@@ -2,113 +2,133 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js canvas - geometry - earth</title>
+		<title>three.js webgl - geometries</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
 			body {
-				color: #808080;
-				font-family:Monospace;
-				font-size:13px;
-				text-align:center;
-
-				background-color: #ffffff;
+				font-family: Monospace;
+				background-color: #000;
 				margin: 0px;
 				overflow: hidden;
 			}
-
-			#info {
-				position: absolute;
-				top: 0px; width: 100%;
-				padding: 5px;
-			}
-
-			a {
-
-				color: #0080ff;
-			}
-
 		</style>
 	</head>
 	<body>
 
-		<div id="container"></div>
-
 		<script src="js/three.js/three.min.js"></script>
+
+		<script src="js/three.js/js/Detector.js"></script>
 		<script src="js/three.js/js/libs/stats.min.js"></script>
 
 		<script>
 
-			var container, stats;
-			var camera, scene, renderer;
-			var group;
-			var mouseX = 0, mouseY = 0;
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-			var windowHalfX = window.innerWidth / 2;
-			var windowHalfY = window.innerHeight / 2;
+			var container, stats;
+
+			var camera, scene, renderer;
 
 			init();
 			animate();
 
 			function init() {
 
-				container = document.getElementById( 'container' );
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
 
-				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 2000 );
-				camera.position.z = 500;
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera.position.y = 400;
 
 				scene = new THREE.Scene();
 
-				group = new THREE.Object3D();
-				scene.add( group );
+				var light, object;
 
-				// earth
+				scene.add( new THREE.AmbientLight( 0x404040 ) );
 
-				var loader = new THREE.TextureLoader();
-				loader.load( 'js/three.js/textures/land_ocean_ice_cloud_2048.jpg', function ( texture ) {
+				light = new THREE.DirectionalLight( 0xffffff );
+				light.position.set( 0, 1, 0 );
+				scene.add( light );
 
-					var geometry = new THREE.SphereGeometry( 200, 20, 20 );
+				var map = THREE.ImageUtils.loadTexture( 'js/three.js/textures/UV_Grid_Sm.jpg' );
+				map.wrapS = map.wrapT = THREE.RepeatWrapping;
+				map.anisotropy = 16;
 
-					var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5 } );
-					var mesh = new THREE.Mesh( geometry, material );
-					group.add( mesh );
+				var material = new THREE.MeshLambertMaterial( { ambient: 0xbbbbbb, map: map, side: THREE.DoubleSide } );
 
-				} );
+				//
 
-				// shadow
+				object = new THREE.Mesh( new THREE.SphereGeometry( 75, 20, 10 ), material );
+				object.position.set( -400, 0, 200 );
+				scene.add( object );
 
-				var canvas = document.createElement( 'canvas' );
-				canvas.width = 128;
-				canvas.height = 128;
+				object = new THREE.Mesh( new THREE.IcosahedronGeometry( 75, 1 ), material );
+				object.position.set( -200, 0, 200 );
+				scene.add( object );
 
-				var context = canvas.getContext( '2d' );
-				var gradient = context.createRadialGradient(
-					canvas.width / 2,
-					canvas.height / 2,
-					0,
-					canvas.width / 2,
-					canvas.height / 2,
-					canvas.width / 2
-				);
-				gradient.addColorStop( 0.1, 'rgba(210,210,210,1)' );
-				gradient.addColorStop( 1, 'rgba(255,255,255,1)' );
+				object = new THREE.Mesh( new THREE.OctahedronGeometry( 75, 2 ), material );
+				object.position.set( 0, 0, 200 );
+				scene.add( object );
 
-				context.fillStyle = gradient;
-				context.fillRect( 0, 0, canvas.width, canvas.height );
+				object = new THREE.Mesh( new THREE.TetrahedronGeometry( 75, 0 ), material );
+				object.position.set( 200, 0, 200 );
+				scene.add( object );
 
-				var texture = new THREE.Texture( canvas );
-				texture.needsUpdate = true;
+				//
 
-				var geometry = new THREE.PlaneGeometry( 300, 300, 3, 3 );
-				var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5 } );
+				object = new THREE.Mesh( new THREE.PlaneGeometry( 100, 100, 4, 4 ), material );
+				object.position.set( -400, 0, 0 );
+				scene.add( object );
 
-				var mesh = new THREE.Mesh( geometry, material );
-				mesh.position.y = - 250;
-				mesh.rotation.x = - Math.PI / 2;
-				group.add( mesh );
+				object = new THREE.Mesh( new THREE.BoxGeometry( 100, 100, 100, 4, 4, 4 ), material );
+				object.position.set( -200, 0, 0 );
+				scene.add( object );
 
-				renderer = new THREE.CanvasRenderer();
-				renderer.setClearColor( 0xffffff );
+				object = new THREE.Mesh( new THREE.CircleGeometry( 50, 20, 0, Math.PI * 2 ), material );
+				object.position.set( 0, 0, 0 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.RingGeometry( 10, 50, 20, 5, 0, Math.PI * 2 ), material );
+				object.position.set( 200, 0, 0 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.CylinderGeometry( 25, 75, 100, 40, 5 ), material );
+				object.position.set( 400, 0, 0 );
+				scene.add( object );
+
+				//
+
+				var points = [];
+
+				for ( var i = 0; i < 50; i ++ ) {
+
+					points.push( new THREE.Vector3( Math.sin( i * 0.2 ) * Math.sin( i * 0.1 ) * 15 + 50, 0, ( i - 5 ) * 2 ) );
+
+				}
+
+				object = new THREE.Mesh( new THREE.LatheGeometry( points, 20 ), material );
+				object.position.set( -400, 0, -200 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.TorusGeometry( 50, 20, 20, 20 ), material );
+				object.position.set( -200, 0, -200 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.TorusKnotGeometry( 50, 10, 50, 20 ), material );
+				object.position.set( 0, 0, -200 );
+				scene.add( object );
+
+				object = new THREE.AxisHelper( 50 );
+				object.position.set( 200, 0, -200 );
+				scene.add( object );
+
+				object = new THREE.ArrowHelper( new THREE.Vector3( 0, 1, 0 ), new THREE.Vector3( 0, 0, 0 ), 50 );
+				object.position.set( 400, 0, -200 );
+				scene.add( object );
+
+				//
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
 				container.appendChild( renderer.domElement );
@@ -118,8 +138,6 @@
 				stats.domElement.style.top = '0px';
 				container.appendChild( stats.domElement );
 
-				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-
 				//
 
 				window.addEventListener( 'resize', onWindowResize, false );
@@ -128,20 +146,10 @@
 
 			function onWindowResize() {
 
-				windowHalfX = window.innerWidth / 2;
-				windowHalfY = window.innerHeight / 2;
-
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
-
-			}
-
-			function onDocumentMouseMove( event ) {
-
-				mouseX = ( event.clientX - windowHalfX );
-				mouseY = ( event.clientY - windowHalfY );
 
 			}
 
@@ -158,16 +166,25 @@
 
 			function render() {
 
-				camera.position.x += ( mouseX - camera.position.x ) * 0.05;
-				camera.position.y += ( - mouseY - camera.position.y ) * 0.05;
+				var timer = Date.now() * 0.0001;
+
+				camera.position.x = Math.cos( timer ) * 800;
+				camera.position.z = Math.sin( timer ) * 800;
+
 				camera.lookAt( scene.position );
 
-				group.rotation.y -= 0.005;
+				for ( var i = 0, l = scene.children.length; i < l; i ++ ) {
+
+					var object = scene.children[ i ];
+
+					object.rotation.x = timer * 5;
+					object.rotation.y = timer * 2.5;
+
+				}
 
 				renderer.render( scene, camera );
 
 			}
-
 
 		</script>
 

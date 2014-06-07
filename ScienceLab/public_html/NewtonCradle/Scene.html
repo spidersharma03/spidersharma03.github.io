@@ -78,6 +78,7 @@
                         var impulse = new Ammo.btVector3(-3,0,0);
                         var impulsePoint = new Ammo.btVector3(0,0,0);
                         
+                        var cameraPosition = new THREE.Vector3();
                         init();
                         animate();
                         //initPhysics();
@@ -240,7 +241,7 @@
                         function initPhysics()
                         {                            
                             // Create Spheres
-                            var x = -1;
+                            var x = -cradleLength/2+0.5;
                             for( var i=0; i<numSpheres; i++)
                             {
                                 // Create body
@@ -314,7 +315,8 @@
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
-				camera.position.z = 10;
+				camera.position.z = -8;
+				camera.position.y = 4;
                                 controls = new THREE.OrbitControls( camera );
                                 controls.addEventListener( 'change', render );
 				// scene
@@ -326,9 +328,9 @@
 
 				var light = new THREE.DirectionalLight( 0xffeedd );
 				light.position.set( 50, 200, -100 );
-                                //var light = new THREE.SpotLight( 0xffffff );
-                                //light.position.set( 85, 85, 85 );
-                                //light.target.position.set(0, 0, 0 );
+                                //var light1 = new THREE.SpotLight( 0xffffff );
+                                //light1.position.set( 85, 85, 85 );
+                                //light1.target.position.set(0, 0, 0 );
                                 light.castShadow = true;
                                 light.shadowMapWidth = 1024;
 				light.shadowMapHeight = 1024;
@@ -380,6 +382,7 @@
         			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
         			document.addEventListener( 'mousedown', onDocumentMouseDown, false );
         			document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+        			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
 
 				window.addEventListener( 'resize', onWindowResize, false );
                                 
@@ -395,100 +398,44 @@
                         
                         function onDocumentMouseMove(event)
                         {
-//                            var x = event.clientX;
-//                            var y = event.clientY;
-//                            if(pickConstraint)
-//                            {
-//                                  //keep it at the same picking distance
-//                                  var newRayTo = getRayTo(x,y);
-//                                  var rayFrom;
-//                                  var oldPivotInB = pickConstraint.getPivotInB();
-//                                  var newPivotB;
-//                                  
-//                                    rayFrom = this.m_cameraPosition;
-//                                    var dir = newRayTo.op_sub(rayFrom);
-//                                    dir.normalize();
-//                                    dir.op_mul(gOldPickingDist);
-//                                    newPivotB = this.tVec(rayFrom.x() + dir.x(),
-//                                                          rayFrom.y() + dir.y(),
-//                                                          rayFrom.z() + dir.z());
-//                                  pickConstraint.setPivotB(newPivotB);
-//                            }
+                            var pos = camera.position;
+
+                            if( pos.y < 2 )
+                            {
+                                //pos.y = 2;
+                            }
+                        }
+                        
+                        function onDocumentMouseWheel(event)
+                        {
+                            var pos = camera.position;
+                            var d = pos.length();
+                            cameraPosition.x = pos.x;
+                            cameraPosition.y = pos.y;
+                            cameraPosition.z = pos.z;
+                            if( d < 5 )
+                            {
+                               cameraPosition.normalize();
+                               pos.x = cameraPosition.x*5;
+                               pos.y = cameraPosition.y*5;
+                               pos.z = cameraPosition.z*5;
+                            }
+                            if( d > 10 )
+                            {
+                               cameraPosition.normalize();
+                               pos.x = cameraPosition.x*10;
+                               pos.y = cameraPosition.y*10;
+                               pos.z = cameraPosition.z*10;
+                            }
+                            
                         }
                         
                         function onDocumentMouseDown(e)
-                        {
-//                            var button = mouseButton = event.which;
-//                            var x = event.clientX///this.m_glScreenWidth;
-//                            var y = event.clientY///this.m_glScreenHeight;
-//
-//                            this.m_mouseOldX = x;
-//                            this.m_mouseOldY = y;
-//
-//                            var rayTo = this.getRayTo(x, y);
-//
-//                            // add a point to point constraint for picking
-//                            if(!this.isIdle() && scene.world)
-//                            {
-//                              var rayFrom = new Ammo.btVector3(0,0,0);
-//
-//                              rayFrom.setValue(camera.position.x,
-//                                                 camera.position.y,
-//                                                 camera.position.z);
-//
-//                              var rayCallback = new Ammo.ClosestRayResultCallback(rayFrom,rayTo);
-//                              scene.world.rayTest(rayFrom,rayTo,rayCallback);
-//                              if(rayCallback.hasHit()){
-//                                var body = rayCallback.get_m_collisionObject();
-//                                if(body){
-//                                  // other exclusions?
-//                                  if(!(body.isStaticObject() || body.isKinematicObject())){
-//                                    pickedBody = body = Ammo.btRigidBody.prototype.upcast(body);
-//                                    body.activate();
-//
-//                                    var pickPos = rayCallback.get_m_hitPointWorld();
-//
-//                                    var localPivot = body.getCenterOfMassTransform().inverse().op_mul(pickPos);
-//
-//
-//                                      var p2p = new Ammo.btPoint2PointConstraint(body,localPivot);
-//                                      scene.world.addConstraint(p2p);
-//                                      pickConstraint = p2p;
-//                                      p2p.get_m_setting().set_m_impulseClamp(mousePickClamping);
-//                                      //very weak constraint for picking
-//                                      p2p.get_m_setting().set_m_tau(0.001);
-//
-//                                    //save mouse position for dragging
-//                                    gOldPickingPos = rayTo;
-//                                    gHitPos = pickPos;
-//
-//                                    gOldPickingDist  = (pickPos.op_sub(rayFrom)).length();
-//                                  }
-//                                }
-//                              }
-//                            } 
-//                            else 
-//                            {
-//                              if(pickConstraint && scene.world){
-//                                scene.world.removeConstraint(pickConstraint);
-//                                pickConstraint = 0;
-//                                pickedBody.forceActivationState(ACTIVE_TAG);
-//                                pickedBody.setDeactivationTime( 0.0 );
-//                                pickedBody = 0;
-//                              }
-//                            }                                  
-                           
+                        {                                 
                         }
                         
                         function onDocumentMouseUp(e)
                         {
-//                            if(pickConstraint)
-//                                scene.world.removeConstraint(pickConstraint);
-//                            pickConstraint = null;
-                            //physicsBodies[0].applyImpulse(impulse,impulsePoint );
-                            //physicsBodies[1].applyImpulse(impulse,impulsePoint );
-                            //physicsBodies[2].applyImpulse(impulse,impulsePoint );
-                            //physicsBodies[3].applyImpulse(impulse,impulsePoint );
                         }
                         
 			function onWindowResize() {

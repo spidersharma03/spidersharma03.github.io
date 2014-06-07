@@ -1,0 +1,542 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - loaders - OBJ loader</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+		</style>
+	</head>
+
+	<body>
+
+		<script src="../js/three.js/three.js"></script>
+		<script src="../js/three.js/ammo.js"></script>
+		<script src="NewtonCradleSimulation.js"></script>
+                
+		<script src="../js/three.js/js/controls/OrbitControls.js"></script>
+
+		<script src="../js/three.js/js/Detector.js"></script>
+		<script src="../js/three.js/js/libs/stats.min.js"></script>
+
+		<script>
+
+			var container, stats;
+                        var pickConstraint = null;
+			var camera, scene, renderer, controls;
+
+                        var fov = 70,
+			isUserInteracting = false,
+			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+			lon = 0, onMouseDownLon = 0,
+			lat = 0, onMouseDownLat = 0,
+			phi = 0, theta = 0;
+			
+                        var mouseX = 0, mouseY = 0;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+                        
+                        var cubeMaterial;
+                        var groundMaterial;
+                        var sphereMaterial;
+                        
+                        var numSpheres = 10;
+                        var spheres = [];
+                        var physicsBodies = [];
+                        var boxMesh;
+                        
+                        var geometry;
+                        var sphereRadius = 0.2;
+			var cradleWidth = 3.0;
+                        var cradleHeight = 3.0;
+                        var cradleLength = 5.0;
+                        var groundWidth = 1.5*cradleLength;
+                        var groundDepth = 1.5*cradleLength;
+                        var groundHeight = 0.2;
+                        
+                        var anchorPositions = [];
+                        var indices_array = [];
+                        var impulse = new Ammo.btVector3(-3,0,0);
+                        var impulsePoint = new Ammo.btVector3(0,0,0);
+                        
+                        init();
+                        animate();
+                        //initPhysics();
+                        //updatePhysicalBodies();
+                        // Initialize Cradle Geometry
+                        function initCradleGeometry()
+                        {
+                            // Make Root Group
+                            var group = new THREE.Object3D();
+                            scene.add(group);
+                            // Make Geometry for Base Structure
+//                            var Spline = new THREE.SplineCurve3( [
+//					new THREE.Vector3( -cradleLength/2, 0,  0 ),
+//					new THREE.Vector3( -cradleLength/2, cradleHeight,  0 ),
+//					//new THREE.Vector3( -cradleLength/2, cradleHeight,  0 ),
+//					new THREE.Vector3(  cradleLength/2, cradleHeight,  0 ),
+//					//new THREE.Vector3(  cradleLength/2, cradleHeight,  0 ),
+//					new THREE.Vector3(  cradleLength/2, 0,  0 )
+//				] );
+//
+//                            var extrudeSettings = {
+//                                    steps		: 50,
+//                                    bevelEnabled	: false,
+//                                    extrudePath		: Spline
+//                            };
+//
+//                            // Create
+//                            var pts = [], count = 10;
+//
+//                            for ( var i = 0; i < count; i ++ ) {
+//
+//                                    var l = 0.2;
+//
+//                                    var a = 2 * i / count * Math.PI;
+//
+//                                    pts.push( new THREE.Vector2 ( Math.cos( a ) * l, Math.sin( a ) * l ) );
+//
+//                            }
+//
+//                            var shape = new THREE.Shape( pts );
+//
+//                            var geometry1 = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+//
+//                            var material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: false } );
+//
+//                            var mesh = new THREE.Mesh( geometry1, groundMaterial );
+//                            
+//                            var clonedMesh = mesh.clone();
+//                            clonedMesh.position.z += cradleWidth/2;
+//                            mesh.position.z -= cradleWidth/2;
+//                            mesh.castShadow = true;
+//                            mesh.receiveShadow = true;
+//                            clonedMesh.castShadow = true;
+//                            clonedMesh.receiveShadow = true;
+//                            
+//                            group.add( mesh );
+//                            group.add( clonedMesh );
+                            
+                            // 
+                            var cylGroup = new THREE.Object3D();
+                            var cyl1 = new THREE.CylinderGeometry(0.2,0.2,cradleHeight);
+                            var cyl1Mesh = new THREE.Mesh( cyl1, groundMaterial );
+                            cyl1Mesh.castShadow = true;
+                            cyl1Mesh.receiveShadow = true;
+                            cyl1Mesh.position.x += cradleLength/2;
+                            cyl1Mesh.position.y += cradleHeight/2;
+                            var cyl2 = new THREE.CylinderGeometry(0.2,0.2,cradleHeight);
+                            var cyl2Mesh = new THREE.Mesh( cyl2, groundMaterial );
+                            cyl2Mesh.castShadow = true;
+                            cyl2Mesh.receiveShadow = true;
+                            cyl2Mesh.position.x -= cradleLength/2;
+                            cyl2Mesh.position.y += cradleHeight/2;
+                            var cyl3 = new THREE.CylinderGeometry(0.15,0.15,cradleLength);
+                            var cyl3Mesh = new THREE.Mesh( cyl3, groundMaterial );
+                            cyl3Mesh.castShadow = true;
+                            cyl3Mesh.receiveShadow = true;
+                            cyl3Mesh.position.y += cradleHeight;                   
+                            cyl3Mesh.rotation.z = 3.14/2;
+                            cylGroup.add( cyl1Mesh );
+                            cylGroup.add( cyl2Mesh );
+                            cylGroup.add( cyl3Mesh );
+                            cylGroup.position.z += cradleWidth/2;
+                            
+                            var cylgroupClone = cylGroup.clone();
+                            cylgroupClone.position.z -= cradleWidth;
+                            group.add(cylGroup);
+                            group.add(cylgroupClone);
+                            // Base Plane
+                            var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
+                            boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
+                            group.add( boxMesh );
+                            
+                            boxMesh.castShadow = true;
+                            boxMesh.receiveShadow = true;
+                            // Create Spheres
+                            var sphereGeometry = new THREE.SphereGeometry(sphereRadius, 15, 15);
+                            var x = 0;
+                            var y = 1.3;
+                            
+                            for( var i=0; i<numSpheres; i++ )
+                            {
+                                var mesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
+                                mesh.castShadow = true;
+                                mesh.receiveShadow = true;
+                                mesh.position.x = x;
+                                mesh.position.y = y;
+                                mesh.position.z = 0;
+
+                                group.add( mesh );
+
+                                spheres.push( mesh );
+                            }
+                             // Suspension Threads
+                            geometry = new THREE.BufferGeometry();
+                            var material = new THREE.LineBasicMaterial({ vertexColors: true });
+                            var segments = 4*numSpheres;
+                            geometry.dynamic = true;
+                            
+                            geometry.addAttribute( 'position', new Float32Array( segments * 3 ), 3 );
+                            geometry.addAttribute( 'color', new Float32Array( segments * 3 ), 3 );
+
+                            var colors = geometry.getAttribute( 'color' ).array;
+                            
+                            var r = 800;
+
+                            for ( var i = 0; i < numSpheres*4; i +=4 ) {
+                                    var sphere = spheres[i/4];
+                                    var x = sphere.position.x;
+                                    var y = sphere.position.y + sphereRadius/2;
+                                    var z = sphere.position.z;
+
+                                    // colors
+                                    colors[ i * 3 ] = ( x / r ) + 0.5;
+                                    colors[ i * 3 + 1 ] = ( y / r ) + 0.5;
+                                    colors[ i * 3 + 2 ] = ( z / r ) + 0.5;
+                                    
+                                    colors[ (i+1) * 3 ] = ( x / r ) + 0.5;
+                                    colors[ (i+1) * 3 + 1 ] = ( y / r ) + 0.5;
+                                    colors[ (i+1) * 3 + 2 ] = ( z / r ) + 0.5;
+                                    
+                                    colors[ (i+2) * 3 ] = ( x / r ) + 0.5;
+                                    colors[ (i+2) * 3 + 1 ] = ( y / r ) + 0.5;
+                                    colors[ (i+2) * 3 + 2 ] = ( z / r ) + 0.5;
+                                    
+                                    colors[ (i+3) * 3 ] = ( x / r ) + 0.5;
+                                    colors[ (i+3) * 3 + 1 ] = ( y / r ) + 0.5;
+                                    colors[ (i+3) * 3 + 2 ] = ( z / r ) + 0.5;
+                                    //indices.push(i,i+1);
+                                    //indices.push(i,i+2);
+                            }
+
+                            mesh = new THREE.Line( geometry, material, THREE.LinePieces );
+                            mesh.castShadow = true;
+                            mesh.receiveShadow = true;
+                            group.add( mesh );
+                         
+                        }
+                        
+                        // Initialize Physics
+                        function initPhysics()
+                        {                            
+                            // Create Spheres
+                            var x = -1;
+                            for( var i=0; i<numSpheres; i++)
+                            {
+                                // Create body
+                                var sphereBody = new NewtonCradleSimulation.PhysicalBody(sphereRadius);
+                                sphereBody.position.x = x;
+                                sphereBody.position.y = 1.0;
+                                sphereBody.position.z = 0;
+                                NewtonCradleSimulation.addBody(sphereBody);
+                                sphereBody.mesh = spheres[i];
+                                // Create Constraints
+                                var pivot = new THREE.Vector2(x,cradleHeight);
+                                anchorPositions.push(new THREE.Vector2(x,cradleHeight));
+                                    
+                                var constraint = new NewtonCradleSimulation.Constraint(sphereBody, pivot);
+                                NewtonCradleSimulation.addConstraint(constraint);
+                                x += sphereRadius*1.9;
+                                if( i == 0 || i==1 || i == 2 )
+                                {
+                                    sphereBody.velocity.x = -3;
+                                }
+                                if( i == numSpheres-1 )
+                                {
+                                    //sphereBody.velocity.x = 6;
+                                }
+                            }
+                            //Give Impulse to the last sphere
+                            //sphereBody.position.y = 1.0;
+                            NewtonCradleSimulation.init();
+
+                        }
+                        
+                        function updatePhysicalBodies() 
+                        {
+                            var positions = geometry.getAttribute( 'position' ).array;
+                            
+                            var l=0;
+                            for ( i = 0; i < NewtonCradleSimulation.bodies.length; i++ ) 
+                            {
+                                //physicsBodies[i].getMotionState().getWorldTransform( transform ); // Retrieve box position & rotation from Ammo
+                                var body = NewtonCradleSimulation.bodies[i];
+                                // Update position
+                                var origin = body.position;
+                                body.mesh.position.x = origin.x;
+                                body.mesh.position.y = origin.y;
+                                
+                                // positions
+                                positions[ l * 3 ] = origin.x;
+                                positions[ l * 3 + 1 ] = origin.y;
+                                positions[ l * 3 + 2 ] = 0;
+
+                                positions[ (l+1) * 3 ] = anchorPositions[i].x;
+                                positions[ (l+1) * 3 + 1 ] = anchorPositions[i].y;
+                                positions[ (l+1) * 3 + 2 ] = cradleWidth/2;
+
+                                positions[ (l+2) * 3 ] = origin.x;
+                                positions[ (l+2) * 3 + 1 ] = origin.y;
+                                positions[ (l+2) * 3 + 2 ] = 0;
+
+                                positions[ (l+3) * 3 ] = anchorPositions[i].x;
+                                positions[ (l+3) * 3 + 1 ] = anchorPositions[i].y;
+                                positions[ (l+3) * 3 + 2 ] = -cradleWidth/2; 
+                                l += 4;
+                            };
+                            geometry.dynamic = true;
+                            geometry.attributes.position.needsUpdate = true;
+                        };
+                        
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
+				camera.position.z = 10;
+                                controls = new THREE.OrbitControls( camera );
+                                controls.addEventListener( 'change', render );
+				// scene
+
+				scene = new THREE.Scene();
+                                
+				var ambient = new THREE.AmbientLight( 0x101030 );
+				scene.add( ambient );
+
+				var light = new THREE.DirectionalLight( 0xffeedd );
+				light.position.set( 50, 200, -100 );
+                                //var light = new THREE.SpotLight( 0xffffff );
+                                //light.position.set( 85, 85, 85 );
+                                //light.target.position.set(0, 0, 0 );
+                                light.castShadow = true;
+                                light.shadowMapWidth = 1024;
+				light.shadowMapHeight = 1024;
+                                
+                                var d = 5;
+
+				light.shadowCameraLeft = -d;
+				light.shadowCameraRight = d;
+				light.shadowCameraTop = d;
+				light.shadowCameraBottom = -d;
+
+				light.shadowCameraFar = 1000;
+				light.shadowDarkness = 0.5;
+                                scene.add( light );
+                                
+//                      		var light1 = new THREE.DirectionalLight( 0xffeedd );
+//      	                        light1.castShadow = false;
+//                                light1.position.set( 50, -200, 100 );
+//                                scene.add( light1 );
+
+				// texture
+
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+
+					console.log( item, loaded, total );
+
+				};
+                                    
+                                var path = "../js/three.js/textures/cube/pisa/";
+				var format = '.png';
+				var urls = [
+						path + 'px' + format, path + 'nx' + format,
+						path + 'py' + format, path + 'ny' + format,
+						path + 'pz' + format, path + 'nz' + format
+					];
+
+				var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
+				reflectionCube.format = THREE.RGBFormat;    
+                                //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
+                                cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } )
+                                groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2});
+                                sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
+                                
+				renderer = new THREE.WebGLRenderer({antialias:true});
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+        			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+        			document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+        			document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+                                
+                                
+                                renderer.shadowMapEnabled = true;
+                                renderer.shadowMapSoft = true;
+                                
+                                initCradleGeometry();
+                                
+                                initPhysics();
+
+			}
+                        
+                        function onDocumentMouseMove(event)
+                        {
+//                            var x = event.clientX;
+//                            var y = event.clientY;
+//                            if(pickConstraint)
+//                            {
+//                                  //keep it at the same picking distance
+//                                  var newRayTo = getRayTo(x,y);
+//                                  var rayFrom;
+//                                  var oldPivotInB = pickConstraint.getPivotInB();
+//                                  var newPivotB;
+//                                  
+//                                    rayFrom = this.m_cameraPosition;
+//                                    var dir = newRayTo.op_sub(rayFrom);
+//                                    dir.normalize();
+//                                    dir.op_mul(gOldPickingDist);
+//                                    newPivotB = this.tVec(rayFrom.x() + dir.x(),
+//                                                          rayFrom.y() + dir.y(),
+//                                                          rayFrom.z() + dir.z());
+//                                  pickConstraint.setPivotB(newPivotB);
+//                            }
+                        }
+                        
+                        function onDocumentMouseDown(e)
+                        {
+//                            var button = mouseButton = event.which;
+//                            var x = event.clientX///this.m_glScreenWidth;
+//                            var y = event.clientY///this.m_glScreenHeight;
+//
+//                            this.m_mouseOldX = x;
+//                            this.m_mouseOldY = y;
+//
+//                            var rayTo = this.getRayTo(x, y);
+//
+//                            // add a point to point constraint for picking
+//                            if(!this.isIdle() && scene.world)
+//                            {
+//                              var rayFrom = new Ammo.btVector3(0,0,0);
+//
+//                              rayFrom.setValue(camera.position.x,
+//                                                 camera.position.y,
+//                                                 camera.position.z);
+//
+//                              var rayCallback = new Ammo.ClosestRayResultCallback(rayFrom,rayTo);
+//                              scene.world.rayTest(rayFrom,rayTo,rayCallback);
+//                              if(rayCallback.hasHit()){
+//                                var body = rayCallback.get_m_collisionObject();
+//                                if(body){
+//                                  // other exclusions?
+//                                  if(!(body.isStaticObject() || body.isKinematicObject())){
+//                                    pickedBody = body = Ammo.btRigidBody.prototype.upcast(body);
+//                                    body.activate();
+//
+//                                    var pickPos = rayCallback.get_m_hitPointWorld();
+//
+//                                    var localPivot = body.getCenterOfMassTransform().inverse().op_mul(pickPos);
+//
+//
+//                                      var p2p = new Ammo.btPoint2PointConstraint(body,localPivot);
+//                                      scene.world.addConstraint(p2p);
+//                                      pickConstraint = p2p;
+//                                      p2p.get_m_setting().set_m_impulseClamp(mousePickClamping);
+//                                      //very weak constraint for picking
+//                                      p2p.get_m_setting().set_m_tau(0.001);
+//
+//                                    //save mouse position for dragging
+//                                    gOldPickingPos = rayTo;
+//                                    gHitPos = pickPos;
+//
+//                                    gOldPickingDist  = (pickPos.op_sub(rayFrom)).length();
+//                                  }
+//                                }
+//                              }
+//                            } 
+//                            else 
+//                            {
+//                              if(pickConstraint && scene.world){
+//                                scene.world.removeConstraint(pickConstraint);
+//                                pickConstraint = 0;
+//                                pickedBody.forceActivationState(ACTIVE_TAG);
+//                                pickedBody.setDeactivationTime( 0.0 );
+//                                pickedBody = 0;
+//                              }
+//                            }                                  
+                           
+                        }
+                        
+                        function onDocumentMouseUp(e)
+                        {
+//                            if(pickConstraint)
+//                                scene.world.removeConstraint(pickConstraint);
+//                            pickConstraint = null;
+                            //physicsBodies[0].applyImpulse(impulse,impulsePoint );
+                            //physicsBodies[1].applyImpulse(impulse,impulsePoint );
+                            //physicsBodies[2].applyImpulse(impulse,impulsePoint );
+                            //physicsBodies[3].applyImpulse(impulse,impulsePoint );
+                        }
+                        
+			function onWindowResize() {
+
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+//			function onDocumentMouseMove( event ) {
+//
+//				mouseX = ( event.clientX - windowHalfX ) / 2;
+//				mouseY = ( event.clientY - windowHalfY ) / 2;
+//
+//			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+                                controls.update();
+                                NewtonCradleSimulation.updateSimulation(1/60);
+                                updatePhysicalBodies();
+				render();
+			}
+
+			function render() {
+                                renderer.setClearColor( 0xffffff, 1);
+				//lat = Math.max( - 85, Math.min( 85, lat ) );
+//				phi = THREE.Math.degToRad( 90 - lat );
+//				theta = THREE.Math.degToRad( lon );
+                                
+//                                camera.position.z = 100 * Math.sin( phi ) * Math.cos( theta );
+//				camera.position.y = 100 * Math.cos( phi );
+//				camera.position.x = 100 * Math.sin( phi ) * Math.sin( theta );
+                                
+				//camera.lookAt( scene.position );
+				renderer.render( scene, camera );
+// 1479
+			}
+
+		</script>
+
+	</body>
+</html>

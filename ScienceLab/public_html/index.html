@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html  lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Science</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+
+    <script src="js/lib/angular.js/angular.js"></script>
+    <script src="js/lib/angular.js/angular-route.js"></script>
+    <script src="js/lib/jquery/jquery.js"></script>
+    <script src = "js/mainApp.js"></script>
+  </head>
+
+  <body ng-app ="mainApp">
+     <div class='container' >
+    <h1>Science Academy</h1>
+    <div class='navbar navbar-inverse'>
+      <div class='navbar-inner nav-collapse' style="height: auto;">
+        <ul class="nav">
+          <li class="active"><a href="#Home">Home</a></li>
+          <li class="dropdown">
+            <a href="#Explore" data-toggle="dropdown" class="dropdown-toggle">Explore <b class="caret"></b></a>
+            <ul class="dropdown-menu">
+                <li><a href="#Physics">Physics</a></li>
+                <li><a href="#Mathematics">Mathematics</a></li>
+                <li><a href="#Computer Science">Computer Science</a></li>
+                <!li class="divider"><!li>
+                <li><a href="#Chemistry">Chemistry</a></li>
+            </ul>
+          </li>
+
+          <li><a href="#">Our Mission</a></li>
+          <li><a href="#">About us</a></li>
+        </ul>
+      </div>
+    </div>
+    
+
+    <div ng-view> </div>
+    
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/lib/bootstrap.min.js"></script>
+    
+<!--    <script>
+        $(document).ready(function () {
+           $('label.tree-toggler').click(function () {
+                   $(this).parent().children('ul.tree').toggle(300);
+           });
+   });
+  </script>-->
+  
+  </body>
+</html>

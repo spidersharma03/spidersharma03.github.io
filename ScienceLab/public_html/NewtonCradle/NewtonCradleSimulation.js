@@ -273,12 +273,11 @@ NewtonCradleSimulation.PhysicalBody.prototype =
     {
         var dx = this.position.x - otherBody.position.x;
         var dy = this.position.y - otherBody.position.y;
-        var d2 = (dx*dx + dy*dy);
-        var this_r2 = this.radius;
-        var other_r2 = otherBody.radius;
-        var r2 = this_r2 + other_r2;
-        r2 *= r2;
-        var overlap = d2 - r2;
+        var d = Math.sqrt(dx*dx + dy*dy);
+        var this_r = this.radius;
+        var other_r = otherBody.radius;
+        var r = this_r + other_r;
+        var overlap = d - r;
         return overlap;
     }
 };

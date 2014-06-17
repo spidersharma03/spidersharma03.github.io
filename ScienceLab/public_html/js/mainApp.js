@@ -15,21 +15,25 @@ mainApp.config(['$routeProvider',
         //controller: 'AddOrderController'
       }).
       when('/Explore', {
-         templateUrl: 'partials/homePage.html'
+         templateUrl: 'partials/test.html'
       }).
       when('/Physics', {
-        templateUrl: 'partials/homePage.html',
-        controller: 'AddOrderController'
+         templateUrl: 'partials/MechanicsPage.html',
+         controller: 'Physics_SubjectsController'
       }).
-      otherwise({
-         templateUrl: 'partials/homePage.html'
-  
-        //redirectTo: '/Home'
+      otherwise({  
+        redirectTo: '/Home'
       });
   }]);
 
  mainApp.controller('AddOrderController', function($scope) {
-     
-    $scope.message = 'This is Add new order screen';
-     
+    //$scope.message = 'This is Add new order screen';
+});
+
+mainApp.controller('Physics_SubjectsController', function ($scope, $http) {
+  $http.get('json/physics_sub.json').success(function(data) {
+    $scope.physics_subs = data;
+  });
+
+  //$scope.orderProp = 'age';
 });

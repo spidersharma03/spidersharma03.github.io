@@ -9,62 +9,35 @@
 
     <title>Science</title>
     
-    <script src="js/lib/angular.js/angular.js"></script>
+<!--    <script src="js/lib/angular.js/angular.js"></script>
     <script src = "js/mainApp.js"></script>
-    <!-- Bootstrap core CSS -->
+     Bootstrap core CSS 
     <link href="css/bootstrap.css" rel="stylesheet">
-    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">-->
     
   </head>
 
   <body ng-controller="Physics_SubjectsController">
      <div class='container' >
-    
-    
         <div id='content' class='row-fluid'>
-    
-            <div class = 'span2' style="overflow-y: scroll; overflow-x: hidden; height: 500px;">
+            <div class = 'span6' style=" font-family: sans-serif; font: caption ; color: white; background-color: #3a87ad; height: 500px; text-align: center;">
+                <h2><span>Physics</span></h2>
+            </div>
+            <div class = 'span6' style="overflow-y: scroll; overflow-x: hidden; height: 500px;">
               <ul class="nav nav-list">
                     <li ng-repeat="category in physics_subs">
                         <a href="#">
-                            <span style="size: 10px;">{{category.sub}}</span> 
+                            <div  style=" text-align: center; ; font-weight: bolder; margin-top: 10px">
+                                {{category.sub}}
+                            </div> 
+                            <div style=" text-align: justify; color: #444; margin:  10px 40px 10px 40px; font-weight: 300">
+                                {{category.description}}
+                            </div>
+                            <div class = "divider" style="margin:  2% 0% -1% 0%;"></div>
                         </a>
                     </li>
               </ul>
             </div>
-        
-        <div class='span10 main'>
-          <div class ="row-fluid span10">
-              <div class = ' row-fluid '>
-                  <div class="well span4 text-center"  style="height: 70px;" ><a href="#">Introduction</a></div>
-              <div class="well span8" style="height: 70px;">Description</div>
-            </div>
-            <div class = ' row-fluid '>
-              <div class="well span4 text-center"  style="height: 70px;" >Kinematics</div>
-              <div class="well span8" style="height: 70px;">Description</div>
-            </div>
-            <div class = ' row-fluid '>
-              <div class="well span4 text-center"  style="height: 70px;" >Dynamics</div>
-              <div class="well span8" style="height: 70px;">Description</div>
-            </div>
-            <div class = ' row-fluid '>
-              <div class="well span4 text-center"  style="height: 70px;" >Statics</div>
-              <div class="well span8" style="height: 70px;">Description</div>
-            </div>
-            <div class = ' row-fluid '>
-              <div class="well span4 text-center"  style="height: 70px;" >Work Energy</div>
-              <div class="well span8" style="height: 70px;">Description</div>
-            </div> 
-            <div class = ' row-fluid '>
-              <div class="well span4 text-center"  style="height: 70px;" >Noninertial Reference Systems</div>
-              <div class="well span8" style="height: 70px;">Description</div>
-            </div> 
-            <div class = ' row-fluid '>
-              <div class="well span4 text-center"  style="height: 70px;" >Oscillations</div>
-              <div class="well span8" style="height: 70px;">Description</div>
-            </div>   
-          </div>
-         </div>  
           
         </div>
       

@@ -3,42 +3,42 @@
         "sub": "Mechanics", 
         "id": "Mechanics.json", 
         "imageUrl": "", 
-        "description": ""
+        "description": "Motion of bodies is governed by forces. Motion of bodies is governed by forces.Motion of bodies is governed by forces.Motion of bodies is governed by forces.Motion of bodies is governed by forces."
     },
     {
         "sub": "Optics", 
         "id": "Optics.json", 
         "imageUrl": "", 
-        "description": ""
+        "description": "Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves."
     },
     {
         "sub": "Electricity", 
         "id": "Electricity.json", 
-        "imageUrl": "", 
-        "description": ""
+        "imageUrl": "",
+        "description": "Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges."
     },
     {
         "sub": "Magnetism", 
         "id": "Megnatism.json", 
-        "imageUrl": "", 
-        "description": ""
+        "imageUrl": "",
+        "description": "Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets "
     },
     {
         "sub": "ElectroMagnetics", 
         "id": "ElectroMagnetics.json", 
         "imageUrl": "", 
-        "description": ""
+        "description": "Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets."
     },
     {
         "sub": "Thermodynamics", 
         "id": "Thermodynamics.json", 
         "imageUrl": "", 
-        "description": ""
+        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
     },
     {
         "sub": "Modern Physics", 
         "id": "Modern Physics.json", 
         "imageUrl": "", 
-        "description": ""
+        "description": "If you understand Quantum mechanics, Relativity theory easily, then you probably don't understand them."
     }
 ]

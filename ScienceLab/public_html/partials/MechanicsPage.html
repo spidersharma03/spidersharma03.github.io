@@ -20,13 +20,26 @@
   <body ng-controller="Physics_SubjectsController">
      <div class='container' >
         <div id='content' class='row-fluid'>
-            <div class = 'span6' style=" font-family: sans-serif; font: caption ; color: white; background-color: #3a87ad; height: 500px; text-align: center;">
-                <h2><span>Physics</span></h2>
+            <div class = 'span6' style=" color: white; background-color: #3a87ad; height: 500px">
+                    <div style=" font-family: sans-serif;  margin: 60px 40px 10px 40px;">
+                        <h2>
+                            <span style="font: caption; font-size: larger;">{{physics_subs.Info.name}}
+                            </span>
+                        </h2>
+                    </div>
+                <ul class="nav nav-list" style="margin: 20px 100px 10px 20px;">
+                    <li class = "divider"></li>
+                </ul>
+                    <div style = "margin: 20px 100px 10px 40px">
+                        <span style="font: caption; font-family: sans-serif;font-weight: 300" >
+                            {{physics_subs.Info.description}}
+                        </span>
+                    </div>
             </div>
-            <div class = 'span6' style="overflow-y: scroll; overflow-x: hidden; height: 500px;">
+            <div  class = 'span6' style="overflow-y: scroll; overflow-x: hidden; height: 500px;">
               <ul class="nav nav-list">
-                    <li ng-repeat="category in physics_subs">
-                        <a href="#">
+                    <li ng-repeat="category in physics_subs.topics">
+                        <a href="#">    
                             <div  style=" text-align: center; ; font-weight: bolder; margin-top: 10px">
                                 {{category.sub}}
                             </div> 

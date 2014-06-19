@@ -14,9 +14,6 @@ mainApp.config(['$routeProvider',
         templateUrl: 'partials/homePage.html'
         //controller: 'AddOrderController'
       }).
-      when('/Explore', {
-         templateUrl: 'partials/test.html'
-      }).
       when('/Physics', {
          templateUrl: 'partials/MechanicsPage.html',
          controller: 'Physics_SubjectsController'
@@ -32,6 +29,14 @@ mainApp.config(['$routeProvider',
 
 mainApp.controller('Physics_SubjectsController', function ($scope, $http) {
   $http.get('json/physics_sub.json').success(function(data) {
+    $scope.physics_subs = data;
+  });
+
+  //$scope.orderProp = 'age';
+});
+
+mainApp.controller('Mechanics_SubjectsController', function ($scope, $http) {
+  $http.get('json/mechanics_sub.json').success(function(data) {
     $scope.physics_subs = data;
   });
 

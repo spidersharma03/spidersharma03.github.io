@@ -1,38 +1,39 @@
 {
    "Info":
     {
-        "name" : "Physics",
-        "description" : "Physics is the natural science that involves the study of matter and its motion through space and time, along with related concepts such as energy and force. More broadly, it is the general analysis of nature, conducted in order to understand how the universe behaves"
+        "name" : "Mechanics",
+        "parent" : "Physics",
+        "description": "Mechanics is the branch of science concerned with the behavior of physical bodies when subjected to forces or displacements, and the subsequent effects of the bodies on their environment"
     }
 ,
 "topics":
 [
     {
-        "sub": "Mechanics", 
+        "sub": "Kinematics", 
         "id": "Mechanics.json", 
         "imageUrl": "", 
         "description": "Mechanics is the branch of science concerned with the behavior of physical bodies when subjected to forces or displacements, and the subsequent effects of the bodies on their environment"
     },
     {
-        "sub": "Optics", 
+        "sub": "Dynamics", 
         "id": "Optics.json", 
         "imageUrl": "", 
         "description": "Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves."
     },
     {
-        "sub": "Electricity", 
+        "sub": "Oscillations", 
         "id": "Electricity.json", 
         "imageUrl": "",
         "description": "Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges."
     },
     {
-        "sub": "Magnetism", 
+        "sub": "Waves", 
         "id": "Megnatism.json", 
         "imageUrl": "",
         "description": "Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets "
     },
     {
-        "sub": "ElectroMagnetics", 
+        "sub": "Fluids", 
         "id": "ElectroMagnetics.json", 
         "imageUrl": "", 
         "description": "Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets."

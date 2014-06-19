@@ -12,30 +12,23 @@
   </head>
 
   <body ng-controller="Physics_SubjectsController">
-     <div style = "margin: 20px 20px 0px 0px" >
-        <div id='content' class='row-fluid'>
-            <div class = 'span7' style=" color: white; background-color: #3a87ad; height: 500px">
-                    <div style=" font-family: sans-serif;  margin: 60px 40px 10px 40px;">
-                        <span style="font: caption;">
-                                {{physics_subs.Info.parent}}
-                        </span>
-                        <h2>
-                            <span style="font: caption; font-size: larger;">
-                                {{physics_subs.Info.name}}
-                            </span>
-                        </h2>
-                    </div>
-                <ul class="nav nav-list" style="margin: 20px 100px 10px 20px;">
-                    <li class = "divider"></li>
-                </ul>
-                    <div style = "margin: 20px 100px 10px 40px">
-                        <span style="font: caption; font-family: sans-serif;font-weight: 300" >
-                            {{physics_subs.Info.description}}
-                        </span>
+     <div style = "margin: 20px 20px 0px 0px;" >
+        <div id='content' class='row-fluid' style = "">
+            <div class = 'well span3' style=" text-align: center; color: black; height: 10px; background-color: #3a87a0">
+                    <div class='row-fluid' style=" font-family: sans-serif;  margin: -15px 0px 0px 0px;">
+                        <div class = 'span4' style="font: caption; background-color: #3a87a0; margin: 0px">
+                                Physics
+                        </div>
+                        <div class = 'span4' style="font: caption; background-color: #3a87a0; margin: 0px;">
+                                Mechanics
+                        </div>
+                        <div class = 'span4' style="font: caption;color: white; background-color: #3a87a0; margin: 0px;">
+                                Oscillations
+                        </div>
                     </div>
             </div>
-            <div  class = 'span5' style="overflow-y: scroll; overflow-x: hidden; height: 500px;">
-              <ul class="nav nav-list">
+            <div  class = 'span9' style="overflow-y: scroll; overflow-x: hidden;">
+<!--              <ul class="nav nav-list">
                     <li ng-repeat="category in physics_subs.topics">
                         <a href="#">    
                             <div  style=" text-align: center; ; font-weight: bolder; margin-top: 10px">
@@ -47,7 +40,7 @@
                             <div class = "divider" style="margin:  2% 0% -1% 0%;"></div>
                         </a>
                     </li>
-              </ul>
+              </ul>-->
             </div>
           
         </div>

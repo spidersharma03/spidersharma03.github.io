@@ -15,7 +15,7 @@ mainApp.config(['$routeProvider',
         //controller: 'AddOrderController'
       }).
       when('/Physics', {
-         templateUrl: 'partials/MechanicsPage.html',
+         templateUrl: 'partials/TopicsPage.html',
          controller: 'Physics_SubjectsController'
       }).
       otherwise({  
@@ -28,7 +28,7 @@ mainApp.config(['$routeProvider',
 });
 
 mainApp.controller('Physics_SubjectsController', function ($scope, $http) {
-  $http.get('json/physics_sub.json').success(function(data) {
+  $http.get('json/mechanics_sub.json').success(function(data) {
     $scope.physics_subs = data;
   });
 

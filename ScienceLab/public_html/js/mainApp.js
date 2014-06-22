@@ -5,40 +5,37 @@
  */
 'use strict';
 
-var mainApp = angular.module('mainApp', ['ngRoute']);
-  
-mainApp.config(['$routeProvider',
+/*
+ * This module is responsible for all the routing.
+ */
+var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'ContentLoadingService']).config(['$routeProvider',
   function($routeProvider) {
     $routeProvider.
       when('/Home', {
-        templateUrl: 'partials/homePage.html'
-        //controller: 'AddOrderController'
+        templateUrl: 'partials/homePage.html',
+        controller: 'homePageLoadController'
       }).
       when('/Physics', {
+         templateUrl: 'partials/PhysicsPage.html',
+         controller: 'SubjectsLoadController'
+      }).
+      when('/:subCategory', {
+         templateUrl: 'partials/MechanicsPage.html',
+         controller: 'TopicsLoadController'
+      }).
+      when('/:subCategory/:Topic', {
          templateUrl: 'partials/TopicsPage.html',
-         controller: 'Physics_SubjectsController'
+         controller: 'SubTopicsLoadController'
       }).
       otherwise({  
         redirectTo: '/Home'
       });
   }]);
-
- mainApp.controller('AddOrderController', function($scope) {
-    //$scope.message = 'This is Add new order screen';
-});
-
-mainApp.controller('Physics_SubjectsController', function ($scope, $http) {
-  $http.get('json/mechanics_sub.json').success(function(data) {
-    $scope.physics_subs = data;
+ 
+//
+mainApp.controller('homePageLoadController', function ($scope, $http) {
+  $http.get('json/physics_sub.json').success(function(data) {
+    $scope.subjects = data;
   });
 
-  //$scope.orderProp = 'age';
-});
-
-mainApp.controller('Mechanics_SubjectsController', function ($scope, $http) {
-  $http.get('json/mechanics_sub.json').success(function(data) {
-    $scope.physics_subs = data;
-  });
-
-  //$scope.orderProp = 'age';
 });

@@ -16,10 +16,12 @@
     <script src="js/lib/angular.js/angular.js"></script>
     <script src="js/lib/angular.js/angular-route.js"></script>
     <script src="js/lib/jquery/jquery.js"></script>
+    <script src = "js/controllers.js"></script>
+    <script src = "js/ContentLoadingService.js"></script>
     <script src = "js/mainApp.js"></script>
   </head>
 
-  <body ng-app ="mainApp">
+  <body ng-app ="mainApp" ng-controller="homePageLoadController">
    <div  style = "margin: 50px 20px 0px 20px">
     <h1>Science Academy</h1>
     <div class='navbar navbar-inverse'>
@@ -29,10 +31,12 @@
           <li class="dropdown">
             <a href="#Explore" target="_self" data-toggle="dropdown" class="dropdown-toggle">Explore <b class="caret"></b></a>
             <ul class="dropdown-menu">
+<!--                <li ng-repeat="subject in subjects"> 
+                    {{ subject.name }}
+                </li>-->
                 <li><a href="#Physics">Physics</a></li>
                 <li><a href="#Mathematics">Mathematics</a></li>
                 <li><a href="#Computer Science">Computer Science</a></li>
-                <!li class="divider"><!li>
                 <li><a href="#Chemistry">Chemistry</a></li>
             </ul>
           </li>

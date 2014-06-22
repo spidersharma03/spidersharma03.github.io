@@ -4,33 +4,43 @@
  * and open the template in the editor.
  */
 
+/*
+ * This module is responsible for loading the data using $http service.
+ */
 
 'use strict';
 
-var _contentLoadingService = angular.module('contentLoadingService', []);
+var _contentLoadingService = angular.module('ContentLoadingService', []);
 
 _contentLoadingService.factory('contentLoadingServiceAPI', function($http) {
 
     var contentApi = {};
 
-    contentApi.getSubjectCategories = function(subject) {
+    contentApi.getSubjects = function() {
       return $http({
-        method: 'get', 
-        url: 'json/' + subject + '.json'
+        method: 'get',
+        url: 'json/subjects' + '.json'
       });
     };
     
     contentApi.getSubCategories = function(category) {
       return $http({
         method: 'get', 
-        url: 'json/' + category + '.json'
+        url: 'json/' + category + '_sub.json'
       });
     };
     
     contentApi.getTopics = function(subcategory) {
       return $http({
         method: 'get', 
-        url: 'json/' + subcategory + '.json'
+        url: 'json/' + subcategory + '_topics.json'
+      });
+    };
+    
+    contentApi.getSubTopics = function(topic) {
+      return $http({
+        method: 'get', 
+        url: 'json/' + topic + '_subtopic.json'
       });
     };
     

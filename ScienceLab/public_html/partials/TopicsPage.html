@@ -9,43 +9,42 @@
 
     <title>Science</title>
     
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
   </head>
 
-  <body ng-controller="Physics_SubjectsController">
-     <div style = "margin: 20px 20px 0px 0px;" >
-        <div id='content' class='row-fluid' style = "">
-            <div class = 'well span3' style=" text-align: center; color: black; height: 10px; background-color: #3a87a0">
-                    <div class='row-fluid' style=" font-family: sans-serif;  margin: -15px 0px 0px 0px;">
-                        <div class = 'span4' style="font: caption; background-color: #3a87a0; margin: 0px">
-                                Physics
-                        </div>
-                        <div class = 'span4' style="font: caption; background-color: #3a87a0; margin: 0px;">
-                                Mechanics
-                        </div>
-                        <div class = 'span4' style="font: caption;color: white; background-color: #3a87a0; margin: 0px;">
-                                Oscillations
-                        </div>
-                    </div>
+  <body ng-controller="TopicsLoadController">
+     
+    <div>
+        <div class="span2 panel panel-default" style = "margin: 0px 0px 0px 0px;">
+            <!--<div class = "row-fluid">-->
+            <div class="span2 panel-heading" style="background-color: #5a87ad; color:white; margin: 0px; height: 30px">
+               <h4 class="panel-title" >
+                   <a href="#{{physics_subs.Info.sub}}">Physics</a>
+               </h4>
             </div>
-            <div  class = 'span9' style="overflow-y: scroll; overflow-x: hidden;">
-<!--              <ul class="nav nav-list">
-                    <li ng-repeat="category in physics_subs.topics">
-                        <a href="#">    
-                            <div  style=" text-align: center; ; font-weight: bolder; margin-top: 10px">
-                                {{category.sub}}
-                            </div> 
-                            <div style=" text-align: justify; color: #444; margin:  10px 40px 10px 40px; font-weight: 300">
-                                {{category.description}}
-                            </div>
-                            <div class = "divider" style="margin:  2% 0% -1% 0%;"></div>
-                        </a>
-                    </li>
-              </ul>-->
+            <div class="span2 panel-heading" style="background-color: #6a87ad; color:white; margin: 0px; height: 40px">
+                <h2 class="panel-title" >
+                   <a href="#{{physics_subs.Info.parent}}">Mechanics</a>
+               </h2>
+            </div>    
+            <div class="panel-heading" style = " background-color: lightblue; margin: 70px 0px 0px 0px">
+                <h4 class="panel-title" style="margin: 10px; font-size: 20px; font-weight: 400;">
+                  {{physics_subs.Info.name}}
+               </h4>
             </div>
-          
+            <ul class="list-group" style="margin: 0px; font-weight: 200">
+                <li class="list-group-item" ng-repeat="category in physics_subs.topics">
+                    {{category.sub}}</li>
+            </ul>
+            <div class="panel-footer">Next</div>
         </div>
-      
+
+        <div  class = ' span10' style="overflow-y: scroll; overflow-x: hidden; height: 500px">
+        </div>
+          
     </div>
+      
 
     <!-- Bootstrap core JavaScript
     ================================================== -->

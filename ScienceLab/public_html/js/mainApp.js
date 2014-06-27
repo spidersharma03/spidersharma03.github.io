@@ -15,15 +15,15 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
         templateUrl: 'partials/homePage.html',
         controller: 'homePageLoadController'
       }).
-      when('/Physics', {
-         templateUrl: 'partials/PhysicsPage.html',
+      when('/:subjectID', {         // this is for loading subject.( ex: physics,mathematics etc)
+         templateUrl: 'partials/SubjectPage.html',
          controller: 'SubjectsLoadController'
       }).
-      when('/:subCategory', {
-         templateUrl: 'partials/MechanicsPage.html',
+      when('/:subjectID/:subjectCategory', {  // this is for loading sub category in a subject.( ex mechanics,optics in physics)
+         templateUrl: 'partials/SubjectCategoryPage.html',
          controller: 'TopicsLoadController'
       }).
-      when('/:subCategory/:Topic', {
+      when('/:subjectID/:subjectCategory/:Topic', { // this is for loading topics in a category.( ex kinematics, oscillations in mechanics)
          templateUrl: 'partials/TopicsPage.html',
          controller: 'SubTopicsLoadController'
       }).
@@ -34,8 +34,8 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
  
 //
 mainApp.controller('homePageLoadController', function ($scope, $http) {
-  $http.get('json/physics_sub.json').success(function(data) {
-    $scope.subjects = data;
-  });
+//  $http.get('json/physics_sub.json').success(function(data) {
+//    $scope.subjects = data;
+//  });
 
 });

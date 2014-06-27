@@ -1,0 +1,47 @@
+{
+   "Info":
+    {
+        "name" : "Mathematics",
+        "description" : "Mathematics is the study of topics such as quantity (numbers), structure, space, and change. There is a range of views among mathematicians and philosophers as to the exact scope and definition of mathematics Mathematicians seek out patterns and use them to formulate new conjectures. Mathematicians resolve the truth or falsity of conjectures by mathematical proof. When mathematical structures are good models of real phenomena, then mathematical reasoning can provide insight or predictions about nature."
+    }
+,
+"categories":
+[
+    {
+        "sub": "Linear Algebra", 
+        "id": "Mechanics.json", 
+        "imageUrl": "", 
+        "description": "Mechanics is the branch of science concerned with the behavior of physical bodies when subjected to forces or displacements, and the subsequent effects of the bodies on their environment"
+    },
+    {
+        "sub": "Calculus", 
+        "id": "Optics.json", 
+        "imageUrl": "", 
+        "description": "Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves."
+    },
+    {
+        "sub": "Trigonometry", 
+        "id": "Electricity.json", 
+        "imageUrl": "",
+        "description": "Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges."
+    },
+    {
+        "sub": "Geometry", 
+        "id": "Megnatism.json", 
+        "imageUrl": "",
+        "description": "Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets "
+    },
+    {
+        "sub": "Probability", 
+        "id": "ElectroMagnetics.json", 
+        "imageUrl": "", 
+        "description": "Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets."
+    },
+    {
+        "sub": "Applied Mathematics", 
+        "id": "Thermodynamics.json", 
+        "imageUrl": "", 
+        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
+    }
+]
+}

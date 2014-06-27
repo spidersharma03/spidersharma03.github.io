@@ -13,31 +13,34 @@
 
   </head>
 
-  <body ng-controller="TopicsLoadController">
+  <body ng-controller="SubTopicsLoadController">
      
-    <div>
-        <div class="span2 panel panel-default" style = "margin: 0px 0px 0px 0px;">
+    <div  class = "row-fluid">
+        <div class="overflow-y: scroll span2 panel panel-default" style = "margin: 0px 0px 0px 0px;">
             <!--<div class = "row-fluid">-->
-            <div class="span2 panel-heading" style="background-color: #5a87ad; color:white; margin: 0px; height: 30px">
+            <div class=" panel-heading" style="background-color: #5a87ad; color:white; margin: 0px; height: 30px">
                <h4 class="panel-title" >
-                   <a href="#{{physics_subs.Info.sub}}">Physics</a>
+                   <a href="#{{categoryTopicsData.Info.subject}}">{{categoryTopicsData.Info.subject}}</a>
                </h4>
             </div>
-            <div class="span2 panel-heading" style="background-color: #6a87ad; color:white; margin: 0px; height: 40px">
+            <div class="panel-heading" style="background-color: #6a87ad; color:white; margin: 0px; height: 40px">
                 <h2 class="panel-title" >
-                   <a href="#{{physics_subs.Info.parent}}">Mechanics</a>
+                   <a href="#{{categoryTopicsData.Info.subject}}/{{categoryTopicsData.Info.category}}">{{categoryTopicsData.Info.category}}</a>
                </h2>
             </div>    
-            <div class="panel-heading" style = " background-color: lightblue; margin: 70px 0px 0px 0px">
-                <h4 class="panel-title" style="margin: 10px; font-size: 20px; font-weight: 400;">
-                  {{physics_subs.Info.name}}
+            <div class="panel-heading" style = " background-color: lightblue; margin: 0px 0px 0px 0px">
+                <h4 class="panel-title" style="margin: 10px; font-size: 20px; font-weight: bolder;">
+                  {{categoryTopicsData.Info.name}}
                </h4>
             </div>
             <ul class="list-group" style="margin: 0px; font-weight: 200">
-                <li class="list-group-item" ng-repeat="category in physics_subs.topics">
-                    {{category.sub}}</li>
+                <li class="list-group-item" ng-repeat="categoryTopic in categoryTopicsData.topics">
+                    {{categoryTopic.name}}</li>
             </ul>
-            <div class="panel-footer">Next</div>
+            <div class="panel-footer"><span class="glyphicon glyphicon-circle-arrow-right"></span>   
+                <a href = "#{{categoryTopicsData.Info.subject}}/{{categoryTopicsData.Info.category}}/{{categoryTopicsData.Info.nextTopic}}"> 
+                    <b style="color: lightseagreen; font-size: larger">{{categoryTopicsData.Info.nextTopic}}</b></a>
+            </div>
         </div>
 
         <div  class = ' span10' style="overflow-y: scroll; overflow-x: hidden; height: 500px">

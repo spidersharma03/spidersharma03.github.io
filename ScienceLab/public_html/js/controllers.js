@@ -12,24 +12,30 @@
 
 var controllers = angular.module('DataLoadControllers', []);
 
-
+// Loads the data for a given subject( physics, computer science, etc...)
 controllers.controller('SubjectsLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
-    $scope.subject = $routeParams.subject;
-    contentLoadingServiceAPI.getSubCategories("physics").success(function(data) {
-    $scope.physics_subs = data;
+    $scope.subjectID = $routeParams.subjectID;
+    contentLoadingServiceAPI.getSubCategories($scope.subjectID.toLowerCase()).success(function(data) {
+    $scope.subjectData = data;
   });
 });
 
+// Loads the data for a given subject category( physics/mechanics, mathematics/linear algebra, etc...)
 controllers.controller('TopicsLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
-    $scope.subCategory = $routeParams.subCategory;
-    contentLoadingServiceAPI.getTopics($scope.subCategory).success(function(data) {
-    $scope.physics_subs = data;
+    $scope.subjectID = $routeParams.subjectID;
+    $scope.subjectCategory = $routeParams.subjectCategory;
+    contentLoadingServiceAPI.getTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase()).success(function(data) {
+    $scope.subjectCategoryData = data;
   });
 });
 
+// Loads the data for a given topic, inside a subject category(  physics/mechanics/oscillations, computer science/computer graphics/opengl, etc...)
 controllers.controller('SubTopicsLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
+    $scope.subjectID = $routeParams.subjectID;
+    $scope.subjectCategory = $routeParams.subjectCategory;
     $scope.Topic = $routeParams.Topic;
-    contentLoadingServiceAPI.getSubTopics($scope.Topic).success(function(data) {
-    $scope.physics_subs = data;
+    contentLoadingServiceAPI.getSubTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase(),$scope.Topic.toLowerCase())
+    .success(function(data) {
+    $scope.categoryTopicsData = data;
   });
 });

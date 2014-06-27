@@ -9,25 +9,19 @@
 
     <title>Science</title>
     
-<!--    <script src="js/lib/angular.js/angular.js"></script>
-    <script src = "js/mainApp.js"></script>
-     Bootstrap core CSS 
-    <link href="css/bootstrap.css" rel="stylesheet">
-    <link href="css/bootstrap-responsive.css" rel="stylesheet">-->
-    
   </head>
 
-  <body ng-controller="Physics_SubjectsController">
+  <body ng-controller="TopicsLoadController">
      <div style = "margin: 20px 20px 0px 0px" >
         <div id='content' class='row-fluid'>
             <div class = 'span7' style=" color: white; background-color: #3a87ad; height: 500px">
                     <div style=" font-family: sans-serif;  margin: 60px 40px 10px 40px;">
-                        <span style="font: caption;">
-                                {{physics_subs.Info.parent}}
+                        <span style="font: caption; ">
+                            <a style = "color: white" href="#{{subjectCategoryData.Info.parent}}">{{subjectCategoryData.Info.parent}}</a>
                         </span>
                         <h2>
-                            <span style="font: caption; font-size: larger;">
-                                {{physics_subs.Info.name}}
+                            <span style="font: caption; font-size: larger; ">
+                                {{subjectCategoryData.Info.name}}
                             </span>
                         </h2>
                     </div>
@@ -36,19 +30,19 @@
                 </ul>
                     <div style = "margin: 20px 100px 10px 40px">
                         <span style="font: caption; font-family: sans-serif;font-weight: 300" >
-                            {{physics_subs.Info.description}}
+                            {{subjectCategoryData.Info.description}}
                         </span>
                     </div>
             </div>
             <div  class = 'span5' style="overflow-y: scroll; overflow-x: hidden; height: 500px;">
               <ul class="nav nav-list">
-                    <li ng-repeat="category in physics_subs.topics">
-                        <a href="#{{category.sub}}">    
+                    <li ng-repeat="sub_category in subjectCategoryData.sub_categories">
+                        <a href="#{{subjectCategoryData.Info.subject.toLowerCase()}}/{{subjectCategoryData.Info.name.toLowerCase()}}/{{sub_category.name.toLowerCase()}}">    
                             <div  style=" text-align: center; ; font-weight: bolder; margin-top: 10px">
-                                {{category.sub}}
+                                {{sub_category.name}}
                             </div> 
                             <div style=" text-align: justify; color: #444; margin:  10px 40px 10px 40px; font-weight: 300">
-                                {{category.description}}
+                                {{sub_category.description}}
                             </div>
                             <div class = "divider" style="margin:  2% 0% -1% 0%;"></div>
                         </a>

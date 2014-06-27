@@ -1,51 +1,65 @@
 {
    "Info":
     {
-        "name" : "Mechanics",
-        "parent" : "Physics",
+        "name" : "Waves",
+        "subject"    : "Physics",
+        "category" : "Mechanics",
+        "nextTopic" : "",
         "description": "Mechanics is the branch of science concerned with the behavior of physical bodies when subjected to forces or displacements, and the subsequent effects of the bodies on their environment"
     }
 ,
 "topics":
 [
     {
-        "sub": "Kinematics", 
+        "name": "What is a Wave?", 
         "id": "Mechanics.json", 
         "imageUrl": "", 
         "description": "Mechanics is the branch of science concerned with the behavior of physical bodies when subjected to forces or displacements, and the subsequent effects of the bodies on their environment"
     },
     {
-        "sub": "Dynamics", 
+        "name": "Propagation of Waves", 
         "id": "Optics.json", 
         "imageUrl": "", 
         "description": "Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves."
     },
     {
-        "sub": "Oscillations", 
+        "name": "Longitudinal Waves", 
         "id": "Electricity.json", 
         "imageUrl": "",
         "description": "Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges."
     },
     {
-        "sub": "Waves", 
+        "name": "Transverse Waves", 
         "id": "Megnatism.json", 
         "imageUrl": "",
         "description": "Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets "
     },
     {
-        "sub": "Fluids", 
+        "name": "Standing Waves", 
         "id": "ElectroMagnetics.json", 
         "imageUrl": "", 
         "description": "Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets."
     },
     {
-        "sub": "Thermodynamics", 
+        "name": "Reflection of Waves", 
         "id": "Thermodynamics.json", 
         "imageUrl": "", 
         "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
     },
     {
-        "sub": "Modern Physics", 
+        "name": "Superposition of Waves", 
+        "id": "Modern Physics.json", 
+        "imageUrl": "", 
+        "description": "If you understand Quantum mechanics, Relativity theory easily, then you probably don't understand them."
+    },
+    {
+        "name": "Interference of Waves", 
+        "id": "Modern Physics.json", 
+        "imageUrl": "", 
+        "description": "If you understand Quantum mechanics, Relativity theory easily, then you probably don't understand them."
+    },
+    {
+        "name": "Diffraction of Waves", 
         "id": "Modern Physics.json", 
         "imageUrl": "", 
         "description": "If you understand Quantum mechanics, Relativity theory easily, then you probably don't understand them."

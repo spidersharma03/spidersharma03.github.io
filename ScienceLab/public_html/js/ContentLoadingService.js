@@ -19,28 +19,28 @@ _contentLoadingService.factory('contentLoadingServiceAPI', function($http) {
     contentApi.getSubjects = function() {
       return $http({
         method: 'get',
-        url: 'json/subjects' + '.json'
+        url: 'json/subjects' + '.json1'
       });
     };
     
     contentApi.getSubCategories = function(category) {
       return $http({
         method: 'get', 
-        url: 'json/' + category + '_sub.json'
+        url: 'json/' + category + '/' + category + '.json'
       });
     };
     
-    contentApi.getTopics = function(subcategory) {
+    contentApi.getTopics = function(category, subcategory) {
       return $http({
         method: 'get', 
-        url: 'json/' + subcategory + '_topics.json'
+        url: 'json/' + category + '/' + subcategory + '/' + subcategory + '.json'
       });
     };
     
-    contentApi.getSubTopics = function(topic) {
+    contentApi.getSubTopics = function(category, subcategory, topic) {
       return $http({
         method: 'get', 
-        url: 'json/' + topic + '_subtopic.json'
+        url: 'json/' + category + '/' + subcategory + '/'  + topic + '.json'
       });
     };
     

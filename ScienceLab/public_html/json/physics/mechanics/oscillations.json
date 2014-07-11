@@ -5,7 +5,7 @@
         "subject"    : "Physics",
         "category" : "Mechanics",
         "nextTopic" : "Waves",
-        "description": "Mechanics is the branch of science concerned with the behavior of physical bodies when subjected to forces or displacements, and the subsequent effects of the bodies on their environment"
+        "description": ""
     }
 ,
 "topics":
@@ -14,13 +14,14 @@
         "name": "Periodic Motion", 
         "id": "Mechanics.json", 
         "imageUrl": "", 
-        "description": "Mechanics is the branch of science concerned with the behavior of physical bodies when subjected to forces or displacements, and the subsequent effects of the bodies on their environment"
+        "description": "",
+        "pageLink"  : "periodic_motion.html"
     },
     {
         "name": "Fundamental Quantities", 
         "id": "Optics.json", 
         "imageUrl": "", 
-        "description": "Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves."
+        "description": ""
     },
     {
         "name": "Harmonic Motion", 

@@ -258,11 +258,11 @@
                                 var constraint = new NewtonCradleSimulation.Constraint(sphereBody, pivot);
                                 NewtonCradleSimulation.addConstraint(constraint);
                                 x += sphereRadius*1.9;
-                                if( i == 0 || i==1 || i == 2 )
+                                if( i === 0 || i===1 || i === 2 )
                                 {
                                     sphereBody.velocity.x = -3;
                                 }
-                                if( i == numSpheres-1 )
+                                if( i === numSpheres-1 )
                                 {
                                     //sphereBody.velocity.x = 6;
                                 }
@@ -370,9 +370,10 @@
 
 				var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
 				reflectionCube.format = THREE.RGBFormat;    
+                                var texture = THREE.ImageUtils.loadTexture( "../js/lib/three.js/textures/wood.jpg");
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
                                 cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } )
-                                groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2});
+                                groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
                                 sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
                                 
 				renderer = new THREE.WebGLRenderer({antialias:true});

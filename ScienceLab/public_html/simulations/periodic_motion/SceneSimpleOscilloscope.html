@@ -80,7 +80,7 @@
                         var sphereMassRadius = 0.2;
                         
                         // Pendulumn
-                        var maxTheta = 30;
+                        var maxTheta = 20;
                         var pendulumnAnchorX = 0;
                         var pendulumnAnchorY = 0;
                         var pendulumnLength = springLength;
@@ -130,7 +130,7 @@
                             }
                             for( var i=0; i<maxOscilloscopeGraphPoints; i++)
                             {
-                                indices_array.push(0,0);   
+                                indices_array.push(0);   
                             }
                             
                             oscillographGeometry.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices_array ), 1 ) );

@@ -88,7 +88,7 @@
                         
                         // Oscilloscope stuff
                         var oscilloscopeGraphPoints = [];
-                        var maxOscilloscopeGraphPoints = 1000;
+                        var maxOscilloscopeGraphPoints = 700;
                         var maxOscilloscopeGraphLength = 1.0;
                         var oscilloscopeGraphSpeed = 0.3;
                         var currentOscilloscopeGraphPoints = 0;
@@ -96,8 +96,8 @@
                         var oscillographBaseMesh;
                         var oscillographBaseLength = 5.0;
                         var dt = 0.016;
-                        var amplitude = 100;
-                        var wavelength = 50;
+                        var amplitude = 50;
+                        var wavelength = 10;
                         
                         var indices_array = [];
                         var positions_array = [];
@@ -109,7 +109,7 @@
                         function createOscilloscopeGeometry(group)
                         {
                             // Create quad on to which the oscillations will be recorded.
-                            var oscilloscopeRecordGeometry = new THREE.BoxGeometry(2*window.innerWidth, 2*window.innerHeight,1.0, 1,1,1);
+                            var oscilloscopeRecordGeometry = new THREE.BoxGeometry(window.innerWidth, window.innerHeight,0.1, 1,1,1);
                             var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/graph-paper.jpg");
                             texture.wrapS = THREE.RepeatWrapping;
                             texture.wrapT = THREE.RepeatWrapping;
@@ -118,7 +118,8 @@
                             oscillographBaseMesh = new THREE.Mesh( oscilloscopeRecordGeometry ,new THREE.MeshBasicMaterial( { color: 0xffffff, ambient: 0xffffff, combine:THREE.MixOperation, map:texture } ));
                             oscillographBaseMesh.castShadow = true;
                             oscillographBaseMesh.receiveShadow = true;
-                            oscillographBaseMesh.position.y = 0.1;
+                            oscillographBaseMesh.position.x = window.innerWidth/2;
+                            oscillographBaseMesh.position.y = window.innerHeight/2;
                             group.add(oscillographBaseMesh);
                             // Create OScillograph Geometry
                             var oscillographGeometry = new THREE.BufferGeometry();
@@ -132,7 +133,7 @@
                             }
                             for( var i=0; i<maxOscilloscopeGraphPoints; i++)
                             {
-                                indices_array.push(0,0);   
+                                indices_array.push(0);   
                             }
                             
                             oscillographGeometry.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices_array ), 1 ) );
@@ -142,21 +143,54 @@
                             oscillographGeometry.dynamic = true;
                             var lineMaterial = new THREE.LineBasicMaterial({ vertexColors: true });
                             oscillographMesh = new THREE.Line( oscillographGeometry, lineMaterial, THREE.LinePieces );
-                            oscillographMesh.position.y = 0.05;
                             group.add( oscillographMesh );
                             
                             var positions = oscillographMesh.geometry.getAttribute( 'position' ).array;
                             var indices = oscillographMesh.geometry.getAttribute( 'index' ).array;
+                            var colors = oscillographMesh.geometry.getAttribute( 'color' ).array;
+                            var offsetX = 0;
+                            var offsetY = window.innerHeight/2;
+                            var x = 0; var dx = 2.0;
+                            var l = 0;
                             for( var i=0; i<3*maxOscilloscopeGraphPoints; i+=3 )
                             {
-                                    positions[i] = 0;
-                                    positions[i+1] = 0;
+                                    colors[i] = colors[i+1] = colors[i+2] = 0;
+                                    positions[i] = offsetX + x;
+                                    positions[i+1] = offsetY + amplitude * Math.sin(x/wavelength);
                                     positions[i+2] = 0;
+                                    x += dx;
+                                    indices[2*l] = l;
+                                    indices[2*l+1] = l+1;
+                                    l++;
                             }
+                            oscillographBaseMesh.geometry.needsUpdate = true;
+                            
+                            oscillographMesh.geometry.computeBoundingSphere();
+                            oscillographMesh.geometry.dynamic = true;
+                            oscillographMesh.geometry.attributes.position.needsUpdate = true;
+                            oscillographMesh.geometry.attributes.index.needsUpdate = true;
                         }
                         
                         function updateOscilloscopeGraph()
                         {
+                            var positions = oscillographMesh.geometry.getAttribute( 'position' ).array;
+                            var indices = oscillographMesh.geometry.getAttribute( 'index' ).array;
+                            var colors = oscillographMesh.geometry.getAttribute( 'color' ).array;
+                            var offsetX = 0;
+                            var offsetY = window.innerHeight/2;
+                            var x = 0; var dx = 2.0;
+                            var l = 0;
+                            for( var i=0; i<3*maxOscilloscopeGraphPoints; i+=3 )
+                            {
+                                    colors[i] = colors[i+1] = colors[i+2] = 0;
+                                    positions[i] = offsetX + x;
+                                    positions[i+1] = offsetY + amplitude * Math.sin(x/wavelength);
+                                    positions[i+2] = 0;
+                                    x += dx;
+                                    indices[2*l] = l;
+                                    indices[2*l+1] = l+1;
+                                    l++;
+                            }
                             oscillographBaseMesh.geometry.uvsNeedUpdate = true;
                             oscillographBaseMesh.geometry.needsUpdate = true;
                             
@@ -179,7 +213,7 @@
                         
                         function updatePhysicalBodies() 
                         { 
-                            updateOscilloscopeGraph();
+                            
                         };
                         
 			function initScene() {
@@ -189,9 +223,9 @@
 
 				//camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 100 );
                                 camera = new THREE.OrthographicCamera( 0, window.innerWidth, 0, window.innerHeight, 0.1, 100 );
-                                camera.position.z = -2;
+                                camera.position.z = 3;
 				camera.position.y = 0;
-                                camera.lookAt( new THREE.Vector3(10,-15,0) );
+                                //camera.lookAt( new THREE.Vector3(10,-15,0) );
                                 controls = new THREE.OrbitControls( camera );
                                 controls.addEventListener( 'change', render );
 				// scene

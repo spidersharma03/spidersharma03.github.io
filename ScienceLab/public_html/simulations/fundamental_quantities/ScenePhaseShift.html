@@ -34,9 +34,11 @@
 
 		<script src="../../js/lib/three.js/js/Detector.js"></script>
 		<script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
-
+                <script src="SimplePendulumn.js"></script>
+                
 		<script>
-
+                        
+                        var simplePendulumn = new SimplePendulumn();
 			var container, stats;
                         var pickConstraint = null;
 			var camera, scene, renderer, controls;
@@ -61,7 +63,7 @@
                         
                         var sphereRadius = 0.2;
                         var cradleHeight = 3.0;
-                        var cradleLength = 5.0;
+                        var cradleLength = 7.0;
                         var groundWidth = 1.5*cradleLength;
                         var groundDepth = 1.5*cradleLength;
                         var groundHeight = 0.2;
@@ -80,7 +82,7 @@
                         var sphereMassRadius = 0.2;
                         
                         // Pendulumn
-                        var maxTheta = 30;
+                        var maxTheta = 15;
                         var pendulumnAnchorX = 0;
                         var pendulumnAnchorY = 0;
                         var pendulumnLength = springLength;
@@ -95,6 +97,7 @@
                         var oscillographMesh;
                         var oscillographBaseMesh;
                         var oscillographBaseLength = 5.0;
+                        var oscillographBaseWidth = 5.0;
                         var dt = 0.016;
                         
                         var indices_array = [];
@@ -107,7 +110,7 @@
                         function createOscilloscopeGeometry(group)
                         {
                             // Create quad on to which the oscillations will be recorded.
-                            var oscilloscopeRecordGeometry = new THREE.BoxGeometry(3.0, 0.05,oscillographBaseLength, 1,1,1);
+                            var oscilloscopeRecordGeometry = new THREE.BoxGeometry(oscillographBaseWidth, 0.05,oscillographBaseLength, 1,1,1);
                             var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/graph-paper.jpg");
                             texture.wrapS = THREE.RepeatWrapping;
                             texture.wrapT = THREE.RepeatWrapping;
@@ -130,7 +133,7 @@
                             }
                             for( var i=0; i<maxOscilloscopeGraphPoints; i++)
                             {
-                                indices_array.push(0,0);   
+                                indices_array.push(0);   
                             }
                             
                             oscillographGeometry.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices_array ), 1 ) );
@@ -162,7 +165,7 @@
                             // Add a point in oscilloscopeGraph based upon the position of pendulumn
                             if(currentOscilloscopeGraphPoints < maxOscilloscopeGraphPoints )
                             {
-                                positions[3*currentOscilloscopeGraphPoints] = sphereMassMeshPendulumn.position.x;
+                                positions[3*currentOscilloscopeGraphPoints] = simplePendulumn.position.x;
                                 positions[3*currentOscilloscopeGraphPoints+1] = 0.1;
                                 positions[3*currentOscilloscopeGraphPoints+2] = 0;
 
@@ -282,27 +285,17 @@
                         
                         function updatePhysicalBodies() 
                         {
-                            time += dt;
-                            
-                            // Pendulumn
-                            var theta = maxTheta * Math.sin(time*3) * 3.14/180;
-                            var x = pendulumnLength * Math.sin(theta);
-                            var y = -pendulumnLength * Math.cos(theta);
-                            sphereMassMeshPendulumn.position.y = y;
-                            sphereMassMeshPendulumn.position.x = x;
+                            simplePendulumn.update(dt);
+                            sphereMassMeshPendulumn.position.x = simplePendulumn.position.x;                    
+                            sphereMassMeshPendulumn.position.y = simplePendulumn.position.y;
                             var positions = geometryPendulumnThread.getAttribute( 'position' ).array;
-                            
-                            var body = sphereMassMeshPendulumn;
-                            // Update position
-                            var origin = body.position;
                             // positions
-                            positions[0] = 0;
-                            positions[1] = 0;
+                            positions[0] = simplePendulumn.origin.x;
+                            positions[1] = simplePendulumn.origin.y;
                             positions[2] = 0;
-
-                            positions[3] = origin.x;
-                            positions[4] = origin.y;
-                            positions[5] = origin.z;
+                            positions[3] = simplePendulumn.position.x;
+                            positions[4] = simplePendulumn.position.y;
+                            positions[5] = 0;
 
                             geometryPendulumnThread.dynamic = true;
                             geometryPendulumnThread.attributes.position.needsUpdate = true;
@@ -311,7 +304,6 @@
                         };
                         
 			function initScene() {
-
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 

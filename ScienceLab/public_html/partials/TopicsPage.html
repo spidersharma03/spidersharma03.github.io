@@ -34,8 +34,8 @@
                </h4>
             </div>
             <ul class="list-group" style="margin: 0px; font-weight: 200">
-                <li class="list-group-item" ng-repeat="categoryTopic in categoryTopicsData.topics">
-                    {{categoryTopic.name}}</li>
+                <li class="list-group-item" ng-repeat="categoryTopic in categoryTopicsData.topics" ng-click="onSubTopicClick(categoryTopic.pageLink)">
+                    <a href = "#{{subjectID}}/{{subjectCategory}}/{{Topic}}/{{categoryTopic.pageLink}}">{{categoryTopic.name}}</a></li>
             </ul>
             <div class="panel-footer"><span class="glyphicon glyphicon-circle-arrow-right"></span>   
                 <a href = "#{{categoryTopicsData.Info.subject}}/{{categoryTopicsData.Info.category}}/{{categoryTopicsData.Info.nextTopic}}"> 
@@ -44,7 +44,7 @@
         </div>
 
         <div  class = ' span10' style="overflow-y: scroll; overflow-x: hidden; height: 500px">
-            <div ng-include=" 'partials/periodic_motion.html' ">         
+            <div ng-include=" 'partials/' + SubTopic + '.html' ">         
             </div>
         </div>
           

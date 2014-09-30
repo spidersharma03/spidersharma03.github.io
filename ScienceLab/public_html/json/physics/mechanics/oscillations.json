@@ -15,13 +15,14 @@
         "id": "Mechanics.json", 
         "imageUrl": "", 
         "description": "",
-        "pageLink"  : "periodic_motion.html"
+        "pageLink"  : "periodic_motion"
     },
     {
         "name": "Fundamental Quantities", 
         "id": "Optics.json", 
         "imageUrl": "", 
-        "description": ""
+        "description": "",
+        "pageLink"  : "fundamental_quantities"
     },
     {
         "name": "Harmonic Motion", 

@@ -34,6 +34,23 @@ controllers.controller('SubTopicsLoadController', function ($scope, $routeParams
     $scope.subjectID = $routeParams.subjectID;
     $scope.subjectCategory = $routeParams.subjectCategory;
     $scope.Topic = $routeParams.Topic;
+    
+    contentLoadingServiceAPI.getSubTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase(),$scope.Topic.toLowerCase())
+    .success(function(data) {
+    $scope.categoryTopicsData = data;
+    $scope.SubTopic = $scope.categoryTopicsData.topics[0].pageLink;
+  });
+});
+
+// Loads the data for a given topic, inside a subject category(  physics/mechanics/oscillations, computer science/computer graphics/opengl, etc...)
+controllers.controller('SubTopicsDataLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
+    $scope.subjectID = $routeParams.subjectID;
+    $scope.subjectCategory = $routeParams.subjectCategory;
+    $scope.Topic = $routeParams.Topic;
+    $scope.SubTopic = $routeParams.SubTopic;
+    $scope.onSubTopicClick = function(subTopicPage) {
+        $scope.SubTopic = subTopicPage;
+    };
     contentLoadingServiceAPI.getSubTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase(),$scope.Topic.toLowerCase())
     .success(function(data) {
     $scope.categoryTopicsData = data;

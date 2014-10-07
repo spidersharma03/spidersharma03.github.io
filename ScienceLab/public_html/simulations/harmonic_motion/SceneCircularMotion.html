@@ -1,0 +1,347 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>periodic_motion</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+		</style>
+	</head>
+
+	<body>
+
+		<script src="../../js/lib/three.js/three.js"></script>
+		
+		<script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
+
+		<script src="../../js/lib/three.js/js/Detector.js"></script>
+		<script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+
+		<script>
+
+			var container, stats;
+                        var pickConstraint = null;
+			var camera, scene, renderer, controls;
+
+                        var fov = 70,
+			isUserInteracting = false,
+			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+			lon = 0, onMouseDownLon = 0,
+			lat = 0, onMouseDownLat = 0,
+			phi = 0, theta = 0;
+			
+                        var mouseX = 0, mouseY = 0;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+                        
+                        var cubeMaterial;
+                        var groundMaterial;
+                        var sphereMaterial;
+                        
+                        var boxMesh;
+                        
+                        var sphereRadius = 0.2;
+                        var cradleHeight = 3.0;
+                        var cradleLength = 5.0;
+                        var groundWidth = 1.5*cradleLength;
+                        var groundDepth = 1.5*cradleLength;
+                        var groundHeight = 0.2;
+                                                
+                        var cameraPosition = new THREE.Vector3(0,0,5);
+                        
+                        // Spring-Mass System
+                        var springAmplitude = 0.2;
+                        var springLength = 1.8;
+                        var springRadius = 0.01;
+                        var spiralRadius = 0.08;
+                        var springMesh;
+                        var time = 0.0;
+                        
+                        var sphereMassMesh, sphereMassMeshPendulumn;
+                        var sphereMassRadius = 0.2;
+                        
+                        // Pendulumn
+                        var maxTheta = 30;
+                        var pendulumnAnchorX = 0;
+                        var pendulumnAnchorY = 0;
+                        var pendulumnLength = springLength;
+                        var geometryPendulumnThread;
+                        
+                        // Oscilloscope stuff
+                        var oscilloscopeGraphPoints = [];
+                        var maxOscilloscopeGraphPoints = 700;
+                        var maxOscilloscopeGraphLength = 1.0;
+                        var currentOscilloscopeGraphPoints = 0;
+                        var oscillographMesh;
+                        var oscillographBaseMesh;
+                        var circleDotMesh;
+                        var oscillographBaseLength = 5.0;
+                        var time = 0;
+                        var timePeriod = 0.4; // Time taken to do one revolution.
+                        var dt = (2.0*Math.PI)/60 * timePeriod; // assuming a 60 fps
+                        var oscilloscopeGraphSpeed = 20.0;
+
+                        var indices_array = [];
+                        var positions_array = [];
+                        var colors_array = [];
+                        
+                        var circleRadius = window.innerWidth/3;
+                        var amplitude = circleRadius/2;
+                        var wavelength = 20;
+                        
+                        initScene();
+                        animate();
+                        
+
+                        function createGeometry(group)
+                        {
+                            // Create Quad for Circle
+                            var circleGeometry = new THREE.BoxGeometry(circleRadius, circleRadius,0.1, 1,1,1);
+                            var circleTexture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/circle.jpg");
+                            var circleMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, ambient: 0xffffff, combine:THREE.MixOperation, map:circleTexture } );
+                            circleMesh = new THREE.Mesh( circleGeometry, circleMaterial);
+                            circleMesh.position.x = circleRadius/2;
+                            circleMesh.position.y = window.innerHeight/2;
+                            group.add(circleMesh);
+                            // Create Geometry for moving dot
+                            var circleDotGeometry = new THREE.BoxGeometry(circleRadius/10, circleRadius/10,0.1, 1,1,1);
+                            var circleDotTexture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/reddot.png");
+                            //circleDotTexture.format = THREE.RGBAFormat;
+                            var circleDotMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, ambient: 0xffffff, combine:THREE.MixOperation, map:circleDotTexture, transparent:true } );
+                            circleDotMesh = new THREE.Mesh( circleDotGeometry, circleDotMaterial);
+                            circleDotMesh.position.x = circleRadius/2 + circleRadius/2;
+                            circleDotMesh.position.y = window.innerHeight/2;
+                            circleDotMesh.position.z = 0.001;
+                            group.add(circleDotMesh);
+                            // Create quad on to which the oscillations will be recorded.
+                            var oscilloscopeRecordGeometry = new THREE.BoxGeometry(circleRadius*1.5, circleRadius*1.5,0.01, 1,1,1);
+                            var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/graph_paper.png");
+                            texture.wrapS = THREE.RepeatWrapping;
+                            texture.wrapT = THREE.RepeatWrapping;
+                            
+                            texture.needsUpdate = true;
+                            oscillographBaseMesh = new THREE.Mesh( oscilloscopeRecordGeometry ,new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xaaaaaa, combine:THREE.MixOperation, map:texture,transparent:true  } ));
+                            oscillographBaseMesh.position.z = 0.001;
+                            oscillographBaseMesh.position.x = circleRadius*2;
+                            oscillographBaseMesh.position.y = window.innerHeight/2;
+                            group.add(oscillographBaseMesh);
+                            // Create OScillograph Geometry
+                            var oscillographGeometry = new THREE.BufferGeometry();
+                            oscillographGeometry.dynamic = true;
+                            
+                            for( var i=0; i<maxOscilloscopeGraphPoints; i++)
+                            {
+                                positions_array.push(0,window.innerHeight/2,0);
+                                colors_array.push(0,0,0);
+                            }
+                            for( var i=0; i<maxOscilloscopeGraphPoints; i++)
+                            {
+                                indices_array.push(0);   
+                            }
+                            
+                            var oscillographMeshGroup = new THREE.Object3D();
+                            oscillographGeometry.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices_array ), 1 ) );
+                            oscillographGeometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( positions_array ), 3 ) );
+                            oscillographGeometry.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( colors_array ), 3 ) );
+                            
+                            oscillographGeometry.dynamic = true;
+                            var lineMaterial = new THREE.LineBasicMaterial({ vertexColors: true });
+                            oscillographMesh = new THREE.Line( oscillographGeometry, lineMaterial, THREE.LinePieces );
+                            oscillographMesh.position.y = 0;
+                            oscillographMeshGroup.add(oscillographMesh);
+                            group.add( oscillographMeshGroup );
+                            oscillographMeshGroup.position.x = circleRadius;// + circleRadius/4;
+                            oscillographMeshGroup.position.y = 0;
+                        }
+                        
+                        function updateOscilloscopeGraph()
+                        {
+                            // update Circle Dot. move in a circular path
+                            circleDotMesh.position.x = circleRadius/2 + circleRadius/2 * Math.cos(time);
+                            circleDotMesh.position.y = window.innerHeight/2 + circleRadius/2 * Math.sin(time);
+                            time += dt;
+                            
+                            var positions = oscillographMesh.geometry.getAttribute( 'position' ).array;
+                            var indices = oscillographMesh.geometry.getAttribute( 'index' ).array;
+                            // Cull and shift Points
+                            if( currentOscilloscopeGraphPoints < maxOscilloscopeGraphPoints && positions[0] > circleRadius*1.75 )
+                            {
+                                for( var i=0; i<3*(currentOscilloscopeGraphPoints-1); i+=3 )
+                                {
+                                    positions[i] = positions[i+3];
+                                    positions[i+1] = positions[i+4];
+                                    positions[i+2] = positions[i+5];
+                                }
+                                currentOscilloscopeGraphPoints--;
+                            }
+                            // Add a point in oscilloscopeGraph based upon the position of pendulumn
+                            if(currentOscilloscopeGraphPoints < maxOscilloscopeGraphPoints )
+                            {
+                                positions[3*currentOscilloscopeGraphPoints] = circleRadius/4;
+                                positions[3*currentOscilloscopeGraphPoints+1] = circleDotMesh.position.y;
+                                positions[3*currentOscilloscopeGraphPoints+2] = 0.001;
+
+                                indices[2*currentOscilloscopeGraphPoints] = currentOscilloscopeGraphPoints;
+                                indices[2*currentOscilloscopeGraphPoints+1] = currentOscilloscopeGraphPoints+1;
+                                currentOscilloscopeGraphPoints++;
+                            }
+                            // Update Geometry
+                            // Move the points
+                            for( var i=0; i<3*currentOscilloscopeGraphPoints; i+=3 )
+                            {
+                                positions[i] += oscilloscopeGraphSpeed*dt;
+                            }  
+                            // Move texture coordinates of oscillographBaseMesh
+                            var uv_1 = oscillographBaseMesh.geometry.faceVertexUvs[0][10];
+                            var uv_2 = oscillographBaseMesh.geometry.faceVertexUvs[0][11];
+                            var ds = oscilloscopeGraphSpeed*dt/(circleRadius*1.5);
+                            uv_1[0].x += ds;
+                            uv_1[1].x += ds;
+                            uv_1[2].x += ds;
+                            uv_2[0].x += ds;
+                            uv_2[1].x += ds;
+                            uv_2[2].x += ds;
+                            //uvs[3].y += 0.01;
+                            oscillographBaseMesh.geometry.uvsNeedUpdate = true;
+                            oscillographBaseMesh.geometry.needsUpdate = true;
+                            
+                            oscillographMesh.geometry.computeBoundingSphere();
+                            oscillographMesh.geometry.dynamic = true;
+                            oscillographMesh.geometry.attributes.position.needsUpdate = true;
+                            oscillographMesh.geometry.attributes.index.needsUpdate = true;
+                        }
+                        
+                        // Initialize Geometry
+                        function initGeometry()
+                        {
+                            // Make Root Group
+                            var group = new THREE.Object3D();
+                            scene.add(group);
+                            
+                            // Init Geometry for the Structure
+                            createGeometry(group);
+                        }
+                        
+                        function updatePhysicalBodies() 
+                        { 
+                            updateOscilloscopeGraph();
+                        };
+                        
+			function initScene() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				//camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 100 );
+                                camera = new THREE.OrthographicCamera( 0, window.innerWidth, 0, window.innerHeight, 0.1, 100 );
+                                camera.position.z = 3;
+				camera.position.y = 0;
+                                //camera.lookAt( new THREE.Vector3(10,-15,0) );
+                                controls = new THREE.OrbitControls( camera );
+                                controls.addEventListener( 'change', render );
+				// scene
+
+				scene = new THREE.Scene();				
+				
+				renderer = new THREE.WebGLRenderer({antialias:true});
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+        			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+        			document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+        			document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+        			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+                                initGeometry();
+			}
+                        
+                        function onDocumentMouseMove(event)
+                        {
+                            var pos = camera.position;
+
+                            if( pos.y < 2 )
+                            {
+                                //pos.y = 2;
+                            }
+                        }
+                        
+                        function onDocumentMouseWheel(event)
+                        {
+                            var pos = camera.position;
+                            var d = pos.length();
+                            cameraPosition.x = pos.x;
+                            cameraPosition.y = pos.y;
+                            cameraPosition.z = pos.z;
+                            if( d < 1 )
+                            {
+                               cameraPosition.normalize();
+                               pos.x = cameraPosition.x*1;
+                               pos.y = cameraPosition.y*1;
+                               pos.z = cameraPosition.z*1;
+                            }
+                            if( d > 10 )
+                            {
+                               cameraPosition.normalize();
+                               pos.x = cameraPosition.x*10;
+                               pos.y = cameraPosition.y*10;
+                               pos.z = cameraPosition.z*10;
+                            }
+                            
+                        }
+                        
+                        function onDocumentMouseDown(e)
+                        {                                 
+                        }
+                        
+                        function onDocumentMouseUp(e)
+                        {
+                        }
+                        
+			function onWindowResize() {
+
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+                                controls.update();
+                                updatePhysicalBodies();
+				render();
+			}
+
+			function render() {
+                                renderer.setClearColor( 0xffffff, 1);
+				renderer.render( scene, camera );
+			}
+
+		</script>
+
+	</body>
+</html>

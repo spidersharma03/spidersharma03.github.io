@@ -259,7 +259,6 @@ NewtonCradleSimulation.Constraint.prototype = {
         
         this.body.velocity.x += this.tempVector.x;
         this.body.velocity.y += this.tempVector.y;
-       
     }
 };
 

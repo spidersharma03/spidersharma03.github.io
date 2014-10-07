@@ -1,0 +1,312 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>periodic_motion</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+		</style>
+	</head>
+
+	<body>
+
+		<script src="../../js/lib/three.js/three.js"></script>
+		
+		<script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
+
+		<script src="../../js/lib/three.js/js/Detector.js"></script>
+		<script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+
+		<script>
+
+			var container, stats;
+                        var pickConstraint = null;
+			var camera, scene, renderer, controls;
+
+                        var fov = 70,
+			isUserInteracting = false,
+			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+			lon = 0, onMouseDownLon = 0,
+			lat = 0, onMouseDownLat = 0,
+			phi = 0, theta = 0;
+			
+                        var mouseX = 0, mouseY = 0;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+                        
+                        var cubeMaterial;
+                        var groundMaterial;
+                        var wallMaterial;
+                        var sphereMaterial;
+                        
+                        var boxMesh;
+                        
+                        var tableRadius = 2.4;
+                        var tableHeight = 2.0;
+                        var sphereRadius = 0.2;
+                        var groundWidth = 7.0;
+                        var groundDepth = 7.0;
+                        var groundHeight = 0.2;
+                                                
+                        var cameraPosition = new THREE.Vector3(0,0,5);                        
+                        var sphereMassRadius = 0.2;
+                        
+                        var timePeriod = 0.5; // Time taken to do one revolution.
+                        var dt = (2.0*Math.PI)/60 * timePeriod; // assuming a 60 fps
+                         
+                        var cylSHMGroup;
+                        
+                        initScene();
+                        animate();
+                        
+                        function initStructureGeometry(group)
+                        {
+                            var cylGroup = new THREE.Object3D();
+                            var cyl1 = new THREE.CylinderGeometry(tableRadius/3,tableRadius/3,0.1,15);
+                            var cyl1Mesh = new THREE.Mesh( cyl1, groundMaterial );
+                            cyl1Mesh.castShadow = true;
+                            cyl1Mesh.receiveShadow = true;
+                            cyl1Mesh.position.x += 0;
+                            cyl1Mesh.position.y += 0;
+                            var cyl2 = new THREE.CylinderGeometry(0.2,0.2,tableHeight);
+                            var cyl2Mesh = new THREE.Mesh( cyl2, groundMaterial );
+                            cyl2Mesh.castShadow = true;
+                            cyl2Mesh.receiveShadow = true;
+                            cyl2Mesh.position.x -= 0;
+                            cyl2Mesh.position.y += (tableHeight/2-groundHeight/2);
+                            var cyl3 = new THREE.CylinderGeometry(tableRadius,tableRadius,0.1,30);
+                            var cyl3Mesh = new THREE.Mesh( cyl3, groundMaterial );
+                            cyl3Mesh.castShadow = true;
+                            cyl3Mesh.receiveShadow = true;                  
+                            cylGroup.add( cyl1Mesh );
+                            cylGroup.add( cyl2Mesh );
+                            // Create Geometry for Projecting Shapes( the shadow of this will demonstrate SHM)
+                            var cyl4 = new THREE.CylinderGeometry(0.1,0.1,0.5,10);
+                            var cyl4Mesh = new THREE.Mesh( cyl4, groundMaterial );
+                            cyl4Mesh.position.y += 0.25;
+                            cyl4Mesh.position.x += tableRadius*0.8;
+                            cyl4Mesh.castShadow = true;
+                            cyl4Mesh.receiveShadow = true;
+                            var sphereGeometry = new THREE.SphereGeometry(0.2, 15, 15);
+                            var sphereMesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
+                            sphereMesh.castShadow = true;
+                            sphereMesh.receiveShadow = true;
+                            sphereMesh.position.y += 0.5;
+                            sphereMesh.position.x += tableRadius*0.8;
+                            cylSHMGroup = new THREE.Object3D();
+                            cylSHMGroup.position.y += (tableHeight-groundHeight/2); 
+                            cylSHMGroup.add(cyl3Mesh);
+                            cylSHMGroup.add(cyl4Mesh);
+                            cylSHMGroup.add(sphereMesh);
+                            
+                            cylGroup.add( cylSHMGroup );
+                            cylGroup.position.y += groundHeight/2;
+                            group.add(cylGroup);
+                            
+                            // Base Plane
+                            var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
+                            boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
+                            group.add( boxMesh );
+                            
+                            boxMesh.receiveShadow = true;
+                            boxMesh.castShadow = true;
+                            
+                            // Shadow Wall
+                            var wallGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
+                            var wallMesh = new THREE.Mesh( wallGeometry, wallMaterial );
+                            wallMesh.rotation.z = Math.PI/2;
+                            wallMesh.position.x -= groundWidth/2;
+                            wallMesh.position.y += groundWidth/2;
+                            group.add( wallMesh );
+                            
+                            wallMesh.receiveShadow = true;
+                        }
+                        // Initialize Geometry
+                        function initGeometry()
+                        {
+                            // Make Root Group
+                            var group = new THREE.Object3D();
+                            scene.add(group);
+                            
+                            // Init Geometry for the Structure
+                             initStructureGeometry(group);
+                        }
+                        
+                        function update() 
+                        {
+                            cylSHMGroup.rotation.y += dt;
+                        };
+                        
+			function initScene() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
+				camera.position.z = -5;
+				camera.position.y = 5;
+                                camera.lookAt( new THREE.Vector3(10,-15,0) );
+                                controls = new THREE.OrbitControls( camera );
+                                controls.addEventListener( 'change', render );
+				// scene
+
+				scene = new THREE.Scene();
+                                
+				var ambient = new THREE.AmbientLight( 0x101030 );
+				scene.add( ambient );
+
+				var light = new THREE.DirectionalLight( 0xffeedd );
+				light.position.set( 60, 0, 0 );
+                                var light1 = new THREE.DirectionalLight( 0xffffff );
+                                light1.position.set( 60, 85, 0 );
+                                light.castShadow = true;
+                                light.shadowMapWidth = 1024;
+				light.shadowMapHeight = 1024;
+                                
+                                var d = 5;
+
+				light.shadowCameraLeft = -d;
+				light.shadowCameraRight = d;
+				light.shadowCameraTop = d;
+				light.shadowCameraBottom = -d;
+
+				light.shadowCameraFar = 1000;
+				light.shadowDarkness = 0.5;
+                                scene.add( light );
+                                scene.add( light1 );
+
+				// texture
+
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+
+					console.log( item, loaded, total );
+
+				};
+                                    
+                                var path = "../../js/lib/three.js/textures/cube/pisa/";
+				var format = '.png';
+				var urls = [
+						path + 'px' + format, path + 'nx' + format,
+						path + 'py' + format, path + 'ny' + format,
+						path + 'pz' + format, path + 'nz' + format
+					];
+
+				var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
+				reflectionCube.format = THREE.RGBFormat;   
+                                var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
+                                //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
+                                cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } )
+                                var wallColor = new THREE.Color();
+                                wallColor.setRGB(0.8,0.8,0.8);
+                                var textureWall = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wall.jpg");
+                                wallMaterial = new THREE.MeshBasicMaterial({ color: wallColor, ambient: 0xffffff, combine:THREE.MixOperation, map:textureWall });
+                                groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
+                                sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
+                                
+				renderer = new THREE.WebGLRenderer({antialias:true});
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+        			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+        			document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+        			document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+        			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+                                
+                                renderer.shadowMapEnabled = true;
+                                renderer.shadowMapSoft = true;
+                                
+                                initGeometry();
+			}
+                        
+                        function onDocumentMouseMove(event)
+                        {
+                            var pos = camera.position;
+
+                            if( pos.y < 2 )
+                            {
+                                //pos.y = 2;
+                            }
+                        }
+                        
+                        function onDocumentMouseWheel(event)
+                        {
+                            var pos = camera.position;
+                            var d = pos.length();
+                            cameraPosition.x = pos.x;
+                            cameraPosition.y = pos.y;
+                            cameraPosition.z = pos.z;
+                            if( d < 1 )
+                            {
+                               cameraPosition.normalize();
+                               pos.x = cameraPosition.x*1;
+                               pos.y = cameraPosition.y*1;
+                               pos.z = cameraPosition.z*1;
+                            }
+                            if( d > 10 )
+                            {
+                               cameraPosition.normalize();
+                               pos.x = cameraPosition.x*10;
+                               pos.y = cameraPosition.y*10;
+                               pos.z = cameraPosition.z*10;
+                            }
+                            
+                        }
+                        
+                        function onDocumentMouseDown(e)
+                        {                                 
+                        }
+                        
+                        function onDocumentMouseUp(e)
+                        {
+                        }
+                        
+			function onWindowResize() {
+
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+                                controls.update();
+                                update();
+				render();
+			}
+
+			function render() {
+                                renderer.setClearColor( 0xffffff, 1);
+				renderer.render( scene, camera );
+			}
+
+		</script>
+
+	</body>
+</html>

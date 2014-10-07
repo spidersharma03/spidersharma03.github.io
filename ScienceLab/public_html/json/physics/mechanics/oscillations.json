@@ -28,13 +28,15 @@
         "name": "Harmonic Motion", 
         "id": "Electricity.json", 
         "imageUrl": "",
-        "description": "Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges."
+        "description": "",
+        "pageLink"  : "harmonic_motion"
     },
     {
         "name": "Resonance", 
         "id": "Megnatism.json", 
         "imageUrl": "",
-        "description": "Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets "
+        "description": "",
+        "pageLink"  : "resonance"
     },
     {
         "name": "Frictional Effects", 

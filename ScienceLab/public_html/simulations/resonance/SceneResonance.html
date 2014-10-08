@@ -184,11 +184,11 @@
                             var indicatorGroup = new THREE.Object3D();
                             var cyl4 = new THREE.CylinderGeometry(0.005,0.02,cradleLength/25);
                             var cyl4Mesh = new THREE.Mesh( cyl4, groundMaterial );
-                            cyl4Mesh.position.y += 0.2;
+                            cyl4Mesh.position.y += 0.15;
                             cyl4Mesh.castShadow = true;
                             cyl4Mesh.receiveShadow = true;
                             var cyl5Mesh = new THREE.Mesh( cyl4, groundMaterial );
-                            cyl5Mesh.position.y -= 0.2;
+                            cyl5Mesh.position.y -= 0.15;
                             cyl5Mesh.rotation.z = Math.PI;
                             cyl5Mesh.castShadow = true;
                             cyl5Mesh.receiveShadow = true;
@@ -235,7 +235,7 @@
                             var ox = cylGroupForceOscillation.position.x;
                             var oy = cylGroupForceOscillation.position.y;
                             var radius = 0.1; var maxTheta = Math.PI/18;
-                            var theta = maxTheta * Math.sin(time*4.5);
+                            var theta = maxTheta * Math.sin(time*3.5);
                             oscillatingPoint.x = ox + radius * Math.sin(theta);
                             oscillatingPoint.y = oy - radius * Math.cos(theta);
                             for( var i=0; i<numPendulumns; i++ ) {

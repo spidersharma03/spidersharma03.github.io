@@ -103,7 +103,8 @@
                         
                         var numPendulumns = 25;
                         var simplePendulumn = [];
-                        var cyl3MeshForcedOscillation;
+                        var cylGroupForceOscillation;
+                        var pendulumnInterval = sphereMassRadius*2.3;
                         
                         initScene();
                         animate();
@@ -111,19 +112,19 @@
                         function initPendulumnSystem()
                         {
                             // Create Pendulumns
-                            var x = 0; var dx = sphereMassRadius*2.3;
-                            x = cyl3MeshForcedOscillation.position.x;
-                            x -= numPendulumns/2 * dx;
+                            var x = 0;
+                            x = cylGroupForceOscillation.position.x;
+                            x -= numPendulumns/2 * pendulumnInterval;
                             var pendulumnOrigin = new THREE.Vector2();
-                            pendulumnOrigin.y = cyl3MeshForcedOscillation.position.y;
+                            pendulumnOrigin.y = cylGroupForceOscillation.position.y;
                             var length = 2.0;
                             var dl = length/(numPendulumns+3);
                             for( var i=0; i<numPendulumns; i++ ) {
                                 simplePendulumn[i] = new SimplePendulumn(length, pendulumnOrigin);
                                 simplePendulumn[i].offset = x;
-                                x += dx;
+                                x += pendulumnInterval;
                                 length -= dl;
-                                //simplePendulumn[i].velocity.x = 2.0;
+                                simplePendulumn[i].velocity.x = 2.0;
                             }
                             var material = new THREE.LineBasicMaterial({ vertexColors: true });
                             var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
@@ -158,6 +159,7 @@
                         function initStructureGeometry(group)
                         {
                             var cylGroup = new THREE.Object3D();
+                            group.add(cylGroup);
                             var cyl1 = new THREE.CylinderGeometry(0.2,0.2,cradleHeight);
                             var cyl1Mesh = new THREE.Mesh( cyl1, groundMaterial );
                             cyl1Mesh.castShadow = true;
@@ -170,17 +172,42 @@
                             cyl2Mesh.receiveShadow = true;
                             cyl2Mesh.position.x -= cradleLength/2;
                             cyl2Mesh.position.y += cradleHeight/2;
-                            var cyl3 = new THREE.CylinderGeometry(0.15,0.15,cradleLength);
-                            cyl3MeshForcedOscillation = new THREE.Mesh( cyl3, groundMaterial );
-                            cyl3MeshForcedOscillation.castShadow = true;
-                            cyl3MeshForcedOscillation.receiveShadow = true;
-                            cyl3MeshForcedOscillation.position.y += cradleHeight;                   
-                            cyl3MeshForcedOscillation.rotation.z = 3.14/2;
                             cylGroup.add( cyl1Mesh );
                             cylGroup.add( cyl2Mesh );
-                            cylGroup.add( cyl3MeshForcedOscillation );
                             
-                            group.add(cylGroup);
+                            var cyl3 = new THREE.CylinderGeometry(0.1,0.1,cradleLength);
+                            var cyl3MeshForcedOscillation = new THREE.Mesh( cyl3, groundMaterial );
+                            cyl3MeshForcedOscillation.castShadow = true;
+                            cyl3MeshForcedOscillation.receiveShadow = true;                  
+                            cyl3MeshForcedOscillation.rotation.z = Math.PI/2;
+                            
+                            var indicatorGroup = new THREE.Object3D();
+                            var cyl4 = new THREE.CylinderGeometry(0.005,0.02,cradleLength/25);
+                            var cyl4Mesh = new THREE.Mesh( cyl4, groundMaterial );
+                            cyl4Mesh.position.y += 0.2;
+                            cyl4Mesh.castShadow = true;
+                            cyl4Mesh.receiveShadow = true;
+                            var cyl5Mesh = new THREE.Mesh( cyl4, groundMaterial );
+                            cyl5Mesh.position.y -= 0.2;
+                            cyl5Mesh.rotation.z = Math.PI;
+                            cyl5Mesh.castShadow = true;
+                            cyl5Mesh.receiveShadow = true;
+                            indicatorGroup.add(cyl4Mesh);
+                            indicatorGroup.add(cyl5Mesh);
+                            
+                            cylGroupForceOscillation = new THREE.Object3D();
+                            cylGroupForceOscillation.position.y += cradleHeight; 
+                            cylGroupForceOscillation.add(cyl3MeshForcedOscillation);
+                            group.add(cylGroupForceOscillation);
+                            
+                            var x = -pendulumnInterval/2;
+                            x -= numPendulumns/2 * pendulumnInterval;
+                            for( var i=0; i<numPendulumns; i++ ) {
+                                var indicatorGroupClone = indicatorGroup.clone();
+                                indicatorGroupClone.position.x = x;
+                                cylGroupForceOscillation.add(indicatorGroupClone);
+                                x += pendulumnInterval;
+                            }
                             
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
@@ -205,17 +232,17 @@
                         
                         function updateOscilatingPivot()
                         {
-                            var ox = cyl3MeshForcedOscillation.position.x;
-                            var oy = cyl3MeshForcedOscillation.position.y;
+                            var ox = cylGroupForceOscillation.position.x;
+                            var oy = cylGroupForceOscillation.position.y;
                             var radius = 0.1; var maxTheta = Math.PI/18;
-                            var theta = maxTheta * Math.sin(time*2.5);
+                            var theta = maxTheta * Math.sin(time*4.5);
                             oscillatingPoint.x = ox + radius * Math.sin(theta);
                             oscillatingPoint.y = oy - radius * Math.cos(theta);
                             for( var i=0; i<numPendulumns; i++ ) {
                                 simplePendulumn[i].setOrigin(oscillatingPoint);
                                 simplePendulumn[i].velocity.x += (theta)*0.05;
                             }
-                            cyl3MeshForcedOscillation.rotation.x = -theta;
+                            cylGroupForceOscillation.rotation.x = -theta;
                             time += dt;
                         }
                         

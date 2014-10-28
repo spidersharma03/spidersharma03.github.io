@@ -46,8 +46,12 @@
         </ul>
       </div>
     </div>
+    <script>
+        function callMe(value) {
+            document.getElementById('embedFrame').contentWindow.changeNumPendulumns(value);
+        }
+    </script>
     
-
     <div ng-view> </div>
     
 <!--    <div id="wrap">

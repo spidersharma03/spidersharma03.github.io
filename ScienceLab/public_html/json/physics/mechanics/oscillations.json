@@ -32,6 +32,13 @@
         "pageLink"  : "harmonic_motion"
     },
     {
+        "name": "Pendulumn Dynamics", 
+        "id": "Electricity.json", 
+        "imageUrl": "",
+        "description": "",
+        "pageLink"  : "pendulumn_dynamics"
+    },
+    {
         "name": "Resonance", 
         "id": "Megnatism.json", 
         "imageUrl": "",

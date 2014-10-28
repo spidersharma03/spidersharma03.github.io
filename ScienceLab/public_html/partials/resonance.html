@@ -33,7 +33,9 @@ and open the template in the editor.
             <iframe id="embedFrame" style="width:100%; height:200px;" src="simulations/harmonic_motion/SceneShadowProjector.html"></iframe>
         </div>
          <div class = "well span5" style=" background-color: gainsboro">
-            <iframe id="embedFrame" style="width:100%; height:200px;" src="simulations/resonance/SceneResonance.html"></iframe>
+            <iframe id="resonanceFrame" style="width:100%; height:200px;" src="simulations/resonance/SceneResonance.html"></iframe>
+            <input type="range" min="2" max="4" step ="0.4" onchange="(function(){document.getElementById('resonanceFrame').contentWindow.changeForceFrequency(value)})(value)">
+            <input type="range" min="0.0" max="0.5" step ="0.1" onchange="(function(){document.getElementById('resonanceFrame').contentWindow.changeSystemDamping(value)})(value)">
         </div>
     </div>
 </div>

@@ -36,7 +36,7 @@
 
 		<script src="../js/lib/three.js/js/Detector.js"></script>
 		<script src="../js/lib/three.js/js/libs/stats.min.js"></script>
-
+                
 		<script>
 
 			var container, stats;
@@ -83,7 +83,27 @@
                         animate();
                         //initPhysics();
                         //updatePhysicalBodies();
-                        // Initialize Cradle Geometry
+                        
+                        function changeNumPendulumns(value)
+                        {
+                            // reset all the pendulumns
+                            var x = -cradleLength/2+0.5;
+                            for( var i=0; i<numSpheres; i++)
+                            {
+                                var sphereBody = NewtonCradleSimulation.bodies[i];
+                                sphereBody.velocity.x = 0;
+                                sphereBody.position.x = x;
+                                sphereBody.position.y = 1.0;
+                                sphereBody.position.z = 0;
+                                x += sphereRadius*1.9;
+                            }
+                            // give impulse
+                            for( var i=0; i<value; i++ ) {
+                                var body = NewtonCradleSimulation.bodies[i];
+                                body.velocity.x = -3;
+                            }
+                        }
+                        
                         function initCradleGeometry()
                         {
                             // Make Root Group
@@ -260,7 +280,7 @@
                                 x += sphereRadius*1.9;
                                 if( i === 0 || i===1 || i === 2 )
                                 {
-                                    sphereBody.velocity.x = -3;
+                                    //sphereBody.velocity.x = -3;
                                 }
                                 if( i === numSpheres-1 )
                                 {
@@ -485,6 +505,6 @@
 			}
 
 		</script>
-
+                
 	</body>
 </html>

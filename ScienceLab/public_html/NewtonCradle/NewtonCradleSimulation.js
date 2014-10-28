@@ -14,7 +14,7 @@ NewtonCradleSimulation = function(N)
     this.e = 1.0;
     this.numIterations = 0;
     this.numPendulumns = N;
-    
+    this.solverMethod = 0;
 };
 
 var NewtonCradleSimulation = new NewtonCradleSimulation(10);
@@ -102,7 +102,7 @@ NewtonCradleSimulation.integrate = function(dt)
     {
         var body = this.bodies[i];
         body.velocity.y += this.gravity * dt;
-        
+         
         body.position.x += body.velocity.x * dt;
         body.position.y += body.velocity.y * dt;
     }
@@ -251,9 +251,6 @@ NewtonCradleSimulation.Constraint.prototype = {
         
         var vel = this.body.velocity;
         var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y;
-        
-        //this.body.position.x += this.tempVector.x * error;
-        //this.body.position.y += this.tempVector.y * error;
         
         this.tempVector.multiplyScalar(-vDotN + error);
         

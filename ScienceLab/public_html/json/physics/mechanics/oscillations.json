@@ -61,7 +61,7 @@
         "name": "Shape of Periodic Oscillations", 
         "id": "Modern Physics.json", 
         "imageUrl": "", 
-        "description": "If you understand Quantum mechanics, Relativity theory easily, then you probably don't understand them."
+        "pageLink"  : "harmonic_composition"
     }
 ]
 }

@@ -4,49 +4,59 @@
 	<head>
 		<title>periodic_motion</title>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
                 <script src="../../js/lib/vis/vis.js"></script>
                 <link href="../../js/lib/vis/vis.css" rel="stylesheet" type="text/css" />
 	</head>
 	<body>
                 
-                <div id="visualization"></div>
+            <div id="visualization" style="background-color: white"></div>
 
-                <script type="text/javascript">
+            <script type="text/javascript">
                     var container = document.getElementById('visualization');
                     var dataset = new vis.DataSet();
                     
+                    var amplitude = 0.5;
+                    var wavelength = 10*2*Math.PI;
                      // a function to generate data points
                     function func(x) {
-                      return Math.sin(x / 2);
+                      return amplitude*Math.sin(2*Math.PI*x/wavelength);
                     }
                     
                     function initGraph() {
-                        for( var i=0; i<100; i++ ) {
+                        for( var i=0; i<2*Math.PI*200; i++ ) {
                         dataset.add({
                             x: i,
-                            y: func(i)
+                            y: func(i/(2*Math.PI))
                           });
                       }
                     }
                     
                     initGraph();
                     var options = {
+                        graphWidth:  container.clientWidth,
+                        graphHeight: container.clientWidth*0.5,
+                        showCurrentTime:false,
+                        zoomMin:2*Math.PI*200,
+                        zoomMax:2*Math.PI*200,
                         //start: vis.moment().add(-30, 'seconds'), // changed so its faster
                         //end: vis.moment(),
                         dataAxis: {
                           customRange: {
                             left: {
-                              min:-1, max: 1
-                            }
-                          }
+                              min:-0.75, max: 0.75,
+                            },
+                          },
+                          //showMajorLabels:true,
+                          //showMinorLabels:true,
+                          visible:false
                         },
                         drawPoints: {
-                          style: 'circle' // square, circle
+                          enabled: false
                         },
-                        shaded: {
-                          orientation: 'bottom' // top, bottom
-                        }
+//                        shaded: {
+//                          orientation: 'bottom' // top, bottom
+//                        }
                     };
                     var graph2d = new vis.Graph2d(container, dataset, options);
                     

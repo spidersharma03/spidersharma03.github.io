@@ -1,407 +1,392 @@
 
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>periodic_motion</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<style>
-			body {
-				font-family: Monospace;
-				background-color: #000;
-				color: #fff;
-				margin: 0px;
-				overflow: hidden;
-			}
-			#info {
-				color: #fff;
-				position: absolute;
-				top: 10px;
-				width: 100%;
-				text-align: center;
-				z-index: 100;
-				display:block;
-			}
-			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
-		</style>
-	</head>
+    <head>
+        <title>periodic_motion</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <script src="../../js/lib/dyGraph/dygraph-combined.js"></script>
+        <script src="../../js/lib/three.js/three.js"></script>
+        <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
+        <script src="../../js/lib/three.js/js/Detector.js"></script>
+        <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+    </head>
 
-	<body>
+    <body>
+        <div id="spectrum" style="background-color: white; height: 200px"></div>
+        <div id="composition" style="background-color: white; height: 200px"></div>
 
-		<script src="../../js/lib/three.js/three.js"></script>
-		
-		<script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
+        <script type="text/javascript">
+            var containerComposition = document.getElementById('composition');
+            var containerSpectrum = document.getElementById('spectrum');
 
-		<script src="../../js/lib/three.js/js/Detector.js"></script>
-		<script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+            var fundamentalFrequency = 1 / 500;
+            var nHarmonics = 4;
+            var amplitude = [0.5, 0.25, 0.125, 0.125];
+            var mixed = [];
+            var bars = [];
+            var harmonicsData = [];
+            var gHarmonics = [];
 
-		<script>
+            function harmonic(x, n, amplitude) {
+                return amplitude * Math.sin(x * fundamentalFrequency * n * (2 * Math.PI));
+            }
 
-			var container, stats;
-                        var pickConstraint = null;
-			var camera, scene, renderer, controls;
+            // Add(Composite) Harmonics
+            function compositeHarmonics(x) {
+                var sum = 0;
+                for (var i = 1; i <= nHarmonics; i++) {
+                    sum += harmonic(x, i, amplitude[i - 1]);
+                }
+                return sum;
+            }
 
-                        var fov = 70,
-			isUserInteracting = false,
-			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
-			lon = 0, onMouseDownLon = 0,
-			lat = 0, onMouseDownLat = 0,
-			phi = 0, theta = 0;
-			
-                        var mouseX = 0, mouseY = 0;
+            function initGraph() {
+                for (var i = 0; i < 2 * Math.PI * 100; i++) {
+                    mixed.push([i, compositeHarmonics(i)]);
+                }
+                for (var i = 0; i < 2 * Math.PI * 100; i++) {
+                    harmonicsData[i] = [i];
+                }
+                for (var i = 0; i < 2 * Math.PI * 100; i++) {
+                    for (var j = 0; j < nHarmonics; j++) {
+                        harmonicsData[i][j + 1] = harmonic(i, j + 1, amplitude[j]);
+                    }
+                }
+                for (var i = 0; i < 2 * Math.PI * 100; i++) {
+                    harmonicsData[i][nHarmonics + 1] = compositeHarmonics(i);
+                }
+                bars.push([0, 0]);
+                for (var i = 1; i <= nHarmonics; i++) {
+                    bars.push([i, amplitude[i - 1]]);
+                }
+                bars.push([nHarmonics + 1, 0.0]);
+            }
 
-			var windowHalfX = window.innerWidth / 2;
-			var windowHalfY = window.innerHeight / 2;
-                        
-                        var cubeMaterial;
-                        var groundMaterial;
-                        var sphereMaterial;
-                        
-                        var boxMesh;
-                        
-                        var sphereRadius = 0.2;
-                        var cradleHeight = 3.0;
-                        var cradleLength = 5.0;
-                        var groundWidth = 1.5*cradleLength;
-                        var groundDepth = 1.5*cradleLength;
-                        var groundHeight = 0.2;
-                                                
-                        var cameraPosition = new THREE.Vector3(0,0,5);
-                        
-                        // Spring-Mass System
-                        var springAmplitude = 0.2;
-                        var springLength = 1.8;
-                        var springRadius = 0.01;
-                        var spiralRadius = 0.08;
-                        var springMesh;
-                        var time = 0.0;
-                        
-                        var sphereMassMesh, sphereMassMeshPendulumn;
-                        var sphereMassRadius = 0.2;
-                        
-                        // Pendulumn
-                        var maxTheta = 30;
-                        var pendulumnAnchorX = 0;
-                        var pendulumnAnchorY = 0;
-                        var pendulumnLength = springLength;
-                        var geometryPendulumnThread;
-                        
-                        init();
-                        animate();
-                        
-                        function initSpringMassSystem()
-                        {
-                            // Create SphereMass
-                            var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
-                            sphereMassMesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
-                            sphereMassMesh.castShadow = true;
-                            sphereMassMesh.receiveShadow = true;
-                            
-                            // Make group for Spring-Mass System
-                            var groupSpringMass = new THREE.Object3D();
-                            groupSpringMass.position.y = cradleHeight - springLength;
-                            scene.add(groupSpringMass);
-                            // Make Geometry for Spring
-                            var helixPoints = [];
-                            var theta = 0;
-                            for ( var i = 0; i < 500; i ++ ) {
-                                    var x = spiralRadius * Math.cos(theta*50);
-                                    var z = spiralRadius * Math.sin(theta*50);
-                                    var y = theta;
-                                    theta += springLength/500;
-                                    helixPoints.push( new THREE.Vector3( x, y, z) );
+            initGraph();
+
+            // This function draws bars for a single series. See
+            // multiColumnBarPlotter below for a plotter which can draw multi-series
+            // bar charts.
+            function barChartPlotter(e) {
+                var ctx = e.drawingContext;
+                var points = e.points;
+                var y_bottom = e.dygraph.toDomYCoord(0);
+
+                // The RGBColorParser class is provided by rgbcolor.js, which is
+                // packed in with dygraphs.
+                var color = new RGBColorParser(e.color);
+                color.r = Math.floor((255 + color.r) / 2);
+                color.g = Math.floor((255 + color.g) / 2);
+                color.b = Math.floor((255 + color.b) / 2);
+                ctx.fillStyle = color.toRGB();
+
+                // Find the minimum separation between x-values.
+                // This determines the bar width.
+                var min_sep = Infinity;
+                for (var i = 1; i < points.length; i++) {
+                    var sep = points[i].canvasx - points[i - 1].canvasx;
+                    if (sep < min_sep)
+                        min_sep = sep;
+                }
+                var bar_width = Math.floor(1.0 / 3 * min_sep);
+
+                // Do the actual plotting.
+                for (var i = 0; i < points.length; i++) {
+                    var p = points[i];
+                    var center_x = p.canvasx;
+
+                    ctx.fillRect(center_x - bar_width / 2, p.canvasy,
+                            bar_width, y_bottom - p.canvasy);
+
+                    ctx.strokeRect(center_x - bar_width / 2, p.canvasy,
+                            bar_width, y_bottom - p.canvasy);
+                }
+            }
+
+            var labels = ['x'];
+            for (var i = 0; i < nHarmonics + 1; ++i) {
+                var label = '' + i;
+                label = 's' + '000'.substr(label.length) + label;
+                labels[i + 1] = label;
+            }
+
+            var g = new Dygraph(
+                    containerComposition,
+                    harmonicsData,
+                    {
+                        animatedZooms: true,
+                        series: {
+                            's000': {
+                                strokeWidth: 0.1
+                            },
+                            's001': {
+                                strokeWidth: 0.1
+                            },
+                            's002': {
+                                strokeWidth: 0.1
+                            },
+                            's003': {
+                                strokeWidth: 0.1
+                            },
+                            's004': {
+                                strokeWidth: 1.0
                             }
-			    var helixSpline =  new THREE.SplineCurve3( helixPoints );
-                            var extrudeSettings = {
-                                    steps		: 100,
-                                    bevelEnabled	: false,
-                                    extrudePath		: helixSpline
-                            };
-                            // Create
-                            var pts = [], count = 10;
-                            for ( var i = 0; i < count; i ++ ) {
-                                    var a = 2 * i / count * Math.PI;
-                                    pts.push( new THREE.Vector2 ( Math.cos( a ) * springRadius, Math.sin( a ) * springRadius ) );
-                            }
-                            var shape = new THREE.Shape( pts );
+                        },
+                        labels: labels.slice(),
+                        strokeWidth: 0.2,
+                        strokePattern: Dygraph.DASHED_LINE});
 
-                            var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-                            var material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: false } );
-                            springMesh = new THREE.Mesh( geometry, groundMaterial );
-                            
-                            springMesh.castShadow = true;
-                            springMesh.receiveShadow = true;
-                            groupSpringMass.add( springMesh );
-                            groupSpringMass.add( sphereMassMesh );
-                        }
-                        
-                        function initPendulumnSystem()
-                        {
-                            // Create SphereMass
-                            var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
-                            sphereMassMeshPendulumn = new THREE.Mesh( sphereGeometry, sphereMaterial );
-                            sphereMassMeshPendulumn.castShadow = true;
-                            sphereMassMeshPendulumn.receiveShadow = true;
-                             // Make group for Pendulumn System
-                            var groupPendulumn = new THREE.Object3D();
-                            groupPendulumn.position.y = cradleHeight;
-                            groupPendulumn.position.x = -1.5;
-                            scene.add(groupPendulumn);
-                            groupPendulumn.add(sphereMassMeshPendulumn);
-                            
-                            // Suspension Threads
-                            geometryPendulumnThread = new THREE.BufferGeometry();
-                            var material = new THREE.LineBasicMaterial({ vertexColors: true });
-                            geometryPendulumnThread.dynamic = true;
-                            
-                            geometryPendulumnThread.addAttribute( 'position', new Float32Array( 6 ), 3 );
-                            geometryPendulumnThread.addAttribute( 'color', new Float32Array( 6 ), 3 );
+//            var gSpectrum = new Dygraph(
+//                    containerSpectrum,
+//                    bars, {labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
+//            );
 
-                            var colors = geometryPendulumnThread.getAttribute( 'color' ).array;
-                            for ( var i = 0; i < 2; i ++ ) {
-                                // colors
-                               colors[ i * 3 ] = 0;
-                               colors[ i * 3 + 1 ] = 0;
-                               colors[ i * 3 + 2 ] = 0;
-                            }
+            var pickConstraint = null;
+            var camera, scene, renderer, controls;
 
-                            mesh = new THREE.Line( geometryPendulumnThread, material, THREE.Line );
-                            mesh.castShadow = true;
-                            mesh.receiveShadow = true;
-                            groupPendulumn.add( mesh );
-                        }
-                        
-                        function initStructureGeometry(group)
-                        {
-                             var cylGroup = new THREE.Object3D();
-                            var cyl1 = new THREE.CylinderGeometry(0.2,0.2,cradleHeight);
-                            var cyl1Mesh = new THREE.Mesh( cyl1, groundMaterial );
-                            cyl1Mesh.castShadow = true;
-                            cyl1Mesh.receiveShadow = true;
-                            cyl1Mesh.position.x += cradleLength/2;
-                            cyl1Mesh.position.y += cradleHeight/2;
-                            var cyl2 = new THREE.CylinderGeometry(0.2,0.2,cradleHeight);
-                            var cyl2Mesh = new THREE.Mesh( cyl2, groundMaterial );
-                            cyl2Mesh.castShadow = true;
-                            cyl2Mesh.receiveShadow = true;
-                            cyl2Mesh.position.x -= cradleLength/2;
-                            cyl2Mesh.position.y += cradleHeight/2;
-                            var cyl3 = new THREE.CylinderGeometry(0.15,0.15,cradleLength);
-                            var cyl3Mesh = new THREE.Mesh( cyl3, groundMaterial );
-                            cyl3Mesh.castShadow = true;
-                            cyl3Mesh.receiveShadow = true;
-                            cyl3Mesh.position.y += cradleHeight;                   
-                            cyl3Mesh.rotation.z = 3.14/2;
-                            cylGroup.add( cyl1Mesh );
-                            cylGroup.add( cyl2Mesh );
-                            cylGroup.add( cyl3Mesh );
-                            
-                            group.add(cylGroup);
-                            
-                            // Base Plane
-                            var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
-                            boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
-                            group.add( boxMesh );
-                            
-                            boxMesh.castShadow = true;
-                            boxMesh.receiveShadow = true;
-                        }
-                        // Initialize Geometry
-                        function initGeometry()
-                        {
-                            // Make Root Group
-                            var group = new THREE.Object3D();
-                            scene.add(group);
-                           
-                            // Create Geometry for spring mass
-                             initSpringMassSystem();
-                            // Create Geometry for Pendulumn
-                             initPendulumnSystem();
-                            // Init Geometry for the Structure
-                             initStructureGeometry(group);
-                        }
-                        
-                        function updatePhysicalBodies() 
-                        {
-                            time += 0.016;
-                            
-                            // Spring Mass
-                            var springScale = 1.0 + springAmplitude * Math.sin(time*3);
-                            springMesh.scale.y = springScale;
-                            springMesh.position.y = springLength * (1.0 - springScale);
-                            sphereMassMesh.position.y = springMesh.position.y;
-                            
-                            // Pendulumn
-                            var theta = maxTheta * Math.sin(time*3) * 3.14/180;
-                            var x = pendulumnLength * Math.sin(theta);
-                            var y = -pendulumnLength * Math.cos(theta);
-                            sphereMassMeshPendulumn.position.y = y;
-                            sphereMassMeshPendulumn.position.z = x;
-                            var positions = geometryPendulumnThread.getAttribute( 'position' ).array;
-                            
-                            var body = sphereMassMeshPendulumn;
-                            // Update position
-                            var origin = body.position;
-                            // positions
-                            positions[0] = 0;
-                            positions[1] = 0;
-                            positions[2] = 0;
+            var fov = 70,
+            isUserInteracting = false,
+            onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+            lon = 0, onMouseDownLon = 0,
+            lat = 0, onMouseDownLat = 0,
+            phi = 0, theta = 0;
 
-                            positions[3] = origin.x;
-                            positions[4] = origin.y;
-                            positions[5] = origin.z;
+            var mouseX = 0, mouseY = 0;
 
-                            geometryPendulumnThread.dynamic = true;
-                            geometryPendulumnThread.attributes.position.needsUpdate = true;
-                        };
-                        
-			function init() {
+            var windowHalfX = window.innerWidth / 2;
+            var windowHalfY = window.innerHeight / 2;
 
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
+            var cubeMaterial;
+            var groundMaterial;
+            var sphereMaterial;
 
-				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
-				camera.position.z = -5;
-				camera.position.y = 5;
-                                camera.lookAt( new THREE.Vector3(10,-15,0) );
-                                controls = new THREE.OrbitControls( camera );
-                                controls.addEventListener( 'change', render );
-				// scene
+            var boxMesh;
 
-				scene = new THREE.Scene();
-                                
-				var ambient = new THREE.AmbientLight( 0x101030 );
-				scene.add( ambient );
+            var sphereRadius = 0.2;
+            var cradleHeight = 3.0;
+            var cradleLength = 5.0;
+            var groundWidth = 1.5 * cradleLength;
+            var groundDepth = 1.5 * cradleLength;
+            var groundHeight = 0.2;
 
-				var light = new THREE.DirectionalLight( 0xffeedd );
-				light.position.set( 50, 200, -100 );
-                                //var light1 = new THREE.SpotLight( 0xffffff );
-                                //light1.position.set( 85, 85, 85 );
-                                //light1.target.position.set(0, 0, 0 );
-                                light.castShadow = true;
-                                light.shadowMapWidth = 1024;
-				light.shadowMapHeight = 1024;
-                                
-                                var d = 5;
+            var cameraPosition = new THREE.Vector3(0, 0, 5);
 
-				light.shadowCameraLeft = -d;
-				light.shadowCameraRight = d;
-				light.shadowCameraTop = d;
-				light.shadowCameraBottom = -d;
+            // Spring-Mass System
+            var springAmplitude = 0.2;
+            var springLength = 1.8;
+            var springRadius = 0.01;
+            var spiralRadius = 0.08;
+            var springMesh;
+            var time = 0.0;
 
-				light.shadowCameraFar = 1000;
-				light.shadowDarkness = 0.5;
-                                scene.add( light );
+            var sphereMassMesh, sphereMassMeshPendulumn;
+            var sphereMassRadius = 0.2;
 
-				// texture
+            // Pendulumn
+            var maxTheta = 30;
+            var pendulumnAnchorX = 0;
+            var pendulumnAnchorY = 0;
+            var pendulumnLength = springLength;
+            var geometryPendulumnThread;
 
-				var manager = new THREE.LoadingManager();
-				manager.onProgress = function ( item, loaded, total ) {
+            function initPendulumnSystem()
+            {
+                // Create SphereMass
+                var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
+                sphereMassMeshPendulumn = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                sphereMassMeshPendulumn.castShadow = true;
+                sphereMassMeshPendulumn.receiveShadow = true;
+                // Make group for Pendulumn System
+                var groupPendulumn = new THREE.Object3D();
+                groupPendulumn.position.y = cradleHeight;
+                groupPendulumn.position.x = -1.5;
+                scene.add(groupPendulumn);
+                groupPendulumn.add(sphereMassMeshPendulumn);
 
-					console.log( item, loaded, total );
+                // Suspension Threads
+                geometryPendulumnThread = new THREE.BufferGeometry();
+                var material = new THREE.LineBasicMaterial({vertexColors: true});
+                geometryPendulumnThread.dynamic = true;
 
-				};
-                                    
-                                var path = "../../js/lib/three.js/textures/cube/pisa/";
-				var format = '.png';
-				var urls = [
-						path + 'px' + format, path + 'nx' + format,
-						path + 'py' + format, path + 'ny' + format,
-						path + 'pz' + format, path + 'nz' + format
-					];
+                geometryPendulumnThread.addAttribute('position', new Float32Array(6), 3);
+                geometryPendulumnThread.addAttribute('color', new Float32Array(6), 3);
 
-				var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
-				reflectionCube.format = THREE.RGBFormat;    
-                                var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
-                                //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
-                                cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } )
-                                groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
-                                sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
-                                
-				renderer = new THREE.WebGLRenderer({antialias:true});
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				container.appendChild( renderer.domElement );
+                var colors = geometryPendulumnThread.getAttribute('color').array;
+                for (var i = 0; i < 2; i++) {
+                    // colors
+                    colors[ i * 3 ] = 0;
+                    colors[ i * 3 + 1 ] = 0;
+                    colors[ i * 3 + 2 ] = 0;
+                }
 
-        			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-        			document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-        			document.addEventListener( 'mouseup', onDocumentMouseUp, false );
-        			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
+                mesh = new THREE.Line(geometryPendulumnThread, material, THREE.Line);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                groupPendulumn.add(mesh);
+            }
 
-				window.addEventListener( 'resize', onWindowResize, false );
-                                
-                                renderer.shadowMapEnabled = true;
-                                renderer.shadowMapSoft = true;
-                                
-                                initGeometry();
-			}
-                        
-                        function onDocumentMouseMove(event)
-                        {
-                            var pos = camera.position;
+            function initStructureGeometry(group)
+            {
+                var cylGroup = new THREE.Object3D();
+                var cyl1 = new THREE.CylinderGeometry(0.2, 0.2, cradleHeight);
+                var cyl1Mesh = new THREE.Mesh(cyl1, groundMaterial);
+                cyl1Mesh.castShadow = true;
+                cyl1Mesh.receiveShadow = true;
+                cyl1Mesh.position.x += cradleLength / 2;
+                cyl1Mesh.position.y += cradleHeight / 2;
+                var cyl2 = new THREE.CylinderGeometry(0.2, 0.2, cradleHeight);
+                var cyl2Mesh = new THREE.Mesh(cyl2, groundMaterial);
+                cyl2Mesh.castShadow = true;
+                cyl2Mesh.receiveShadow = true;
+                cyl2Mesh.position.x -= cradleLength / 2;
+                cyl2Mesh.position.y += cradleHeight / 2;
+                var cyl3 = new THREE.CylinderGeometry(0.15, 0.15, cradleLength);
+                var cyl3Mesh = new THREE.Mesh(cyl3, groundMaterial);
+                cyl3Mesh.castShadow = true;
+                cyl3Mesh.receiveShadow = true;
+                cyl3Mesh.position.y += cradleHeight;
+                cyl3Mesh.rotation.z = 3.14 / 2;
+                cylGroup.add(cyl1Mesh);
+                cylGroup.add(cyl2Mesh);
+                cylGroup.add(cyl3Mesh);
 
-                            if( pos.y < 2 )
-                            {
-                                //pos.y = 2;
-                            }
-                        }
-                        
-                        function onDocumentMouseWheel(event)
-                        {
-                            var pos = camera.position;
-                            var d = pos.length();
-                            cameraPosition.x = pos.x;
-                            cameraPosition.y = pos.y;
-                            cameraPosition.z = pos.z;
-                            if( d < 1 )
-                            {
-                               cameraPosition.normalize();
-                               pos.x = cameraPosition.x*1;
-                               pos.y = cameraPosition.y*1;
-                               pos.z = cameraPosition.z*1;
-                            }
-                            if( d > 10 )
-                            {
-                               cameraPosition.normalize();
-                               pos.x = cameraPosition.x*10;
-                               pos.y = cameraPosition.y*10;
-                               pos.z = cameraPosition.z*10;
-                            }
-                            
-                        }
-                        
-                        function onDocumentMouseDown(e)
-                        {                                 
-                        }
-                        
-                        function onDocumentMouseUp(e)
-                        {
-                        }
-                        
-			function onWindowResize() {
+                group.add(cylGroup);
 
-				windowHalfX = window.innerWidth / 2;
-				windowHalfY = window.innerHeight / 2;
+                // Base Plane
+                var boxGeometry = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
+                boxMesh = new THREE.Mesh(boxGeometry, groundMaterial);
+                group.add(boxMesh);
 
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
+                boxMesh.castShadow = true;
+                boxMesh.receiveShadow = true;
+            }
+            // Initialize Geometry
+            function initGeometry()
+            {
+                // Make Root Group
+                var group = new THREE.Object3D();
+                scene.add(group);
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
+                // Create Geometry for Pendulumn
+                initPendulumnSystem();
+                // Init Geometry for the Structure
+                initStructureGeometry(group);
+            }
 
-			}
+            function updatePhysicalBodies()
+            {
+                time += 0.016;
 
-			function animate() {
-				requestAnimationFrame( animate );
-                                controls.update();
-                                updatePhysicalBodies();
-				render();
-			}
+                // Spring Mass
+                var springScale = 1.0 + springAmplitude * Math.sin(time * 3);
+                springMesh.scale.y = springScale;
+                springMesh.position.y = springLength * (1.0 - springScale);
+                sphereMassMesh.position.y = springMesh.position.y;
 
-			function render() {
-                                renderer.setClearColor( 0xffffff, 1);
-				renderer.render( scene, camera );
-			}
+                // Pendulumn
+                var theta = maxTheta * Math.sin(time * 3) * 3.14 / 180;
+                var x = pendulumnLength * Math.sin(theta);
+                var y = -pendulumnLength * Math.cos(theta);
+                sphereMassMeshPendulumn.position.y = y;
+                sphereMassMeshPendulumn.position.z = x;
+                var positions = geometryPendulumnThread.getAttribute('position').array;
 
-		</script>
+                var body = sphereMassMeshPendulumn;
+                // Update position
+                var origin = body.position;
+                // positions
+                positions[0] = 0;
+                positions[1] = 0;
+                positions[2] = 0;
 
-	</body>
+                positions[3] = origin.x;
+                positions[4] = origin.y;
+                positions[5] = origin.z;
+
+                geometryPendulumnThread.dynamic = true;
+                geometryPendulumnThread.attributes.position.needsUpdate = true;
+            }
+            ;
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                updatePhysicalBodies();
+                render();
+            }
+            function init() {
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100);
+                camera.position.z = -5;
+                camera.position.y = 5;
+                camera.lookAt(new THREE.Vector3(10, -15, 0));
+                controls = new THREE.OrbitControls(camera);
+                controls.addEventListener('change', render);
+                // scene
+                scene = new THREE.Scene();
+                var ambient = new THREE.AmbientLight(0x101030);
+                scene.add(ambient);
+
+                var light = new THREE.DirectionalLight(0xffeedd);
+                light.position.set(50, 200, -100);
+                light.castShadow = true;
+                light.shadowMapWidth = 1024;
+                light.shadowMapHeight = 1024;
+
+                var d = 5;
+
+                light.shadowCameraLeft = -d;
+                light.shadowCameraRight = d;
+                light.shadowCameraTop = d;
+                light.shadowCameraBottom = -d;
+
+                light.shadowCameraFar = 1000;
+                light.shadowDarkness = 0.5;
+                scene.add(light);
+
+                // texture
+
+                var manager = new THREE.LoadingManager();
+                manager.onProgress = function(item, loaded, total) {
+                    console.log(item, loaded, total);
+
+                };
+
+                var path = "../../js/lib/three.js/textures/cube/pisa/";
+                var format = '.png';
+                var urls = [
+                    path + 'px' + format, path + 'nx' + format,
+                    path + 'py' + format, path + 'ny' + format,
+                    path + 'pz' + format, path + 'nz' + format
+                ];
+
+                var reflectionCube = THREE.ImageUtils.loadTextureCube(urls);
+                reflectionCube.format = THREE.RGBFormat;
+                var texture = THREE.ImageUtils.loadTexture("../../js/lib/three.js/textures/wood.jpg");
+                //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
+                cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine: THREE.MixOperation})
+                groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map: texture});
+                sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess: 1000});
+
+                renderer = new THREE.WebGLRenderer({antialias: true});
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                containerSpectrum.appendChild(renderer.domElement);
+
+                document.addEventListener('mousemove', onDocumentMouseMove, false);
+                document.addEventListener('mousedown', onDocumentMouseDown, false);
+                document.addEventListener('mouseup', onDocumentMouseUp, false);
+                document.addEventListener('mousewheel', onDocumentMouseWheel, false);
+
+                window.addEventListener('resize', onWindowResize, false);
+
+                renderer.shadowMapEnabled = true;
+                renderer.shadowMapSoft = true;
+
+                initGeometry();
+            }
+
+            init();
+            animate();
+            
+        </script>
+    </body>
 </html>

@@ -13,6 +13,9 @@ SimplePendulumn = function()
     this.time = 0.0;
     this.maxTheta = 15;
     this.phase = 0.0;
+    this.g = 10.0;
+    this.offset = 0;
+    this.timePeriod = 2*Math.PI*Math.sqrt(this.length/this.g) * 0.2;
 };
 
 SimplePendulumn.prototype = {
@@ -31,7 +34,7 @@ SimplePendulumn.prototype = {
     
     update : function(dt)
     {
-        var theta = this.maxTheta * Math.sin(this.time*3 + this.phase*Math.PI/180) * 3.14/180;
+        var theta = this.maxTheta * Math.sin(this.time/this.timePeriod + this.phase*Math.PI/180) * 3.14/180;
         this.position.x = this.origin.x + this.length * Math.sin(theta);
         this.position.y = this.origin.y + -this.length * Math.cos(theta);
         this.time += dt;

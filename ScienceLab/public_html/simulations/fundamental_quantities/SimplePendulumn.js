@@ -15,11 +15,37 @@ SimplePendulumn = function()
     this.phase = 0.0;
     this.g = 10.0;
     this.offset = 0;
-    this.timePeriod = 2*Math.PI*Math.sqrt(this.length/this.g) * 0.2;
+    this.omega = Math.sqrt(this.g/this.length);
+};
+
+SimplePendulumn = function(length)
+{
+    this.origin = new THREE.Vector2();
+    this.position = new THREE.Vector2();
+    this.length = length;
+    this.time = 0.0;
+    this.maxTheta = 25;
+    this.phase = 0.0;
+    this.g = 10.0;
+    this.offset = 0;
+    this.omega = Math.sqrt(this.g/this.length);
 };
 
 SimplePendulumn.prototype = {
     constructor: SimplePendulumn,
+    
+    init : function(length)
+    {
+        this.origin = new THREE.Vector2();
+        this.position = new THREE.Vector2();
+        this.length = length;
+        this.time = 0.0;
+        this.maxTheta = 25;
+        this.phase = 0.0;
+        this.g = 10.0;
+        this.offset = 0;
+        this.omega = Math.sqrt(this.g/this.length);
+    },
     
     setLength : function(length)
     {
@@ -34,7 +60,8 @@ SimplePendulumn.prototype = {
     
     update : function(dt)
     {
-        var theta = this.maxTheta * Math.sin(this.time/this.timePeriod + this.phase*Math.PI/180) * 3.14/180;
+        var phase_ = this.time*this.omega;
+        var theta = this.maxTheta * Math.sin( phase_ + this.phase*Math.PI/180) * Math.PI/180;
         this.position.x = this.origin.x + this.length * Math.sin(theta);
         this.position.y = this.origin.y + -this.length * Math.cos(theta);
         this.time += dt;

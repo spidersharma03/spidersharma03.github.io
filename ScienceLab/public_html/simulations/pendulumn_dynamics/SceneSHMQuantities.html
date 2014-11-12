@@ -10,16 +10,17 @@
         <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
         <script src="../../js/lib/three.js/js/Detector.js"></script>
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+        <script src="../fundamental_quantities/SimplePendulumn.js"></script>
     </head>
 
     <body>
-        <div id="spectrum" style="background-color: white; height: 200px"></div>
-        <div id="composition" style="background-color: white; height: 200px"></div>
+        <div id="pendulumn" style="background-color: white"></div>
+        <div id="composition" style="background-color: white"></div>
 
         <script type="text/javascript">
             var containerComposition = document.getElementById('composition');
-            var containerSpectrum = document.getElementById('spectrum');
-
+            var containerPendulumn = document.getElementById('pendulumn');
+            var simplePendulumn = new SimplePendulumn();    
             var fundamentalFrequency = 1 / 500;
             var nHarmonics = 4;
             var amplitude = [0.5, 0.25, 0.125, 0.125];
@@ -27,7 +28,8 @@
             var bars = [];
             var harmonicsData = [];
             var gHarmonics = [];
-
+            var numPoints = 10;
+            
             function harmonic(x, n, amplitude) {
                 return amplitude * Math.sin(x * fundamentalFrequency * n * (2 * Math.PI));
             }
@@ -42,18 +44,18 @@
             }
 
             function initGraph() {
-                for (var i = 0; i < 2 * Math.PI * 100; i++) {
+                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
                     mixed.push([i, compositeHarmonics(i)]);
                 }
-                for (var i = 0; i < 2 * Math.PI * 100; i++) {
+                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
                     harmonicsData[i] = [i];
                 }
-                for (var i = 0; i < 2 * Math.PI * 100; i++) {
+                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
                     for (var j = 0; j < nHarmonics; j++) {
                         harmonicsData[i][j + 1] = harmonic(i, j + 1, amplitude[j]);
                     }
                 }
-                for (var i = 0; i < 2 * Math.PI * 100; i++) {
+                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
                     harmonicsData[i][nHarmonics + 1] = compositeHarmonics(i);
                 }
                 bars.push([0, 0]);
@@ -141,16 +143,22 @@
 //                    containerSpectrum,
 //                    bars, {labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
 //            );
-
-            var pickConstraint = null;
+//            var ll =10;
+//            setInterval(function() {
+//                var x = ll++ ;  // current time
+//                var y = Math.random();
+//                harmonicsData.push([x, y,y,y,y,y]);
+//                //g.updateOptions( { 'file': harmonicsData } );
+//              }, 1000);
+              
             var camera, scene, renderer, controls;
 
             var fov = 70,
-            isUserInteracting = false,
-            onMouseDownMouseX = 0, onMouseDownMouseY = 0,
-            lon = 0, onMouseDownLon = 0,
-            lat = 0, onMouseDownLat = 0,
-            phi = 0, theta = 0;
+                    isUserInteracting = false,
+                    onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+                    lon = 0, onMouseDownLon = 0,
+                    lat = 0, onMouseDownLat = 0,
+                    phi = 0, theta = 0;
 
             var mouseX = 0, mouseY = 0;
 
@@ -171,13 +179,6 @@
             var groundHeight = 0.2;
 
             var cameraPosition = new THREE.Vector3(0, 0, 5);
-
-            // Spring-Mass System
-            var springAmplitude = 0.2;
-            var springLength = 1.8;
-            var springRadius = 0.01;
-            var spiralRadius = 0.08;
-            var springMesh;
             var time = 0.0;
 
             var sphereMassMesh, sphereMassMeshPendulumn;
@@ -187,11 +188,12 @@
             var maxTheta = 30;
             var pendulumnAnchorX = 0;
             var pendulumnAnchorY = 0;
-            var pendulumnLength = springLength;
+            var pendulumnLength = 1.8;
             var geometryPendulumnThread;
 
             function initPendulumnSystem()
             {
+                simplePendulumn.init(pendulumnLength);
                 // Create SphereMass
                 var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
                 sphereMassMeshPendulumn = new THREE.Mesh(sphereGeometry, sphereMaterial);
@@ -200,7 +202,6 @@
                 // Make group for Pendulumn System
                 var groupPendulumn = new THREE.Object3D();
                 groupPendulumn.position.y = cradleHeight;
-                groupPendulumn.position.x = -1.5;
                 scene.add(groupPendulumn);
                 groupPendulumn.add(sphereMassMeshPendulumn);
 
@@ -277,19 +278,12 @@
             function updatePhysicalBodies()
             {
                 time += 0.016;
-
-                // Spring Mass
-                var springScale = 1.0 + springAmplitude * Math.sin(time * 3);
-                springMesh.scale.y = springScale;
-                springMesh.position.y = springLength * (1.0 - springScale);
-                sphereMassMesh.position.y = springMesh.position.y;
-
+                simplePendulumn.update(0.016);
                 // Pendulumn
-                var theta = maxTheta * Math.sin(time * 3) * 3.14 / 180;
-                var x = pendulumnLength * Math.sin(theta);
-                var y = -pendulumnLength * Math.cos(theta);
+                var x = simplePendulumn.position.x;
+                var y = simplePendulumn.position.y;
                 sphereMassMeshPendulumn.position.y = y;
-                sphereMassMeshPendulumn.position.z = x;
+                sphereMassMeshPendulumn.position.x = x;
                 var positions = geometryPendulumnThread.getAttribute('position').array;
 
                 var body = sphereMassMeshPendulumn;
@@ -307,20 +301,78 @@
                 geometryPendulumnThread.dynamic = true;
                 geometryPendulumnThread.attributes.position.needsUpdate = true;
             }
-            ;
+
+            function onDocumentMouseMove(event)
+            {
+                var pos = camera.position;
+
+                if (pos.y < 2)
+                {
+                    //pos.y = 2;
+                }
+            }
+
+            function onDocumentMouseWheel(event)
+            {
+                var pos = camera.position;
+                var d = pos.length();
+                cameraPosition.x = pos.x;
+                cameraPosition.y = pos.y;
+                cameraPosition.z = pos.z;
+                if (d < 1)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * 1;
+                    pos.y = cameraPosition.y * 1;
+                    pos.z = cameraPosition.z * 1;
+                }
+                if (d > 10)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * 10;
+                    pos.y = cameraPosition.y * 10;
+                    pos.z = cameraPosition.z * 10;
+                }
+
+            }
+
+            function onDocumentMouseDown(e)
+            {
+            }
+
+            function onDocumentMouseUp(e)
+            {
+            }
+
+            function onWindowResize() {
+
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+            }
             function animate() {
                 requestAnimationFrame(animate);
-                controls.update();
+                //controls.update();
                 updatePhysicalBodies();
                 render();
             }
+
+            function render() {
+                renderer.setClearColor(0xffffff, 1);
+                renderer.render(scene, camera);
+            }
             function init() {
-                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100);
-                camera.position.z = -5;
-                camera.position.y = 5;
-                camera.lookAt(new THREE.Vector3(10, -15, 0));
-                controls = new THREE.OrbitControls(camera);
-                controls.addEventListener('change', render);
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight*2, 1, 100);
+                camera.position.z = -4;
+                camera.position.y = 4;
+                camera.lookAt(new THREE.Vector3(0, 0, 1));
+                //controls = new THREE.OrbitControls(camera);
+                //controls.addEventListener('change', render);
                 // scene
                 scene = new THREE.Scene();
                 var ambient = new THREE.AmbientLight(0x101030);
@@ -346,7 +398,7 @@
                 // texture
 
                 var manager = new THREE.LoadingManager();
-                manager.onProgress = function(item, loaded, total) {
+                manager.onProgress = function (item, loaded, total) {
                     console.log(item, loaded, total);
 
                 };
@@ -368,8 +420,8 @@
                 sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess: 1000});
 
                 renderer = new THREE.WebGLRenderer({antialias: true});
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                containerSpectrum.appendChild(renderer.domElement);
+                renderer.setSize(window.innerWidth, window.innerHeight/2);
+                containerPendulumn.appendChild(renderer.domElement);
 
                 document.addEventListener('mousemove', onDocumentMouseMove, false);
                 document.addEventListener('mousedown', onDocumentMouseDown, false);
@@ -386,7 +438,7 @@
 
             init();
             animate();
-            
+
         </script>
     </body>
 </html>

@@ -58,14 +58,14 @@
                     </div>
               </div>
               <div class = 'well span8 text-success text-center' style="height: 400px ">
-                  <iframe id="newtonCradleFrame" style="width:100%; height:100%;" src="simulations/pendulumn_waves/ScenePendulumnWaves.html"></iframe>
-                  <!--<iframe id="newtonCradleFrame" style="width:100%; height:100%;" src="NewtonCradle/Scene.html"></iframe>-->
+                  <!--<iframe id="newtonCradleFrame" style="width:100%; height:100%;" src="simulations/pendulumn_waves/ScenePendulumnWaves.html"></iframe>-->
+                  <iframe id="newtonCradleFrame" style="width:100%; height:100%;" src="NewtonCradle/Scene.html"></iframe>
                   <div class = 'span12 row-fluid'>
                   <!--<h4>Cycle</h4>-->
-                  <input type="range" min="50" max="70" value="60" step= "5" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeCycleTime(value)})(value)">
-                  <input type="range" min="100" max="150" value="100" step= "10" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeNumOscillations(value)})(value)">
+                  <!--<input type="range" min="50" max="70" value="60" step= "5" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeCycleTime(value)})(value)">-->
+                  <!--<input type="range" min="100" max="150" value="100" step= "10" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeNumOscillations(value)})(value)">-->
+                  <input type="range" min="1" value="0" max="10" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeNumPendulumns(value)})(value)" orient="vertical">
                   </div>
-                  <!--<input type="range" min="1" value="0" max="10" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeNumPendulumns(value)})(value)" orient="vertical">-->
               </div>
           </div>  
 <!--          <div class ='well text-center ' style="padding:   0px 0px 0px 0px">

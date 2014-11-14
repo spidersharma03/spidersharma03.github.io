@@ -11,6 +11,11 @@ SimplePendulumn = function()
     this.position = new THREE.Vector2();
     this.length = 1.8;
     this.time = 0.0;
+    this.theta = 0.0;
+    this.angularSpeed = 0.0;
+    this.acceleration = 0.0;
+    this.pe = 0.0; // Potential energy
+    this.ke = 0.0; // Kinetic energy
     this.maxTheta = 15;
     this.phase = 0.0;
     this.g = 10.0;
@@ -24,6 +29,11 @@ SimplePendulumn = function(length)
     this.position = new THREE.Vector2();
     this.length = length;
     this.time = 0.0;
+    this.theta = 0.0;
+    this.angularSpeed = 0.0;
+    this.acceleration = 0.0;
+    this.pe = 0.0; // Potential energy
+    this.ke = 0.0; // Kinetic energy
     this.maxTheta = 25;
     this.phase = 0.0;
     this.g = 10.0;
@@ -61,9 +71,17 @@ SimplePendulumn.prototype = {
     update : function(dt)
     {
         var phase_ = this.time*this.omega;
-        var theta = this.maxTheta * Math.sin( phase_ + this.phase*Math.PI/180) * Math.PI/180;
-        this.position.x = this.origin.x + this.length * Math.sin(theta);
-        this.position.y = this.origin.y + -this.length * Math.cos(theta);
+        this.theta = this.maxTheta * Math.sin( phase_ + this.phase*Math.PI/180) * Math.PI/180;
+        this.angularSpeed = this.maxTheta * this.omega * Math.cos( phase_ + this.phase*Math.PI/180) * Math.PI/180;
+        this.acceleration = -this.maxTheta * this.omega * this.omega * Math.sin( phase_ + this.phase*Math.PI/180) * Math.PI/180;
+        this.position.x = this.origin.x + this.length * Math.sin(this.theta);
+        this.position.y = this.origin.y + -this.length * Math.cos(this.theta);
+        updateEnergies(dt);
         this.time += dt;
+    },
+    
+    updateEnergies : function(dt)
+    {
+        this.pe = this.g * this.length * ( 1.0 - Math.cos(this.theta)); // mgl(1-cos(theta))
     }
 };

@@ -22,47 +22,26 @@
             var containerPendulumn = document.getElementById('pendulumn');
             var simplePendulumn = new SimplePendulumn();    
             var fundamentalFrequency = 1 / 500;
-            var nHarmonics = 4;
+            var nHarmonics = 3;
             var amplitude = [0.5, 0.25, 0.125, 0.125];
             var mixed = [];
             var bars = [];
             var harmonicsData = [];
             var gHarmonics = [];
-            var numPoints = 10;
+            var numPoints = 100;
             
-            function harmonic(x, n, amplitude) {
-                return amplitude * Math.sin(x * fundamentalFrequency * n * (2 * Math.PI));
-            }
-
-            // Add(Composite) Harmonics
-            function compositeHarmonics(x) {
-                var sum = 0;
-                for (var i = 1; i <= nHarmonics; i++) {
-                    sum += harmonic(x, i, amplitude[i - 1]);
-                }
-                return sum;
-            }
-
             function initGraph() {
-                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
-                    mixed.push([i, compositeHarmonics(i)]);
+                for (var i = 0; i < 1; i++) {
+                    harmonicsData.push([i,simplePendulumn.theta,simplePendulumn.angularSpeed,simplePendulumn.acceleraion]);
                 }
-                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
-                    harmonicsData[i] = [i];
-                }
-                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
-                    for (var j = 0; j < nHarmonics; j++) {
-                        harmonicsData[i][j + 1] = harmonic(i, j + 1, amplitude[j]);
-                    }
-                }
-                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
-                    harmonicsData[i][nHarmonics + 1] = compositeHarmonics(i);
-                }
-                bars.push([0, 0]);
-                for (var i = 1; i <= nHarmonics; i++) {
-                    bars.push([i, amplitude[i - 1]]);
-                }
-                bars.push([nHarmonics + 1, 0.0]);
+//                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
+//                    harmonicsData[i][nHarmonics + 1] = compositeHarmonics(i);
+//                }
+//                bars.push([0, 0]);
+//                for (var i = 1; i <= nHarmonics; i++) {
+//                    bars.push([i, amplitude[i - 1]]);
+//                }
+//                bars.push([nHarmonics + 1, 0.0]);
             }
 
             initGraph();
@@ -107,11 +86,9 @@
             }
 
             var labels = ['x'];
-            for (var i = 0; i < nHarmonics + 1; ++i) {
-                var label = '' + i;
-                label = 's' + '000'.substr(label.length) + label;
-                labels[i + 1] = label;
-            }
+            labels[1] = 'Angle';
+            labels[2] = 'Velocity';
+            labels[3] = 'Acceleration';
 
             var g = new Dygraph(
                     containerComposition,
@@ -119,19 +96,13 @@
                     {
                         animatedZooms: true,
                         series: {
-                            's000': {
-                                strokeWidth: 0.1
+                            'Angle': {
+                                strokeWidth: 2.5
                             },
-                            's001': {
-                                strokeWidth: 0.1
+                            'Velocity': {
+                                strokeWidth: 1.2
                             },
-                            's002': {
-                                strokeWidth: 0.1
-                            },
-                            's003': {
-                                strokeWidth: 0.1
-                            },
-                            's004': {
+                            'Acceleration': {
                                 strokeWidth: 1.0
                             }
                         },
@@ -143,13 +114,17 @@
 //                    containerSpectrum,
 //                    bars, {labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
 //            );
-//            var ll =10;
-//            setInterval(function() {
-//                var x = ll++ ;  // current time
-//                var y = Math.random();
-//                harmonicsData.push([x, y,y,y,y,y]);
-//                //g.updateOptions( { 'file': harmonicsData } );
-//              }, 1000);
+            var count = 1;
+            setInterval(function() {
+                var theta = simplePendulumn.theta;
+                var angularSpeed = simplePendulumn.angularSpeed;
+                var acceleration = simplePendulumn.acceleration;
+                harmonicsData.push([count, theta, angularSpeed,acceleration]);
+                if(harmonicsData.length>50)
+                    harmonicsData.splice(0,1);
+                g.updateOptions( { 'file': harmonicsData } );
+                count++;
+              }, 100);
               
             var camera, scene, renderer, controls;
 

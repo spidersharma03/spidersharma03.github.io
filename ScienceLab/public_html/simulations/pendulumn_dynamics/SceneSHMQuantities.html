@@ -15,11 +15,14 @@
 
     <body>
         <div id="pendulumn" style="background-color: white"></div>
+        <div class="row-fluid span12">
+        <div id="energy" style="background-color: white"></div>
         <div id="composition" style="background-color: white"></div>
-
+        </div>
         <script type="text/javascript">
             var containerComposition = document.getElementById('composition');
             var containerPendulumn = document.getElementById('pendulumn');
+            var containerEnergy = document.getElementById('energy');
             var simplePendulumn = new SimplePendulumn();    
             var fundamentalFrequency = 1 / 500;
             var nHarmonics = 3;
@@ -32,16 +35,13 @@
             
             function initGraph() {
                 for (var i = 0; i < 1; i++) {
-                    harmonicsData.push([i,simplePendulumn.theta,simplePendulumn.angularSpeed,simplePendulumn.acceleraion]);
+                    harmonicsData.push([i,simplePendulumn.theta,simplePendulumn.speed,simplePendulumn.acceleraion]);
                 }
-//                for (var i = 0; i < 2 * Math.PI * numPoints; i++) {
-//                    harmonicsData[i][nHarmonics + 1] = compositeHarmonics(i);
-//                }
-//                bars.push([0, 0]);
-//                for (var i = 1; i <= nHarmonics; i++) {
-//                    bars.push([i, amplitude[i - 1]]);
-//                }
-//                bars.push([nHarmonics + 1, 0.0]);
+
+                bars.push([0, 0]);
+                bars.push([1, 10]);
+                bars.push([2, 10]);
+                bars.push([3, 0]);
             }
 
             initGraph();
@@ -110,20 +110,25 @@
                         strokeWidth: 0.2,
                         strokePattern: Dygraph.DASHED_LINE});
 
-//            var gSpectrum = new Dygraph(
-//                    containerSpectrum,
-//                    bars, {labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
-//            );
+            var gEnergyGraph = new Dygraph(
+                    containerEnergy,
+                    bars, {labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
+            );
+    
             var count = 1;
             setInterval(function() {
                 var theta = simplePendulumn.theta;
-                var angularSpeed = simplePendulumn.angularSpeed;
+                var speed = simplePendulumn.speed;
                 var acceleration = simplePendulumn.acceleration;
-                harmonicsData.push([count, theta, angularSpeed,acceleration]);
+                harmonicsData.push([count, theta, speed,acceleration]);
                 if(harmonicsData.length>50)
                     harmonicsData.splice(0,1);
                 g.updateOptions( { 'file': harmonicsData } );
                 count++;
+                
+                bars[1] = [ 1,simplePendulumn.pe];
+                bars[2] = [ 2,simplePendulumn.ke];
+                gEnergyGraph.updateOptions( { 'file': bars } );
               }, 100);
               
             var camera, scene, renderer, controls;
@@ -163,7 +168,7 @@
             var maxTheta = 30;
             var pendulumnAnchorX = 0;
             var pendulumnAnchorY = 0;
-            var pendulumnLength = 1.8;
+            var pendulumnLength = 2.0;
             var geometryPendulumnThread;
 
             function initPendulumnSystem()

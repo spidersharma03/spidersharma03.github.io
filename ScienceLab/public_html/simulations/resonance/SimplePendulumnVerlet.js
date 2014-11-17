@@ -47,8 +47,17 @@ SimplePendulumn.prototype = {
         this.position.x = this.position.x + this.velocity.x * dt;
         this.position.y = this.position.y + this.velocity.y * dt;
         
+        var diffy = this.position.y - this.prevPosition.y;
+
         this.projectConstraint();
         
+        var speed2 = this.velocity.x*this.velocity.x + this.velocity.y*this.velocity.y;
+        var diffx = this.position.x - this.prevPosition.x;
+        var diffy = this.position.y - this.prevPosition.y;
+        var diff = Math.sqrt(diffx*diffx + diffy*diffy);
+        var absg = Math.abs(this.g);
+        var newDt = Math.sqrt(speed2 + 2*absg * diff) - Math.sqrt(speed2);
+        newDt /= absg;
         this.velocity.x = (this.position.x - this.prevPosition.x)/dt;
         this.velocity.y = (this.position.y - this.prevPosition.y)/dt;
         this.prevPosition.x = this.position.x;

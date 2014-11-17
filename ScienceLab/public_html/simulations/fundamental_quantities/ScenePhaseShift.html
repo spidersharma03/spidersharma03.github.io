@@ -266,6 +266,10 @@
                         
                         function initPendulumnSystem()
                         {
+                            simplePendulumn.init(1.8);
+                            simplePendulumn.maxTheta = 10;
+                            simplePendulumn1.init(1.8);
+                            simplePendulumn1.maxTheta = 10;
                             // Create SphereMass
                             var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
                             sphereMassMeshPendulumn = new THREE.Mesh( sphereGeometry, sphereMaterial );

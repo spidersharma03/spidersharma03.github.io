@@ -2,16 +2,15 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>periodic_motion</title>
+        <title>nonharmonic_resonance</title>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <style>
             body {
                 font-family: Monospace;
                 background-color: #000;
                 color: #fff;
                 margin: 0px;
-                overflow: hidden;
             }
             #info {
                 color: #fff;
@@ -24,20 +23,22 @@
             }
             #info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
         </style>
-    </head>
-
-    <body>
-
+        <script src="../../js/lib/dyGraph/dygraph-combined.js"></script>
         <script src="../../js/lib/three.js/three.js"></script>
-
         <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
-
         <script src="../../js/lib/three.js/js/Detector.js"></script>
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
         <script src="../resonance/SimplePendulumnVerlet.js"></script>
+    </head>
 
+    <body>
+        <div id="ResonanceScene" style="background-color: white"></div>
+        <div class="row-fluid span12">
+        <div id="ResonanceResponseGraph" style="background-color: white"></div>
+        </div>
         <script>
-
+            var containerResonanceScene = document.getElementById('ResonanceScene');
+            var containerResonanceResponseGraph = document.getElementById('ResonanceResponseGraph');
             var container, stats;
             var pickConstraint = null;
             var camera, scene, renderer, controls;
@@ -89,15 +90,71 @@
             var simplePendulumn = [];
             var cylGroupForceOscillation;
             var pendulumnInterval = sphereMassRadius * 12;
-            var forcePeriod = 3.44 * 1;
+            var forcePeriod = 3.657 * 1;
             var forceFrequency = 2 * Math.PI / forcePeriod;
             var systemDamping = 0.0;
-            var forceMode = 0;
+            var forceMode = 1;
+            var maxForce = Math.PI / 18 * 0.05;
+            var force = 0;
+            var selectedPendulumnForGraph = 0;
+            
             initScene();
             animate();
+            
+            var pendulumnData = [];
+            function initGraph() {
+                var velocity = simplePendulumn[0].velocity;
+                var sign = velocity.x > 0 ? 1 : -1;
+                var speed = Math.sqrt(velocity.x*velocity.x + velocity.y*velocity.y);
+                for (var i = 0; i < 1; i++) {
+                    pendulumnData.push([i,speed*sign,force*50]);
+                }
+            }
+
+            initGraph();
+            
+            var labels = ['x'];
+            labels[1] = 'Velocity';
+            labels[2] = 'Force';
+            //labels[3] = 'Acceleration';
+
+            var g = new Dygraph(
+                    containerResonanceResponseGraph,
+                    pendulumnData,
+                    {
+                        animatedZooms: true,
+                        series: {
+                            'Velocity': {
+                                strokeWidth: 2.5
+                            },
+                            'Force': {
+                                strokeWidth: 1.5
+                            }
+                        },
+                        labels: labels.slice(),
+                        strokeWidth: 0.2,
+                        strokePattern: Dygraph.DASHED_LINE});
+    
+            var count = 1;
+            setInterval(function() {
+                var velocity = simplePendulumn[0].velocity;
+                var speed = Math.sqrt(velocity.x*velocity.x + velocity.y*velocity.y);
+                var sign = velocity.x > 0 ? 1 : -1;
+                pendulumnData.push([count, speed*sign, force*50]);
+                if(pendulumnData.length>50)
+                    pendulumnData.splice(0,1);
+                g.updateOptions( { 'file': pendulumnData } );
+                count++;
+              }, 100);
+              
             function changeForceFrequency(val)
             {
                 forceFrequency = val;
+            }
+            
+            function changeSelectedPendulumn(val)
+            {
+                selectedPendulumnForGraph = val;
             }
 
             function changeSystemDamping(val)
@@ -243,10 +300,9 @@
                     }
                 }
                 else { // Continious Mode
-                    var maxTheta = Math.PI / 18;
-                    var theta = maxTheta * Math.sin(time * forceFrequency);
+                    force = maxForce * Math.sin(time * forceFrequency);
                     for (var i = 0; i < numPendulumns; i++) {
-                        simplePendulumn[i].velocity.x += (theta) * 0.05;
+                        simplePendulumn[i].velocity.x += force;
                     }
                     cylGroupForceOscillation.rotation.x = -theta;
                 }
@@ -281,10 +337,7 @@
             ;
 
             function initScene() {
-                container = document.createElement('div');
-                document.body.appendChild(container);
-
-                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100);
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight*2, 1, 100);
                 camera.position.z = -5;
                 camera.position.y = 5;
                 camera.lookAt(new THREE.Vector3(10, -15, 0));
@@ -340,8 +393,8 @@
                 sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess: 1000});
 
                 renderer = new THREE.WebGLRenderer({antialias: true});
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                container.appendChild(renderer.domElement);
+                renderer.setSize(window.innerWidth, window.innerHeight/2);
+                containerResonanceScene.appendChild(renderer.domElement);
 
                 document.addEventListener('mousemove', onDocumentMouseMove, false);
                 document.addEventListener('mousedown', onDocumentMouseDown, false);

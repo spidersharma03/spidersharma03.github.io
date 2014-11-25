@@ -34,7 +34,7 @@
     <body>
         <div id="ResonanceScene" style="background-color: white"></div>
         <div class="row-fluid span12">
-        <div id="ResonanceResponseGraph" style="background-color: white"></div>
+        <div id="ResonanceResponseGraph" style="background-color: white; height: 200px"></div>
         </div>
         <script>
             var containerResonanceScene = document.getElementById('ResonanceScene');
@@ -90,20 +90,26 @@
             var simplePendulumn = [];
             var cylGroupForceOscillation;
             var pendulumnInterval = sphereMassRadius * 12;
-            var forcePeriod = 3.657 * 1;
-            var forceFrequency = 2 * Math.PI / forcePeriod;
+            var forcePeriod = 3.55 * 1;
+            var mainFrequency = 2 * Math.PI / forcePeriod;
+            var forceFrequency = mainFrequency;
             var systemDamping = 0.0;
-            var forceMode = 1;
+            var forceMode = 0;
             var maxForce = Math.PI / 18 * 0.05;
             var force = 0;
             var selectedPendulumnForGraph = 0;
+            var resetTimer = 0.0;
+            var a = 0.14;
+            var sqrta = Math.sqrt(a);
+            var c = -0.5;
+            
             
             initScene();
             animate();
             
             var pendulumnData = [];
             function initGraph() {
-                var velocity = simplePendulumn[0].velocity;
+                var velocity = simplePendulumn[selectedPendulumnForGraph].velocity;
                 var sign = velocity.x > 0 ? 1 : -1;
                 var speed = Math.sqrt(velocity.x*velocity.x + velocity.y*velocity.y);
                 for (var i = 0; i < 1; i++) {
@@ -137,7 +143,7 @@
     
             var count = 1;
             setInterval(function() {
-                var velocity = simplePendulumn[0].velocity;
+                var velocity = simplePendulumn[selectedPendulumnForGraph].velocity;
                 var speed = Math.sqrt(velocity.x*velocity.x + velocity.y*velocity.y);
                 var sign = velocity.x > 0 ? 1 : -1;
                 pendulumnData.push([count, speed*sign, force*50]);
@@ -146,20 +152,27 @@
                 g.updateOptions( { 'file': pendulumnData } );
                 count++;
               }, 100);
-              
+             
+            function changeForceMode(val)
+            {
+                forceMode = Number(val);
+            }
+            
             function changeForceFrequency(val)
             {
-                forceFrequency = val;
+                forceFrequency = mainFrequency * Number(val);
             }
             
             function changeSelectedPendulumn(val)
             {
-                selectedPendulumnForGraph = val;
+                selectedPendulumnForGraph = Number(val);
             }
 
             function changeSystemDamping(val)
             {
-                systemDamping = val;
+                for (var i = 0; i < numPendulumns; i++) {
+                   simplePendulumn[i].damping = Number(val);
+                }
             }
 
             function initPendulumnSystem()
@@ -174,6 +187,7 @@
                 for (var i = 0; i < numPendulumns; i++) {
                     simplePendulumn[i] = new SimplePendulumn(lengths[i], pendulumnOrigin);
                     simplePendulumn[i].offset = x;
+                    simplePendulumn[i].damping = systemDamping;
                     x += pendulumnInterval;
                     simplePendulumn[i].velocity.x = 2.0;
                 }
@@ -279,23 +293,13 @@
                 initStructureGeometry(group);
                 // Create Geometry for Pendulumn
                 initPendulumnSystem();
-            }
-
-            var resetTimer = 0.0;
+            }            
+            
             function updateOscilatingPivot()
             {
                 if (forceMode === 0) { // Push mode
+                    applyImpulsiveForce();
                     if (resetTimer >= forcePeriod) {
-                        for (var i = 0; i < numPendulumns; i++) {
-                            var velDir = simplePendulumn[i].velocity;
-                            var vx = velDir.x;
-                            var vy = velDir.y;
-                            var speed = Math.sqrt(vx * vx + vy * vy);
-                            vx /= speed;
-                            vy /= speed;
-                            simplePendulumn[i].velocity.x += Math.abs(vx);
-                            simplePendulumn[i].velocity.y += Math.abs(vy);
-                        }
                         resetTimer = 0.0;
                     }
                 }
@@ -310,6 +314,21 @@
                 resetTimer += dt;
             }
 
+            function applyImpulsiveForce() {
+                force = 5*maxForce * Math.sin(resetTimer * forceFrequency*5);
+                force = resetTimer > forcePeriod/10 ? 0 : force;
+                for (var i = 0; i < numPendulumns; i++) {
+                    var velDir = simplePendulumn[i].velocity;
+                    var vx = velDir.x;
+                    var vy = velDir.y;
+                    var speed = Math.sqrt(vx * vx + vy * vy);
+                    vx /= speed;
+                    vy /= speed;
+                    simplePendulumn[i].velocity.x += force;
+                    simplePendulumn[i].velocity.y += force;
+                }
+            }
+            
             function updatePhysicalBodies()
             {
                 updateOscilatingPivot();
@@ -337,9 +356,9 @@
             ;
 
             function initScene() {
-                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight*2, 1, 100);
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight*1.5, 1, 100);
                 camera.position.z = -5;
-                camera.position.y = 5;
+                camera.position.y = 10;
                 camera.lookAt(new THREE.Vector3(10, -15, 0));
                 controls = new THREE.OrbitControls(camera);
                 controls.addEventListener('change', render);
@@ -393,7 +412,7 @@
                 sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess: 1000});
 
                 renderer = new THREE.WebGLRenderer({antialias: true});
-                renderer.setSize(window.innerWidth, window.innerHeight/2);
+                renderer.setSize(window.innerWidth, window.innerHeight/1.5);
                 containerResonanceScene.appendChild(renderer.domElement);
 
                 document.addEventListener('mousemove', onDocumentMouseMove, false);

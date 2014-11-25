@@ -34,6 +34,7 @@
 
 		<script src="../../js/lib/three.js/js/Detector.js"></script>
 		<script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+		<script src="SimplePendulumnVerlet.js"></script>
 
 		<script>
 
@@ -76,104 +77,99 @@
                         var springMesh;
                         var time = 0.0;
                         
-                        var sphereMassMesh, sphereMassMeshPendulumn;
-                        var sphereMassRadius = 0.2;
+                        var sphereMassMesh;
+                        var sphereMassMeshPendulumn = [];
+                        var sphereMassRadius = 0.05;
                         
                         // Pendulumn
-                        var maxTheta = 30;
+                        var maxTheta = 20;
                         var pendulumnAnchorX = 0;
                         var pendulumnAnchorY = 0;
                         var pendulumnLength = springLength;
-                        var geometryPendulumnThread;
+                        var geometryPendulumnThread = [];
+                        var meshThread = [];
                         
-                        init();
+                        // Oscilloscope stuff
+                        var oscilloscopeGraphPoints = [];
+                        var maxOscilloscopeGraphPoints = 1000;
+                        var maxOscilloscopeGraphLength = 1.0;
+                        var oscilloscopeGraphSpeed = 0.3;
+                        var currentOscilloscopeGraphPoints = 0;
+                        var oscillographMesh;
+                        var oscillographBaseMesh;
+                        var oscillographBaseLength = 5.0;
+                        var dt = 0.016;
+                        var oscillatingPoint = new THREE.Vector2();
+                        
+                        var numPendulumns = 25;
+                        var simplePendulumn = [];
+                        var cylGroupForceOscillation;
+                        var pendulumnInterval = sphereMassRadius*2.3;
+                        var forceFrequency = 3.5;
+                        var systemDamping = 0.0;
+                        initScene();
                         animate();
-                        
-                        function initSpringMassSystem()
+                        function changeForceFrequency(val)
                         {
-                            // Create SphereMass
-                            var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
-                            sphereMassMesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
-                            sphereMassMesh.castShadow = true;
-                            sphereMassMesh.receiveShadow = true;
-                            
-                            // Make group for Spring-Mass System
-                            var groupSpringMass = new THREE.Object3D();
-                            groupSpringMass.position.y = cradleHeight - springLength;
-                            scene.add(groupSpringMass);
-                            // Make Geometry for Spring
-                            var helixPoints = [];
-                            var theta = 0;
-                            for ( var i = 0; i < 500; i ++ ) {
-                                    var x = spiralRadius * Math.cos(theta*50);
-                                    var z = spiralRadius * Math.sin(theta*50);
-                                    var y = theta;
-                                    theta += springLength/500;
-                                    helixPoints.push( new THREE.Vector3( x, y, z) );
-                            }
-			    var helixSpline =  new THREE.SplineCurve3( helixPoints );
-                            var extrudeSettings = {
-                                    steps		: 100,
-                                    bevelEnabled	: false,
-                                    extrudePath		: helixSpline
-                            };
-                            // Create
-                            var pts = [], count = 10;
-                            for ( var i = 0; i < count; i ++ ) {
-                                    var a = 2 * i / count * Math.PI;
-                                    pts.push( new THREE.Vector2 ( Math.cos( a ) * springRadius, Math.sin( a ) * springRadius ) );
-                            }
-                            var shape = new THREE.Shape( pts );
-
-                            var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-                            var material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: false } );
-                            springMesh = new THREE.Mesh( geometry, groundMaterial );
-                            
-                            springMesh.castShadow = true;
-                            springMesh.receiveShadow = true;
-                            groupSpringMass.add( springMesh );
-                            groupSpringMass.add( sphereMassMesh );
+                            forceFrequency = val;
+                        }
+                        
+                        function changeSystemDamping(val)
+                        {
+                            systemDamping = val;
                         }
                         
                         function initPendulumnSystem()
                         {
-                            // Create SphereMass
-                            var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
-                            sphereMassMeshPendulumn = new THREE.Mesh( sphereGeometry, sphereMaterial );
-                            sphereMassMeshPendulumn.castShadow = true;
-                            sphereMassMeshPendulumn.receiveShadow = true;
-                             // Make group for Pendulumn System
-                            var groupPendulumn = new THREE.Object3D();
-                            groupPendulumn.position.y = cradleHeight;
-                            groupPendulumn.position.x = -1.5;
-                            scene.add(groupPendulumn);
-                            groupPendulumn.add(sphereMassMeshPendulumn);
-                            
-                            // Suspension Threads
-                            geometryPendulumnThread = new THREE.BufferGeometry();
-                            var material = new THREE.LineBasicMaterial({ vertexColors: true });
-                            geometryPendulumnThread.dynamic = true;
-                            
-                            geometryPendulumnThread.addAttribute( 'position', new Float32Array( 6 ), 3 );
-                            geometryPendulumnThread.addAttribute( 'color', new Float32Array( 6 ), 3 );
-
-                            var colors = geometryPendulumnThread.getAttribute( 'color' ).array;
-                            for ( var i = 0; i < 2; i ++ ) {
-                                // colors
-                               colors[ i * 3 ] = 0;
-                               colors[ i * 3 + 1 ] = 0;
-                               colors[ i * 3 + 2 ] = 0;
+                            // Create Pendulumns
+                            var x = 0;
+                            x = cylGroupForceOscillation.position.x;
+                            x -= numPendulumns/2 * pendulumnInterval;
+                            var pendulumnOrigin = new THREE.Vector2();
+                            pendulumnOrigin.y = cylGroupForceOscillation.position.y;
+                            var length = 2.0;
+                            var dl = length/(numPendulumns+3);
+                            for( var i=0; i<numPendulumns; i++ ) {
+                                simplePendulumn[i] = new SimplePendulumn(length, pendulumnOrigin);
+                                simplePendulumn[i].offset = x;
+                                x += pendulumnInterval;
+                                length -= dl;
+                                simplePendulumn[i].velocity.x = 2.0;
                             }
+                            var material = new THREE.LineBasicMaterial({ vertexColors: true });
+                            var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
+                            for( var i=0; i<numPendulumns; i++ ) {
+                                // Create SphereMass
+                                sphereMassMeshPendulumn[i] = new THREE.Mesh( sphereGeometry, sphereMaterial );
+                                sphereMassMeshPendulumn[i].castShadow = true;
+                                sphereMassMeshPendulumn[i].receiveShadow = true;
+                                scene.add(sphereMassMeshPendulumn[i]);
+                                // Suspension Threads
+                                geometryPendulumnThread.push(new THREE.BufferGeometry());
+                                geometryPendulumnThread[i].dynamic = true;
 
-                            mesh = new THREE.Line( geometryPendulumnThread, material, THREE.Line );
-                            mesh.castShadow = true;
-                            mesh.receiveShadow = true;
-                            groupPendulumn.add( mesh );
+                                geometryPendulumnThread[i].addAttribute( 'position', new Float32Array( 6 ), 3 );
+                                geometryPendulumnThread[i].addAttribute( 'color', new Float32Array( 6 ), 3 );
+
+                                var colors = geometryPendulumnThread[i].getAttribute( 'color' ).array;
+                                for ( var j = 0; j < 2; j ++ ) {
+                                    // colors
+                                   colors[ j * 3 ] = 0;
+                                   colors[ j * 3 + 1 ] = 0;
+                                   colors[ j * 3 + 2 ] = 0;
+                                }
+
+                                meshThread[i] = new THREE.Line( geometryPendulumnThread[i], material, THREE.Line );
+                                meshThread[i].castShadow = true;
+                                meshThread[i].receiveShadow = true;
+                                scene.add( meshThread[i] );
+                            }
                         }
                         
                         function initStructureGeometry(group)
                         {
-                             var cylGroup = new THREE.Object3D();
+                            var cylGroup = new THREE.Object3D();
+                            group.add(cylGroup);
                             var cyl1 = new THREE.CylinderGeometry(0.2,0.2,cradleHeight);
                             var cyl1Mesh = new THREE.Mesh( cyl1, groundMaterial );
                             cyl1Mesh.castShadow = true;
@@ -186,17 +182,42 @@
                             cyl2Mesh.receiveShadow = true;
                             cyl2Mesh.position.x -= cradleLength/2;
                             cyl2Mesh.position.y += cradleHeight/2;
-                            var cyl3 = new THREE.CylinderGeometry(0.15,0.15,cradleLength);
-                            var cyl3Mesh = new THREE.Mesh( cyl3, groundMaterial );
-                            cyl3Mesh.castShadow = true;
-                            cyl3Mesh.receiveShadow = true;
-                            cyl3Mesh.position.y += cradleHeight;                   
-                            cyl3Mesh.rotation.z = 3.14/2;
                             cylGroup.add( cyl1Mesh );
                             cylGroup.add( cyl2Mesh );
-                            cylGroup.add( cyl3Mesh );
                             
-                            group.add(cylGroup);
+                            var cyl3 = new THREE.CylinderGeometry(0.1,0.1,cradleLength);
+                            var cyl3MeshForcedOscillation = new THREE.Mesh( cyl3, groundMaterial );
+                            cyl3MeshForcedOscillation.castShadow = true;
+                            cyl3MeshForcedOscillation.receiveShadow = true;                  
+                            cyl3MeshForcedOscillation.rotation.z = Math.PI/2;
+                            
+                            var indicatorGroup = new THREE.Object3D();
+                            var cyl4 = new THREE.CylinderGeometry(0.005,0.02,cradleLength/25);
+                            var cyl4Mesh = new THREE.Mesh( cyl4, groundMaterial );
+                            cyl4Mesh.position.y += 0.15;
+                            cyl4Mesh.castShadow = true;
+                            cyl4Mesh.receiveShadow = true;
+                            var cyl5Mesh = new THREE.Mesh( cyl4, groundMaterial );
+                            cyl5Mesh.position.y -= 0.15;
+                            cyl5Mesh.rotation.z = Math.PI;
+                            cyl5Mesh.castShadow = true;
+                            cyl5Mesh.receiveShadow = true;
+                            indicatorGroup.add(cyl4Mesh);
+                            indicatorGroup.add(cyl5Mesh);
+                            
+                            cylGroupForceOscillation = new THREE.Object3D();
+                            cylGroupForceOscillation.position.y += cradleHeight; 
+                            cylGroupForceOscillation.add(cyl3MeshForcedOscillation);
+                            group.add(cylGroupForceOscillation);
+                            
+                            var x = -pendulumnInterval/2;
+                            x -= numPendulumns/2 * pendulumnInterval;
+                            for( var i=0; i<numPendulumns; i++ ) {
+                                var indicatorGroupClone = indicatorGroup.clone();
+                                indicatorGroupClone.position.x = x;
+                                cylGroupForceOscillation.add(indicatorGroupClone);
+                                x += pendulumnInterval;
+                            }
                             
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
@@ -212,51 +233,56 @@
                             // Make Root Group
                             var group = new THREE.Object3D();
                             scene.add(group);
-                           
-                            // Create Geometry for spring mass
-                             initSpringMassSystem();
-                            // Create Geometry for Pendulumn
-                             initPendulumnSystem();
+                            
                             // Init Geometry for the Structure
                              initStructureGeometry(group);
+                            // Create Geometry for Pendulumn
+                             initPendulumnSystem();
+                         }
+                        
+                        function updateOscilatingPivot()
+                        {
+                            var ox = cylGroupForceOscillation.position.x;
+                            var oy = cylGroupForceOscillation.position.y;
+                            var radius = 0.1; var maxTheta = Math.PI/18;
+                            var theta = maxTheta * Math.sin(time*forceFrequency);
+                            oscillatingPoint.x = ox + radius * Math.sin(theta);
+                            oscillatingPoint.y = oy - radius * Math.cos(theta);
+                            for( var i=0; i<numPendulumns; i++ ) {
+                                simplePendulumn[i].damping = systemDamping;
+                                simplePendulumn[i].setOrigin(oscillatingPoint);
+                                simplePendulumn[i].velocity.x += (theta)*0.05;
+                            }
+                            cylGroupForceOscillation.rotation.x = -theta;
+                            time += dt;
                         }
                         
                         function updatePhysicalBodies() 
-                        {
-                            time += 0.016;
-                            
-                            // Spring Mass
-                            var springScale = 1.0 + springAmplitude * Math.sin(time*3);
-                            springMesh.scale.y = springScale;
-                            springMesh.position.y = springLength * (1.0 - springScale);
-                            sphereMassMesh.position.y = springMesh.position.y;
-                            
-                            // Pendulumn
-                            var theta = maxTheta * Math.sin(time*3) * 3.14/180;
-                            var x = pendulumnLength * Math.sin(theta);
-                            var y = -pendulumnLength * Math.cos(theta);
-                            sphereMassMeshPendulumn.position.y = y;
-                            sphereMassMeshPendulumn.position.z = x;
-                            var positions = geometryPendulumnThread.getAttribute( 'position' ).array;
-                            
-                            var body = sphereMassMeshPendulumn;
-                            // Update position
-                            var origin = body.position;
-                            // positions
-                            positions[0] = 0;
-                            positions[1] = 0;
-                            positions[2] = 0;
+                        {           
+                            updateOscilatingPivot();
+                            for( var i=0; i<numPendulumns; i++ ) {
+                                simplePendulumn[i].update(dt); 
+                                sphereMassMeshPendulumn[i].position.x = simplePendulumn[i].offset;
+                                sphereMassMeshPendulumn[i].position.y = simplePendulumn[i].position.y;
+                                sphereMassMeshPendulumn[i].position.z = simplePendulumn[i].position.x;
+                                var positions = geometryPendulumnThread[i].getAttribute( 'position' ).array;
 
-                            positions[3] = origin.x;
-                            positions[4] = origin.y;
-                            positions[5] = origin.z;
+                                // Update position
+                                positions[0] = simplePendulumn[i].offset;
+                                positions[1] = simplePendulumn[i].origin.y;
+                                positions[2] = simplePendulumn[i].origin.x;
 
-                            geometryPendulumnThread.dynamic = true;
-                            geometryPendulumnThread.attributes.position.needsUpdate = true;
+                                positions[3] = simplePendulumn[i].offset;
+                                positions[4] = simplePendulumn[i].position.y;
+                                positions[5] = simplePendulumn[i].position.x;
+
+                                geometryPendulumnThread[i].dynamic = true;
+                                geometryPendulumnThread[i].attributes.position.needsUpdate = true;
+                            }
+                            
                         };
                         
-			function init() {
-
+			function initScene() {                                
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
@@ -267,7 +293,6 @@
                                 controls = new THREE.OrbitControls( camera );
                                 controls.addEventListener( 'change', render );
 				// scene
-
 				scene = new THREE.Scene();
                                 
 				var ambient = new THREE.AmbientLight( 0x101030 );
@@ -291,10 +316,8 @@
 
 				light.shadowCameraFar = 1000;
 				light.shadowDarkness = 0.5;
-                                scene.add( light );
-
+                                scene.add( light ); 
 				// texture
-
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
 
@@ -311,7 +334,7 @@
 					];
 
 				var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
-				reflectionCube.format = THREE.RGBFormat;    
+				reflectionCube.format = THREE.RGBFormat;   
                                 var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
                                 cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } )

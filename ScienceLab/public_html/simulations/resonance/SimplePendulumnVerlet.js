@@ -51,13 +51,26 @@ SimplePendulumn.prototype = {
 
         this.projectConstraint();
         
-        var speed2 = this.velocity.x*this.velocity.x + this.velocity.y*this.velocity.y;
+        /*var speed2 = this.velocity.x*this.velocity.x + this.velocity.y*this.velocity.y;
         var diffx = this.position.x - this.prevPosition.x;
         var diffy = this.position.y - this.prevPosition.y;
         var diff = Math.sqrt(diffx*diffx + diffy*diffy);
         var absg = Math.abs(this.g);
         var newDt = Math.sqrt(speed2 + 2*absg * diff) - Math.sqrt(speed2);
+        var dx1 = this.position.x - this.origin.x;
+        var dy1 = this.position.y - this.origin.y;
+        var dx2 = this.prevPosition.x - this.origin.x;
+        var dy2 = this.prevPosition.y - this.origin.y;
+        var d1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+        var d2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+        dx1 /= d1; dy1 /= d1;
+        dx2 /= d2; dy2 /= d2;
+        var cosTheta = dx1*dx2 + dy1*dy2;
         newDt /= absg;
+        newDt = dt*Math.pow(cosTheta,4);
+        var tanTheta = Math.sqrt(1-cosTheta*cosTheta)/cosTheta;
+        var temp = Math.sqrt(2*(1-cosTheta))/tanTheta;
+        newDt = dt*temp*temp;*/
         this.velocity.x = (this.position.x - this.prevPosition.x)/dt;
         this.velocity.y = (this.position.y - this.prevPosition.y)/dt;
         this.prevPosition.x = this.position.x;

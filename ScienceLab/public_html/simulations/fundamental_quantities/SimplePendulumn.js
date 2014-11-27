@@ -14,6 +14,7 @@ SimplePendulumn = function()
     this.theta = 0.0;
     this.speed = 0.0;
     this.acceleration = 0.0;
+    this.damping = 0.0;
     this.pe = 0.0; // Potential energy
     this.ke = 0.0; // Kinetic energy
     this.maxTheta = 15;
@@ -32,6 +33,7 @@ SimplePendulumn = function(length)
     this.theta = 0.0;
     this.speed = 0.0;
     this.acceleration = 0.0;
+    this.damping = 0.0;
     this.pe = 0.0; // Potential energy
     this.ke = 0.0; // Kinetic energy
     this.maxTheta = 25;
@@ -70,10 +72,11 @@ SimplePendulumn.prototype = {
     
     update : function(dt)
     {
+        var decay = Math.exp(-this.damping*this.time);
         var phase_ = this.time*this.omega;
-        this.theta = this.maxTheta * Math.sin( phase_ + this.phase*Math.PI/180) * Math.PI/180;
-        this.speed = this.maxTheta * this.length * this.omega * Math.cos( phase_ + this.phase*Math.PI/180) * Math.PI/180;
-        this.acceleration = -this.maxTheta * this.length * this.omega * this.omega * Math.sin( phase_ + this.phase*Math.PI/180) * Math.PI/180;
+        this.theta = this.maxTheta * decay * Math.sin( phase_ + this.phase*Math.PI/180) * Math.PI/180;
+        this.speed = this.maxTheta * decay * this.length * this.omega * Math.cos( phase_ + this.phase*Math.PI/180) * Math.PI/180;
+        this.acceleration = -this.maxTheta * decay * this.length * this.omega * this.omega * Math.sin( phase_ + this.phase*Math.PI/180) * Math.PI/180;
         this.position.x = this.origin.x + this.length * Math.sin(this.theta);
         this.position.y = this.origin.y + -this.length * Math.cos(this.theta);
         this.updateEnergies(dt);

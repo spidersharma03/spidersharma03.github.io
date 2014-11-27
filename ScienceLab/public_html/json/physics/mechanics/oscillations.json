@@ -49,7 +49,8 @@
         "name": "Frictional Effects", 
         "id": "ElectroMagnetics.json", 
         "imageUrl": "", 
-        "description": "Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets."
+        "description": "",
+        "pageLink"  : "frictional_effects"
     },
     {
         "name": "Non Harmonic Motion", 

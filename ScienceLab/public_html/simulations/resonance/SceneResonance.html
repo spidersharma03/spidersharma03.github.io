@@ -90,7 +90,7 @@
             var simplePendulumn = [];
             var cylGroupForceOscillation;
             var pendulumnInterval = sphereMassRadius * 12;
-            var forcePeriod = 2.05;
+            var forcePeriod = 4.1;
             var mainFrequency = 2 * Math.PI / forcePeriod;
             var forceFrequency = mainFrequency;
             var systemDamping = 0.0;
@@ -128,6 +128,8 @@
                     containerResonanceResponseGraph,
                     pendulumnData,
                     {
+                        valueRange:[-3.0,3.0],
+                        labelsKMB:true,
                         animatedZooms: true,
                         series: {
                             'Velocity': {

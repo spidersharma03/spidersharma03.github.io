@@ -109,11 +109,22 @@
             var pendulumnAnchorY = 0;
             var pendulumnLength = 2.0;
             var geometryPendulumnThread;
-
+            
+            function changeSystemDamping(value) {
+                simplePendulumn.damping = Number(value);
+            }
+            
+            function resetSystem() {
+                simplePendulumn.init(pendulumnLength);
+                count = 1;
+                harmonicsData.splice(0,harmonicsData.length);
+                g.updateOptions( { 'file': harmonicsData } );
+            }
+            
             function initPendulumnSystem()
             {
                 simplePendulumn.init(pendulumnLength);
-                simplePendulumn.damping = 0.51;
+                simplePendulumn.damping = 0.5;
                 // Create SphereMass
                 var sphereGeometry = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
                 sphereMassMeshPendulumn = new THREE.Mesh(sphereGeometry, sphereMaterial);

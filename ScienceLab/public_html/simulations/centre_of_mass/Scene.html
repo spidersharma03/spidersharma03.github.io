@@ -46,15 +46,17 @@
 
             var initScene, render, renderer, render_stats, physics_stats, scene, ground, light, camera, spawnChair,
                     ground_material, chair_material;
-
+            var controls;
+            
             initScene = function () {
                 var container = document.createElement( 'div' );
                 document.body.appendChild( container );
+                
                 renderer = new THREE.WebGLRenderer({antialias: true});
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 container.appendChild( renderer.domElement );
                 renderer.shadowMapEnabled = true;
-                renderer.shadowMapSoft = true;
+                //renderer.shadowMapSoft = true;
 
                 render_stats = new Stats();
                 render_stats.domElement.style.position = 'absolute';
@@ -87,7 +89,8 @@
                 camera.position.set(60, 50, 60);
                 camera.lookAt(scene.position);
                 scene.add(camera);
-
+                controls = new THREE.OrbitControls( camera );
+                controls.addEventListener( 'change', render );
                 // Light
                 light = new THREE.DirectionalLight(0xFFFFFF);
                 light.position.set(20, 40, -15);
@@ -100,18 +103,30 @@
                 light.shadowCameraNear = 20;
                 light.shadowCameraFar = 200;
                 light.shadowBias = -.0001
-                light.shadowMapWidth = light.shadowMapHeight = 2048;
+                light.shadowMapWidth = light.shadowMapHeight = 1024;
                 light.shadowDarkness = .7;
                 scene.add(light);
 
                 // Materials
+                var path = "../../js/lib/three.js/textures/cube/pisa/";
+                var format = '.png';
+                var urls = [
+                                path + 'px' + format, path + 'nx' + format,
+                                path + 'py' + format, path + 'ny' + format,
+                                path + 'pz' + format, path + 'nz' + format
+                        ];
+
+                var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
+                reflectionCube.format = THREE.RGBFormat;
+                var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
+                var groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
                 ground_material = Physijs.createMaterial(
-                        new THREE.MeshLambertMaterial({map: THREE.ImageUtils.loadTexture('../../js/lib/three.js/textures/wall.jpg')}),
+                        groundMaterial,
                         .8, // high friction
                         .4 // low restitution
                         );
                 ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
-                ground_material.map.repeat.set(3, 3);
+                ground_material.map.repeat.set(1, 1);
 
                 chair_material = Physijs.createMaterial(
                         new THREE.MeshLambertMaterial({map: THREE.ImageUtils.loadTexture('../../js/lib/three.js/textures/wood.jpg')}),
@@ -131,67 +146,127 @@
                 ground.receiveShadow = true;
                 scene.add(ground);
 
-                spawnChair();
-
+                SetupPhysicsGeometry();
+                createObjects();
+                
                 requestAnimationFrame(render);
                 scene.simulate();
             };
-            var spawnCount = 0;
-            spawnChair = (function () {
-                var doSpawn;
+            
+            function SetupPhysicsGeometry() {
+                var inclination = Math.PI/80;
+                var divergentAngle = -Math.PI/30;
+                var boxWidth = 2;
+                var boxLength = 5;
+                var boxHeight = 60;
+                var baseBox1 = new Physijs.BoxMesh(
+                            new THREE.BoxGeometry(boxWidth, boxLength, boxHeight),
+                            chair_material,0
+                            );
+                baseBox1.rotation.set(
+                       inclination,
+                       -divergentAngle,
+                       0
+                        );    
+                baseBox1.position.x = 0;    
+                baseBox1.castShadow = true;
+                baseBox1.receiveShadow = true;    
+                var baseBox2 = new Physijs.BoxMesh(
+                            new THREE.BoxGeometry(boxWidth, boxLength, boxHeight),
+                            chair_material,0
+                            ); 
+                baseBox2.rotation.set(
+                       inclination,
+                       divergentAngle,
+                       0
+                        );     
+                baseBox2.position.x = 8;    
+                baseBox2.castShadow = true;
+                baseBox2.receiveShadow = true;     
+                scene.add(baseBox1);    
+                scene.add(baseBox2);   
+            }
+            
+            function SwitchObjects() {
+                
+            }
+            
+            function createObjects() {
+                var cone1, cone2, base, cylinder;
+                var radius = 5; var height = 7;
+                base = new Physijs.CylinderMesh(
+                        new THREE.CylinderGeometry(radius/10, radius/10, height,30,5),
+                        chair_material,1
+                        );
+                base.castShadow = true;
+                base.receiveShadow = true;
+                base.rotation.set(
+                       0,
+                       0,
+                       -Math.PI/2
+                        );
+                base.position.y = 10;
+                base.position.z = height*2.8;
+                base.position.x = height/2;
+                cone1 = new Physijs.ConeMesh(
+                        new THREE.CylinderGeometry(0, radius, height,20,1),
+                        ground_material,1
+                        );
+                cone1.castShadow = true;
+                cone1.receiveShadow = true;
+                cone1.position.y = -height/2;
+                cone1.rotation.set(
+                       0,
+                       0,
+                       -Math.PI
+                        );
 
-                doSpawn = function () {
-                    var cone1, cone2;
-                    
-                    if(spawnCount++ > 5)
-                        return;
-                    var radius = 4; var height = 4;
-                    cone1 = new Physijs.ConeMesh(
-                            new THREE.CylinderGeometry(0, radius, height,20,1),
-                            chair_material
-                            );
-                    cone1.castShadow = true;
-                    cone1.receiveShadow = true;
-                    cone1.position.y = 60;
-                    cone1.rotation.set(
-                           0,
-                           0,
-                           Math.PI/2
-                            );
-                    
-                    cone2 = new Physijs.ConeMesh(
-                            new THREE.CylinderGeometry(0, radius, height,20,1),
-                            chair_material
-                            );
-                    cone2.castShadow = true;
-                    cone2.receiveShadow = true;
-                    cone2.position.y = height;
-                    cone2.rotation.set(
-                           0,
-                           0,
-                           Math.PI
-                            );
-                    
-                    cone1.add(cone2);
-                    cone1.addEventListener('ready', spawnChair);
-                    scene.add(cone1);
-                    //scene.add(cone2);
-                };
-
-                return function () {
-                    setTimeout(doSpawn, 1500);
-                };
-            })();
-
-            render = function () {
-                requestAnimationFrame(render);
-                renderer.setClearColor(0xffffff, 1);
-                renderer.render(scene, camera);
-                render_stats.update();
+                cone2 = new Physijs.ConeMesh(
+                        new THREE.CylinderGeometry(0, radius, height,20,1),
+                        ground_material,1
+                        );
+                cone2.castShadow = true;
+                cone2.receiveShadow = true;
+                cone2.position.y = height/2;;
+                cone2.rotation.set(
+                       0,
+                       0,
+                       -2*Math.PI
+                        );
+                base.add(cone1);
+                base.add(cone2);
+                scene.add(base);
+                
+                cylinder = new Physijs.CylinderMesh(
+                        new THREE.CylinderGeometry(radius, radius, 2*height,30,5),
+                        ground_material,1
+                        );
+                cylinder.rotation.set(
+                       0,
+                       0,
+                       -Math.PI/2
+                        );
+                cylinder.position.y = 12;
+                cylinder.position.z = -height*2.8;
+                cylinder.position.x = height/2;
+                cylinder.castShadow = true;
+                cylinder.receiveShadow = true;
+                scene.add(cylinder);
             };
 
-            window.onload = initScene;
-
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                //render_stats.update();
+                render();
+            };
+            
+            function render() {
+                renderer.setClearColor( 0xffffff, 1);
+                renderer.render( scene, camera );
+       	    }
+            initScene();
+            animate();
 
         </script>
 

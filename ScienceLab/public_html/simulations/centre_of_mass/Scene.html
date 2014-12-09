@@ -47,6 +47,8 @@
             var initScene, render, renderer, render_stats, physics_stats, scene, ground, light, camera, spawnChair,
                     ground_material, chair_material;
             var controls;
+            var doubleCone, cylinder, currentObject;
+            var cone1, cone2;
             
             initScene = function () {
                 var container = document.createElement( 'div' );
@@ -93,7 +95,7 @@
                 controls.addEventListener( 'change', render );
                 // Light
                 light = new THREE.DirectionalLight(0xFFFFFF);
-                light.position.set(20, 40, -15);
+                light.position.set(-20, 60, -15);
                 light.target.position.copy(scene.position);
                 light.castShadow = true;
                 light.shadowCameraLeft = -60;
@@ -102,10 +104,15 @@
                 light.shadowCameraBottom = 60;
                 light.shadowCameraNear = 20;
                 light.shadowCameraFar = 200;
-                light.shadowBias = -.0001
+                light.shadowBias = -.001
                 light.shadowMapWidth = light.shadowMapHeight = 1024;
-                light.shadowDarkness = .7;
+                light.shadowDarkness = .5;
                 scene.add(light);
+                
+                var dummyLight = new THREE.DirectionalLight(0xFFFFFF);
+                dummyLight.position.set(10, 10, 5);
+                dummyLight.target.position.copy(scene.position);
+                scene.add(dummyLight);
 
                 // Materials
                 var path = "../../js/lib/three.js/textures/cube/pisa/";
@@ -142,7 +149,6 @@
                         ground_material,
                         0 // mass
                         );
-                ;
                 ground.receiveShadow = true;
                 scene.add(ground);
 
@@ -155,9 +161,9 @@
             
             function SetupPhysicsGeometry() {
                 var inclination = Math.PI/80;
-                var divergentAngle = -Math.PI/30;
+                var divergentAngle = -Math.PI/35;
                 var boxWidth = 2;
-                var boxLength = 5;
+                var boxLength = 8;
                 var boxHeight = 60;
                 var baseBox1 = new Physijs.BoxMesh(
                             new THREE.BoxGeometry(boxWidth, boxLength, boxHeight),
@@ -180,36 +186,73 @@
                        divergentAngle,
                        0
                         );     
-                baseBox2.position.x = 8;    
+                baseBox2.position.x = boxLength;    
                 baseBox2.castShadow = true;
                 baseBox2.receiveShadow = true;     
                 scene.add(baseBox1);    
                 scene.add(baseBox2);   
+                
+                // Set Stopper Geometry
+                var stopperBox1 = new Physijs.BoxMesh(
+                            new THREE.BoxGeometry(5, 15, 5),
+                            chair_material,0
+                            );
+                stopperBox1.position.z = boxHeight/2;
+                stopperBox1.position.x = boxLength/2;
+                stopperBox1.castShadow = true;
+                stopperBox1.receiveShadow = true;     
+                var stopperBox2 = new Physijs.BoxMesh(
+                            new THREE.BoxGeometry(30, 15, 5),
+                            chair_material,0
+                            );
+                stopperBox2.position.z = -boxHeight/2;
+                stopperBox2.position.x = boxLength/2;
+                stopperBox2.castShadow = true;
+                stopperBox2.receiveShadow = true;     
+                scene.add(stopperBox1);
+                scene.add(stopperBox2);
             }
             
-            function SwitchObjects() {
-                
+            function SwitchObject() {
+                var prevObject = currentObject;
+                if(currentObject === doubleCone) {
+                    currentObject = cylinder;
+                    currentObject.position.set( prevObject.position.x, prevObject.position.y + 3, prevObject.position.z );
+                }
+                else {
+                    currentObject = doubleCone;
+                    currentObject.position.set( prevObject.position.x, prevObject.position.y, prevObject.position.z );
+                }
+                prevObject.position.set( prevObject.position.x, prevObject.position.y-100, prevObject.position.z );
+                prevObject.setLinearFactor(new THREE.Vector3(0,0,0));
+                prevObject.setAngularFactor(new THREE.Vector3(0,0,0)); 
+                currentObject.setLinearFactor(new THREE.Vector3(1,1,1));
+                currentObject.setAngularFactor(new THREE.Vector3(1,0,0));
+                currentObject.setAngularVelocity(prevObject.getAngularVelocity());
+                currentObject.__dirtyPosition = true;
+                currentObject.__dirtyRotation = true;
+                prevObject.__dirtyPosition = true;
+                prevObject.__dirtyRotation = true;
             }
             
             function createObjects() {
-                var cone1, cone2, base, cylinder;
                 var radius = 5; var height = 7;
-                base = new Physijs.CylinderMesh(
+                doubleCone = new Physijs.CylinderMesh(
                         new THREE.CylinderGeometry(radius/10, radius/10, height,30,5),
                         chair_material,1
                         );
-                base.castShadow = true;
-                base.receiveShadow = true;
-                base.rotation.set(
+                doubleCone.castShadow = true;
+                doubleCone.receiveShadow = true;
+                doubleCone.rotation.set(
                        0,
                        0,
                        -Math.PI/2
                         );
-                base.position.y = 10;
-                base.position.z = height*2.8;
-                base.position.x = height/2;
+                doubleCone.position.y = 10;
+                doubleCone.position.z = height*2.8;
+                doubleCone.position.x = height/2;
                 cone1 = new Physijs.ConeMesh(
-                        new THREE.CylinderGeometry(0, radius, height,20,1),
+                        new THREE.CylinderGeometry(0, radius*1.2, height,20,1),
                         ground_material,1
                         );
                 cone1.castShadow = true;
@@ -222,20 +265,20 @@
                         );
 
                 cone2 = new Physijs.ConeMesh(
-                        new THREE.CylinderGeometry(0, radius, height,20,1),
+                        new THREE.CylinderGeometry(0, radius*1.2, height,20,1),
                         ground_material,1
                         );
                 cone2.castShadow = true;
                 cone2.receiveShadow = true;
-                cone2.position.y = height/2;;
+                cone2.position.y = height/2;
                 cone2.rotation.set(
                        0,
                        0,
-                       -2*Math.PI
+                       0
                         );
-                base.add(cone1);
-                base.add(cone2);
-                scene.add(base);
+                doubleCone.add(cone1);
+                doubleCone.add(cone2);
+                scene.add(doubleCone);
                 
                 cylinder = new Physijs.CylinderMesh(
                         new THREE.CylinderGeometry(radius, radius, 2*height,30,5),
@@ -246,12 +289,14 @@
                        0,
                        -Math.PI/2
                         );
-                cylinder.position.y = 12;
-                cylinder.position.z = -height*2.8;
+                cylinder.position.y = 10;
+                cylinder.position.z = height*2.8;
                 cylinder.position.x = height/2;
                 cylinder.castShadow = true;
                 cylinder.receiveShadow = true;
                 scene.add(cylinder);
+                currentObject = cylinder;
+                SwitchObject();
             };
 
             function animate() {

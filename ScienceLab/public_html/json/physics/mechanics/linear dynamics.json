@@ -1,0 +1,69 @@
+{
+   "Info":
+    {
+        "name" : "Linear Dynamics",
+        "subject"    : "Physics",
+        "category" : "Mechanics",
+        "nextTopic" : "Rotational Dynamics",
+        "description": ""
+    }
+,
+"topics":
+[
+    {
+        "name": "Newton's First Law", 
+        "id": "Mechanics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "pageLink"  : "periodic_motion"
+    },
+    {
+        "name": "Newton's Second Law", 
+        "id": "Optics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "pageLink"  : "fundamental_quantities"
+    },
+    {
+        "name": "Newton's Third Law", 
+        "id": "Electricity.json", 
+        "imageUrl": "",
+        "description": "",
+        "pageLink"  : "harmonic_motion"
+    },
+    {
+        "name": "Linear Momentum Conservation", 
+        "id": "Electricity.json", 
+        "imageUrl": "",
+        "description": "",
+        "pageLink"  : "pendulumn_dynamics"
+    },
+    {
+        "name": "Centre of Mass", 
+        "id": "Megnatism.json", 
+        "imageUrl": "",
+        "description": "",
+        "pageLink"  : "com"
+    },
+    {
+        "name": "Frictional Effects", 
+        "id": "ElectroMagnetics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "pageLink"  : "frictional_effects"
+    },
+    {
+        "name": "Non Harmonic Motion", 
+        "id": "Thermodynamics.json", 
+        "imageUrl": "", 
+        "pageLink"  : "resonance_nonharmonic",
+        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
+    },
+    {
+        "name": "Shape of Periodic Oscillations", 
+        "id": "Modern Physics.json", 
+        "imageUrl": "", 
+        "pageLink"  : "harmonic_composition"
+    }
+]
+}

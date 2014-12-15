@@ -5,59 +5,74 @@
  */
 
 
-NewtonCradleSimulation = function(N)
+MomentumConservationSimulation = function(N)
 {
     this.contacts = [];
     this.bodies = [];
-    this.constraints = [];
     this.gravity = -10;
     this.e = 1.0;
     this.numIterations = 0;
     this.numPendulumns = N;
     this.solverMethod = 0;
+    this.constraintPathRadius = 5.0;
+    this.pivotPoint = new THREE.Vector2(0,this.constraintPathRadius);
+    this.tempVector = new THREE.Vector2(0,0);
 };
 
-var NewtonCradleSimulation = new NewtonCradleSimulation(10);
+var MomentumConservationSimulation = new MomentumConservationSimulation(2);
 
-NewtonCradleSimulation.init = function()
+MomentumConservationSimulation.init = function()
 {
     // Create and push contacts
     for( var i=0; i<this.numPendulumns-1; i++)
     {
-        var contact = new NewtonCradleSimulation.Contact();
+        var contact = new MomentumConservationSimulation.Contact();
         contact.body1 = this.bodies[i];
         contact.body2 = this.bodies[i+1];
         this.contacts.push(contact);
     }
 };
 
-NewtonCradleSimulation.addContact = function(contact)
+MomentumConservationSimulation.addContact = function(contact)
 {
     this.contacts.push(contact);
 };
 
-NewtonCradleSimulation.removeContact = function(contact)
+MomentumConservationSimulation.removeContact = function(contact)
 {
     // remove the contact from list of contacts
 };
 
-NewtonCradleSimulation.addConstraint = function(constraint)
-{
-    this.constraints.push(constraint);
-};
 
-NewtonCradleSimulation.removeConstraint = function(constraint)
-{
-    // remove the constraint from list of constraints
-};
-
-NewtonCradleSimulation.addBody = function(body)
+MomentumConservationSimulation.addBody = function(body)
 {
     this.bodies.push(body);
 },
 
+MomentumConservationSimulation.applyConstraint = function()
+{
+    for(var b=0; b<this.bodies.length; b++ ) {
+        var body = this.bodies[b];
+        var dx = body.position.x - this.pivotPoint.x;
+        var dy = body.position.y - this.pivotPoint.y;
+        var error = this.constraintPathRadius - 2*body.radius - 0.15 - Math.sqrt(dx*dx+dy*dy);
+        // Direction of Constraint impulse
+        this.tempVector.x = dx; this.tempVector.y = dy;
+        this.tempVector.normalize();
 
-NewtonCradleSimulation.Contact = function()
+        var vel = body.velocity;
+        var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y;
+
+        this.tempVector.multiplyScalar(-vDotN + error);
+        if(error < 0) 
+        {
+            body.velocity.x += this.tempVector.x;
+            body.velocity.y += this.tempVector.y;
+        }
+    }
+},
+
+MomentumConservationSimulation.Contact = function()
 {
     this.body1 = null;
     this.body2 = null;
@@ -67,48 +82,35 @@ NewtonCradleSimulation.Contact = function()
     this.penetration = 0;
 };
 
-NewtonCradleSimulation.PhysicalBody = function(r)
+MomentumConservationSimulation.PhysicalBody = function(r)
 {
     this.position = new THREE.Vector2();
     this.velocity = new THREE.Vector2();
+    this.rotation = 0.0;
+    this.angularSpeed = 0.0;
     this.mass   = 1.0;
     this.massInv   = 1/this.mass;
     this.radius = r;
 };
 
-NewtonCradleSimulation.Constraint = function(body,pivot)
-{
-    this.body = body;
-    this.pivotPoint = new THREE.Vector2(pivot.x, pivot.y);
-    var dx = body.position.x - pivot.x;
-    var dy = body.position.y - pivot.y;
-    this.restLength = Math.sqrt(dx*dx+dy*dy);
-};
-
-// Satisfy Constraints
-NewtonCradleSimulation.satisfyConstraints = function()
-{
-    for( var i=0; i<this.constraints.length; i++ )
-    {
-        var constraint = this.constraints[i];
-        constraint.apply();
-    }
-};
-
 // Integrator
-NewtonCradleSimulation.integrate = function(dt)
+MomentumConservationSimulation.integrate = function(dt)
 {
     for( var i=0; i<this.bodies.length; i++ )
     {
         var body = this.bodies[i];
         body.velocity.y += this.gravity * dt;
-         
+        var dvx = body.velocity.x; var dvy = body.velocity.y;
+        var sign = dvx > 0 ? 1 : -1;
+        var speed = Math.sqrt(dvx*dvx + dvy*dvy) * sign;
+        body.angularSpeed =  body.radius * speed;
+        body.rotation += body.angularSpeed * dt;
         body.position.x += body.velocity.x * dt;
         body.position.y += body.velocity.y * dt;
     }
 };
 
-NewtonCradleSimulation.processContacts = function()
+MomentumConservationSimulation.processContacts = function()
 {
     this.numIterations = 0;
 
@@ -133,15 +135,15 @@ NewtonCradleSimulation.processContacts = function()
                 var vMag = body1.velocity.length();
                 if( vMag < 0.2 )
                 {
-                    body1.velocity.x = 0;
-                    body1.velocity.y = 0;
+                    //body1.velocity.x = 0;
+                    //body1.velocity.y = 0;
                 }
                 body2.velocity.x -= contactImpulse * body2.massInv * contact.normal.x;
                 body2.velocity.y -= contactImpulse * body2.massInv * contact.normal.y;
                 if( body2.velocity.length() < 0.2 )
                 {
-                    body2.velocity.x = 0;
-                    body2.velocity.y = 0;
+                    //body2.velocity.x = 0;
+                    //body2.velocity.y = 0;
                 }
                 // Resolve penetration
                 var posImpulse = 0.5*contact.penetration/( body1.massInv + body2.massInv );
@@ -158,7 +160,7 @@ NewtonCradleSimulation.processContacts = function()
     }
 };
 
-NewtonCradleSimulation.checkAndActivateContacts = function()
+MomentumConservationSimulation.checkAndActivateContacts = function()
 {
     var bResult = true;
     for( var i=0; i<this.bodies.length-1; i++ )
@@ -186,7 +188,7 @@ NewtonCradleSimulation.checkAndActivateContacts = function()
             var vDotN = rel_v_dx * nx + rel_v_dy * ny;
             //var eps = Math.sqrt(2*this.gravity*0.01);
             //if( vDotN < 0 && vDotN <  eps ) 
-            if( vDotN < 0 && Math.abs(vDotN) > 0.1 ) // bodies are reaching 
+            if( vDotN < 0 && Math.abs(vDotN) > 0.001 ) // bodies are reaching 
             {
                 this.contacts[i].active = true;
                 bResult = false;
@@ -199,7 +201,7 @@ NewtonCradleSimulation.checkAndActivateContacts = function()
 };
 
 // Update
-NewtonCradleSimulation.updateSimulation = function(dt)
+MomentumConservationSimulation.updateSimulation = function(dt)
 {
 
     this.checkAndActivateContacts();
@@ -208,15 +210,15 @@ NewtonCradleSimulation.updateSimulation = function(dt)
 
     this.processContacts();
     
-    this.satisfyConstraints();
+    this.applyConstraint();
     
     this.integrate(dt);
 
 };
 // Contacts
-NewtonCradleSimulation.Contact.prototype = {
+MomentumConservationSimulation.Contact.prototype = {
     
-    constructor : NewtonCradleSimulation.Contact,
+    constructor : MomentumConservationSimulation.Contact,
     
     isSeperating : function()
     {
@@ -233,38 +235,11 @@ NewtonCradleSimulation.Contact.prototype = {
     }
 };
 
-// Constraints
-NewtonCradleSimulation.Constraint.prototype = {
-    
-    constructor : NewtonCradleSimulation.Constraint,
-    
-    tempVector : new THREE.Vector2(),
-    
-    apply : function()
-    {
-        // Satisfy the constraints
-        var dx = this.body.position.x - this.pivotPoint.x;
-        var dy = this.body.position.y - this.pivotPoint.y;
-        var error = this.restLength - Math.sqrt(dx*dx+dy*dy);
-        // Direction of Constraint impulse
-        this.tempVector.x = dx; this.tempVector.y = dy;
-        this.tempVector.normalize();
-        
-        var vel = this.body.velocity;
-        var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y;
-        
-        this.tempVector.multiplyScalar(-vDotN + error);
-        
-        this.body.velocity.x += this.tempVector.x;
-        this.body.velocity.y += this.tempVector.y;
-    }
-};
-
 // PhysicalBody
-NewtonCradleSimulation.PhysicalBody.prototype = 
+MomentumConservationSimulation.PhysicalBody.prototype = 
 {
     
-    constructor : NewtonCradleSimulation.PhysicalBody,
+    constructor : MomentumConservationSimulation.PhysicalBody,
     
     isColliding : function(otherBody)
     {

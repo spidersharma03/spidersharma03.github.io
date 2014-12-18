@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-
 MomentumConservationSimulation = function(N)
 {
     this.contacts = [];
+    this.constraints = [];
     this.bodies = [];
     this.gravity = -10;
     this.e = 1.0;
@@ -31,6 +31,11 @@ MomentumConservationSimulation.init = function()
         contact.body2 = this.bodies[i+1];
         this.contacts.push(contact);
     }
+};
+
+MomentumConservationSimulation.addConstraint = function(constraint)
+{
+    this.constraints.push(constraint);
 };
 
 MomentumConservationSimulation.addContact = function(contact)
@@ -70,6 +75,10 @@ MomentumConservationSimulation.applyConstraint = function()
             body.velocity.y += this.tempVector.y;
         }
     }
+//    for(var c=0; c<this.constraints.length; c++ ) {
+//        for(var b=0; b<this.bodies.length; b++ )
+//            this.constraints[c].satisfy(this.bodies[b]);
+//    }
 },
 
 MomentumConservationSimulation.Contact = function()
@@ -206,8 +215,6 @@ MomentumConservationSimulation.updateSimulation = function(dt)
 
     this.checkAndActivateContacts();
 
-    //this.satisfyConstraints();
-
     this.processContacts();
     
     this.applyConstraint();
@@ -252,4 +259,63 @@ MomentumConservationSimulation.PhysicalBody.prototype =
         var overlap = d - r;
         return overlap;
     }
+};
+
+CircularTrackConstraint = function(radius, angle, length) {
+    this.radius = radius;
+    this.angle = angle > Math.PI/2 ? Math.PI/2 : angle;
+    this.angle = this.angle < 0 ? -this.angle : angle;
+    this.length = length;
+    this.position = new THREE.Vector2(0,0.4);
+    this.tempVector = new THREE.Vector2(0,0);
+};
+
+CircularTrackConstraint.prototype.satisfy = function(body) {
+    var xLocal = body.position.x - this.position.x;
+    var yLocal = body.position.y - this.position.y;
+    var abs_xLocal = Math.abs(xLocal);
+    // Curved Sections
+    if(xLocal > this.length/2 &&  xLocal < this.length/2 + this.radius*Math.sin(this.angle)) {
+        var dx = xLocal - this.length/2;
+        var dy = yLocal - this.radius;
+        var error = body.radius + Math.sqrt(dx*dx+ dy*dy) - this.radius;
+        // Direction of Constraint impulse
+        this.tempVector.x = dx; this.tempVector.y = dy;
+        this.tempVector.normalize();
+        var vel = body.velocity;
+        var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y;
+
+        this.tempVector.multiplyScalar(-vDotN + error);
+        if(error > 0) 
+        {
+            body.velocity.x += this.tempVector.x;
+            body.velocity.y += this.tempVector.y;
+        }
+    }
+    if(xLocal < this.length/2 &&  xLocal > -this.length/2 - this.radius*Math.sin(this.angle)) {
+        var dx = xLocal - this.length/2;
+        var dy = yLocal - this.radius;
+        var error = body.radius + Math.sqrt(dx*dx+ dy*dy) - this.radius;
+        // Direction of Constraint impulse
+        this.tempVector.x = dx; this.tempVector.y = dy;
+        this.tempVector.normalize();
+        var vel = body.velocity;
+        var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y;
+
+        this.tempVector.multiplyScalar(-vDotN + error);
+        if(error > 0) 
+        {
+            body.velocity.x += this.tempVector.x;
+            body.velocity.y += this.tempVector.y;
+        }
+    }
+    // Linear Section
+    if(Math.abs(xLocal) <= this.length/2) {
+        var error =  this.position.y - body.position.y;
+        if( error > 0 ) {
+            var vel = body.velocity;
+            body.velocity.y += (-vel.y + error);
+        }
+    }
+    
 };

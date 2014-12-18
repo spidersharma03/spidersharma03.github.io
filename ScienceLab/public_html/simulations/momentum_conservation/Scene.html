@@ -81,8 +81,6 @@
                         var cameraPosition = new THREE.Vector3();
                         init();
                         animate();
-                        //initPhysics();
-                        //updatePhysicalBodies();
                         
                         function changeNumPendulumns(value)
                         {
@@ -117,14 +115,25 @@
                             var trackWidth = 0.4;
                             var offset = 0.2;
                             
+                            var pathLength = 0.4;
                             var arcPath = [];
                             var theta = -arcPathAngle;
-                            var cx = 0.0; var cy = arcRadius;
+                            
+                            var cx = -pathLength/2; var cy = arcRadius;
                             for( var i=0; i<arcPointCount; i++ ) {
                                 var x = cx + arcRadius * Math.sin(theta);
                                 var y = cy + -arcRadius * Math.cos(theta);
                                 arcPath.push(new THREE.Vector3( x, y,0 ));
-                                theta += 2*arcPathAngle/arcPointCount;
+                                theta += arcPathAngle/(arcPointCount-1);
+                            }
+                            arcPath.push(new THREE.Vector3( cx+pathLength/4, 0, 0 ));
+                            cx = pathLength/2;
+                            arcPath.push(new THREE.Vector3( cx-pathLength/4, 0, 0 ));
+                            for( var i=0; i<arcPointCount; i++ ) {
+                                var x = cx + arcRadius * Math.sin(theta);
+                                var y = cy + -arcRadius * Math.cos(theta);
+                                arcPath.push(new THREE.Vector3( x, y,0 ));
+                                theta += arcPathAngle/(arcPointCount-1);
                             }
                             // Make Geometry for Base Structure
                             var Spline = new THREE.SplineCurve3( 
@@ -183,25 +192,6 @@
 
                                 spheres.push( mesh );
                             }
-                        }
-                        
-                        // Initialize Physics
-                        function initPhysics()
-                        {                
-                            // Create Spheres
-//                            var x = -2*sphereRadius*numSpheres/2;
-//                            for( var i=0; i<numSpheres; i++)
-//                            {
-//                                // Create body
-//                                var sphereBody = new MomentumConservationSimulation.PhysicalBody(sphereRadius);
-//                                sphereBody.position.x = x;
-//                                sphereBody.position.y = 2.0;
-//                                sphereBody.position.z = 0;
-//                                MomentumConservationSimulation.addBody(sphereBody);
-//                                sphereBody.mesh = spheres[i];
-//                                
-//                                x += sphereRadius*2;
-//                            }
                             var sphereBody = new MomentumConservationSimulation.PhysicalBody(sphereRadius);
                             sphereBody.position.x = 0;
                             sphereBody.position.y = 2.0;
@@ -218,7 +208,9 @@
                             //Give Impulse to the last sphere
                             //sphereBody.position.y = 1.0;
                             MomentumConservationSimulation.init();
-
+                            
+                            var circularTrack = new CircularTrackConstraint(arcRadius, Math.abs(theta), pathLength);
+                            MomentumConservationSimulation.addConstraint(circularTrack);
                         }
                         
                         function updatePhysicalBodies() 
@@ -300,7 +292,7 @@
 				reflectionCube.format = THREE.RGBFormat;    
                                 var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
-                                cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } )
+                                cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } );
                                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
                                 sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
                                 
@@ -320,9 +312,6 @@
                                 renderer.shadowMapSoft = true;
                                 
                                 initCradleGeometry();
-                                
-                                initPhysics();
-
 			}
                         
                         function onDocumentMouseMove(event)

@@ -56,29 +56,10 @@ MomentumConservationSimulation.addBody = function(body)
 
 MomentumConservationSimulation.applyConstraint = function()
 {
-    for(var b=0; b<this.bodies.length; b++ ) {
-        var body = this.bodies[b];
-        var dx = body.position.x - this.pivotPoint.x;
-        var dy = body.position.y - this.pivotPoint.y;
-        var error = this.constraintPathRadius - 2*body.radius - 0.15 - Math.sqrt(dx*dx+dy*dy);
-        // Direction of Constraint impulse
-        this.tempVector.x = dx; this.tempVector.y = dy;
-        this.tempVector.normalize();
-
-        var vel = body.velocity;
-        var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y;
-
-        this.tempVector.multiplyScalar(-vDotN + error);
-        if(error < 0) 
-        {
-            body.velocity.x += this.tempVector.x;
-            body.velocity.y += this.tempVector.y;
-        }
+    for(var c=0; c<this.constraints.length; c++ ) {
+        for(var b=0; b<this.bodies.length; b++ )
+            this.constraints[c].satisfy(this.bodies[b]);
     }
-//    for(var c=0; c<this.constraints.length; c++ ) {
-//        for(var b=0; b<this.bodies.length; b++ )
-//            this.constraints[c].satisfy(this.bodies[b]);
-//    }
 },
 
 MomentumConservationSimulation.Contact = function()
@@ -91,15 +72,15 @@ MomentumConservationSimulation.Contact = function()
     this.penetration = 0;
 };
 
-MomentumConservationSimulation.PhysicalBody = function(r)
+MomentumConservationSimulation.PhysicalBody = function(mass, radius)
 {
     this.position = new THREE.Vector2();
     this.velocity = new THREE.Vector2();
     this.rotation = 0.0;
     this.angularSpeed = 0.0;
-    this.mass   = 1.0;
+    this.mass   = mass;
     this.massInv   = 1/this.mass;
-    this.radius = r;
+    this.radius = radius;
 };
 
 // Integrator
@@ -266,7 +247,7 @@ CircularTrackConstraint = function(radius, angle, length) {
     this.angle = angle > Math.PI/2 ? Math.PI/2 : angle;
     this.angle = this.angle < 0 ? -this.angle : angle;
     this.length = length;
-    this.position = new THREE.Vector2(0,0.4);
+    this.position = new THREE.Vector2(0,0);
     this.tempVector = new THREE.Vector2(0,0);
 };
 
@@ -275,26 +256,11 @@ CircularTrackConstraint.prototype.satisfy = function(body) {
     var yLocal = body.position.y - this.position.y;
     var abs_xLocal = Math.abs(xLocal);
     // Curved Sections
-    if(xLocal > this.length/2 &&  xLocal < this.length/2 + this.radius*Math.sin(this.angle)) {
-        var dx = xLocal - this.length/2;
-        var dy = yLocal - this.radius;
-        var error = body.radius + Math.sqrt(dx*dx+ dy*dy) - this.radius;
-        // Direction of Constraint impulse
-        this.tempVector.x = dx; this.tempVector.y = dy;
-        this.tempVector.normalize();
-        var vel = body.velocity;
-        var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y;
-
-        this.tempVector.multiplyScalar(-vDotN + error);
-        if(error > 0) 
-        {
-            body.velocity.x += this.tempVector.x;
-            body.velocity.y += this.tempVector.y;
-        }
-    }
-    if(xLocal < this.length/2 &&  xLocal > -this.length/2 - this.radius*Math.sin(this.angle)) {
-        var dx = xLocal - this.length/2;
-        var dy = yLocal - this.radius;
+    if(abs_xLocal > this.length/2 ) {
+        var dx = this.length/2 - xLocal;
+        var dy = this.radius - yLocal;
+        if(xLocal < -this.length/2)
+            dx = -this.length/2 - xLocal;
         var error = body.radius + Math.sqrt(dx*dx+ dy*dy) - this.radius;
         // Direction of Constraint impulse
         this.tempVector.x = dx; this.tempVector.y = dy;
@@ -310,10 +276,10 @@ CircularTrackConstraint.prototype.satisfy = function(body) {
         }
     }
     // Linear Section
-    if(Math.abs(xLocal) <= this.length/2) {
-        var error =  this.position.y - body.position.y;
+    if(xLocal <= this.length/2 && xLocal >= -this.length/2) {
+        var error =  body.radius - yLocal;
+        var vel = body.velocity;
         if( error > 0 ) {
-            var vel = body.velocity;
             body.velocity.y += (-vel.y + error);
         }
     }

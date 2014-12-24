@@ -59,16 +59,16 @@
                         var groundMaterial;
                         var sphereMaterial;
                         
-                        var numSpheres = 10;
+                        var numSpheres = 60;
                         var spheres = [];
                         var physicsBodies = [];
                         var boxMesh;
                         
                         var geometry;
-                        var sphereRadius = 0.2;
+                        var sphereRadius = 0.03;
 			var cradleWidth = 3.0;
                         var cradleHeight = 3.0;
-                        var cradleLength = 5.0;
+                        var cradleLength = 15.0;
                         var groundWidth = 1.5*cradleLength;
                         var groundDepth = 1.5*cradleLength;
                         var groundHeight = 0.2;
@@ -230,22 +230,23 @@
                                 // Update position
                                 body.mesh.position.x = body.position.x;
                                 body.mesh.position.y = body.position.y;
+                                body.mesh.position.z = body.position.z;
                                 // positions
-                                positions[ l * 3 ] = body.position.x;
-                                positions[ l * 3 + 1 ] = body.position.y;
-                                positions[ l * 3 + 2 ] = 0;
-
-                                positions[ (l+1) * 3 ] = WaveSimulation.pivots[i].x;
-                                positions[ (l+1) * 3 + 1 ] = WaveSimulation.pivots[i].y;
-                                positions[ (l+1) * 3 + 2 ] = cradleWidth/2;
-
-                                positions[ (l+2) * 3 ] = body.position.x;
-                                positions[ (l+2) * 3 + 1 ] = body.position.y;
-                                positions[ (l+2) * 3 + 2 ] = 0;
-
-                                positions[ (l+3) * 3 ] = WaveSimulation.pivots[i].x;
-                                positions[ (l+3) * 3 + 1 ] = WaveSimulation.pivots[i].y;
-                                positions[ (l+3) * 3 + 2 ] = -cradleWidth/2; 
+//                                positions[ l * 3 ] = body.position.x;
+//                                positions[ l * 3 + 1 ] = body.position.y;
+//                                positions[ l * 3 + 2 ] = body.position.z;
+//
+//                                positions[ (l+1) * 3 ] = WaveSimulation.pivots[i].x;
+//                                positions[ (l+1) * 3 + 1 ] = WaveSimulation.pivots[i].y;
+//                                positions[ (l+1) * 3 + 2 ] = cradleWidth/2;
+//
+//                                positions[ (l+2) * 3 ] = body.position.x;
+//                                positions[ (l+2) * 3 + 1 ] = body.position.y;
+//                                positions[ (l+2) * 3 + 2 ] = body.position.z;
+//
+//                                positions[ (l+3) * 3 ] = WaveSimulation.pivots[i].x;
+//                                positions[ (l+3) * 3 + 1 ] = WaveSimulation.pivots[i].y;
+//                                positions[ (l+3) * 3 + 2 ] = -cradleWidth/2; 
                                 l += 4;
                             };
                             geometry.dynamic = true;
@@ -278,7 +279,7 @@
                                 light.shadowMapWidth = 1024;
 				light.shadowMapHeight = 1024;
                                 
-                                var d = 5;
+                                var d = 8;
 
 				light.shadowCameraLeft = -d;
 				light.shadowCameraRight = d;

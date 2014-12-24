@@ -22,31 +22,33 @@ WaveSimulation = function(N)
     this.numIterations = 0;
     this.numPendulumns = N;
     this.solverMethod = 0;
-    this.length = 5.0;
+    this.length = 15.0;
     this.height = 3.0;
     this.pivots = [];
-    this.sphereRadius = 0.2;
+    this.sphereRadius = 0.03;
+    this.time = 0;
+    this.tempVector = new THREE.Vector3();
 };
 
-var WaveSimulation = new WaveSimulation(10);
+var WaveSimulation = new WaveSimulation(60);
 
 WaveSimulation.init = function()
 {
     // Create Spheres
-    var x = -this.length/2+0.5;
+    var x = this.length/2+0.5;
     for( var i=0; i<this.numPendulumns; i++)
     {
         // Create body
-        var sphereBody = new WaveSimulation.PhysicalBody(this.sphereRadius);
-        sphereBody.position.x = x;
-        sphereBody.position.y = 1.0;
+        var sphereBody = new WaveSimulation.PhysicalBody(this.sphereRadius,1);
+        sphereBody.position.x = 0;
+        sphereBody.position.y = x;
         sphereBody.position.z = 0;
         WaveSimulation.addBody(sphereBody);
         // Create Constraints
-        this.pivots[i] = new THREE.Vector3(x,this.height,0);
-        var constraint = new WaveSimulation.Constraint(sphereBody, this.pivots[i]);
-        WaveSimulation.addConstraint(constraint);
-        x += this.sphereRadius*4.0;
+        //this.pivots[i] = new THREE.Vector3(x,this.height,0);
+        //var constraint = new WaveSimulation.Constraint(sphereBody, this.pivots[i]);
+        //WaveSimulation.addConstraint(constraint);
+        x -= this.sphereRadius*3.4;
     }
     // Create and push contacts
     for( var i=0; i<this.numPendulumns-1; i++)
@@ -64,7 +66,10 @@ WaveSimulation.init = function()
         var d = Math.sqrt(dx*dx + dy*dy + dz*dz);
         this.springs.push(new Spring(d, this.bodies[i], this.bodies[i+1]));
     }
-    this.bodies[0].velocity.x = -4;
+    this.bodies[0].mass = 0;
+    this.bodies[0].massInv = 0;
+    //this.bodies[59].mass = 0;
+    //this.bodies[59].massInv = 0;
 };
 
 WaveSimulation.addContact = function(contact)
@@ -103,20 +108,24 @@ WaveSimulation.Contact = function()
     this.penetration = 0;
 };
 
-WaveSimulation.PhysicalBody = function(r)
+WaveSimulation.PhysicalBody = function(r, mass)
 {
     this.position = new THREE.Vector3(0,0,0);
     this.velocity = new THREE.Vector3(0,0,0);
-    this.mass   = 1.0;
-    this.massInv   = 1/this.mass;
+    this.mass   = mass;
+    if(this.mass === 0)
+     this.massInv   = 0;
+    else
+     this.massInv   = 1/this.mass;    
     this.radius = r;
     this.force = new THREE.Vector3(0,0,0);
+    this.static = false;
 };
 
 WaveSimulation.Constraint = function(body,pivot)
 {
     this.body = body;
-    this.pivotPoint = new THREE.Vector2(pivot.x, pivot.y);
+    this.pivotPoint = new THREE.Vector3(pivot.x, pivot.y, pivot.z);
     var dx = body.position.x - pivot.x;
     var dy = body.position.y - pivot.y;
     this.restLength = Math.sqrt(dx*dx+dy*dy);
@@ -135,15 +144,16 @@ WaveSimulation.satisfyConstraints = function()
 // Integrator
 WaveSimulation.integrate = function(dt)
 {
-    var xx = 1;
     for( var i=0; i<this.bodies.length; i++ )
     {
         var body = this.bodies[i];
-        body.velocity.y += this.gravity * dt;
+        
+        if( body.mass !== 0 )
+            body.velocity.y += this.gravity * dt;
         //console.log(body.force.x);
-        body.velocity.x += body.force.x * body.massInv * dt;
-        body.velocity.y += body.force.y * body.massInv * dt;
-        body.velocity.z += body.force.z * body.massInv * dt;
+//        body.velocity.x += body.force.x * body.massInv * dt;
+//        body.velocity.y += body.force.y * body.massInv * dt;
+//        body.velocity.z += body.force.z * body.massInv * dt;
         
         body.position.x += body.velocity.x * dt;
         body.position.y += body.velocity.y * dt;
@@ -153,6 +163,7 @@ WaveSimulation.integrate = function(dt)
 
 WaveSimulation.processContacts = function()
 {
+    return;
     this.numIterations = 0;
     while(true)
     {
@@ -241,15 +252,15 @@ WaveSimulation.checkAndActivateContacts = function()
 };
 
 WaveSimulation.updateSpringForces = function() {
-    var xx = 1;
+    for(var j=0; j<this.numPendulumns; j++ ) {
      for( var i=0; i<this.springs.length; i++ ) {
          var body1 = this.springs[i].body1;
          var body2 = this.springs[i].body2;
          var p1 = body1.position;
          var p2 = body2.position;
-         var dx = p1.x - p2.x; var dy = p1.y - p2.y; var dz = p1.z - p2.z;
-         var d = Math.sqrt(dx*dx + dy*dy + dz*dz);
-         var forceMagnitude = this.springs[i].k * (this.springs[i].length - d);
+         var dx = p2.x - p1.x; var dy = p2.y - p1.y; var dz = p2.z - p1.z;
+         var error = Math.sqrt(dx*dx + dy*dy + dz*dz) - this.springs[i].length;
+         /*var forceMagnitude = this.springs[i].k * (this.springs[i].length - d);
          dx /= d; dy /= d; dz /= d;
          body1.force.x += dx*forceMagnitude;
          body1.force.y +=  dy*forceMagnitude;
@@ -257,8 +268,29 @@ WaveSimulation.updateSpringForces = function() {
          
          body2.force.x -= dx*forceMagnitude;
          body2.force.y -=  dy*forceMagnitude;
-         body2.force.z -=  dz*forceMagnitude;
+         body2.force.z -=  dz*forceMagnitude;*/
+        
+        // Direction of Constraint impulse
+        this.tempVector.x = dx; this.tempVector.y = dy; this.tempVector.z = dz;
+        
+        var v1 = body1.velocity;
+        var v2 = body2.velocity;
+        var vDotN = (v2.x - v1.x) * this.tempVector.x + (v2.y - v1.y) * this.tempVector.y + (v2.z - v1.z) * this.tempVector.z;
+        this.tempVector.normalize();
+        this.tempVector.multiplyScalar(vDotN + error);
+        this.tempVector.multiplyScalar(body1.massInv + body2.massInv);
+        
+        if(error > 0 ) {
+            body1.velocity.x += this.tempVector.x * body1.massInv;
+            body1.velocity.y += this.tempVector.y * body1.massInv;
+            body1.velocity.z += this.tempVector.z * body1.massInv;
+
+            body2.velocity.x -= this.tempVector.x * body2.massInv;
+            body2.velocity.y -= this.tempVector.y * body2.massInv;
+            body2.velocity.z -= this.tempVector.z * body2.massInv;
+        }
      }
+ }
 };
 // Update
 WaveSimulation.updateSimulation = function(dt)
@@ -266,11 +298,14 @@ WaveSimulation.updateSimulation = function(dt)
     for( var i=0; i<this.bodies.length; i++ ) {
         this.bodies[i].force.set(0,0,0);
     }
-    this.checkAndActivateContacts();
-
-    this.processContacts();
+    this.bodies[1].velocity.x += -5*Math.sin(this.time*15);
+    this.time += dt;
     
-    this.satisfyConstraints();
+    //this.checkAndActivateContacts();
+
+    //this.processContacts();
+    
+    //this.satisfyConstraints();
     
     this.updateSpringForces();
     
@@ -301,25 +336,27 @@ WaveSimulation.Constraint.prototype = {
     
     constructor : WaveSimulation.Constraint,
     
-    tempVector : new THREE.Vector2(),
+    tempVector : new THREE.Vector3(),
     
     apply : function()
     {
         // Satisfy the constraints
         var dx = this.body.position.x - this.pivotPoint.x;
         var dy = this.body.position.y - this.pivotPoint.y;
-        var error = this.restLength - Math.sqrt(dx*dx+dy*dy);
+        var dz = this.body.position.z - this.pivotPoint.z;
+        var error = this.restLength - Math.sqrt(dx*dx+dy*dy+dz*dz);
         // Direction of Constraint impulse
-        this.tempVector.x = dx; this.tempVector.y = dy;
+        this.tempVector.x = dx; this.tempVector.y = dy; this.tempVector.z = dz;
         this.tempVector.normalize();
         
         var vel = this.body.velocity;
-        var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y;
+        var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y + vel.z * this.tempVector.z;
         
         this.tempVector.multiplyScalar(-vDotN + error);
         
         this.body.velocity.x += this.tempVector.x;
         this.body.velocity.y += this.tempVector.y;
+        this.body.velocity.z += this.tempVector.z;
     }
 };
 

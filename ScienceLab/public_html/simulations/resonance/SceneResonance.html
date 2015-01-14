@@ -28,7 +28,8 @@
         <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
         <script src="../../js/lib/three.js/js/Detector.js"></script>
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
-        <script src="../resonance/SimplePendulumnVerlet.js"></script>
+        <!--<script src="../resonance/SimplePendulumnVerlet.js"></script>-->
+        <script src="../../js/simulate/SimplePendulumnSolver.js"></script>
     </head>
 
     <body>
@@ -93,7 +94,7 @@
             var forcePeriod = 4.1;
             var mainFrequency = 2 * Math.PI / forcePeriod;
             var forceFrequency = mainFrequency;
-            var systemDamping = 0.0;
+            var systemDamping = 0.001;
             var bApplyExternalForce = true;
             var maxForce = Math.PI / 18 * 0.05;
             var force = 0;
@@ -146,9 +147,8 @@
             var count = 1;
             setInterval(function() {
                 var velocity = simplePendulumn[selectedPendulumnForGraph].velocity;
-                var speed = Math.sqrt(velocity.x*velocity.x + velocity.y*velocity.y);
-                var sign = velocity.x > 0 ? 1 : -1;
-                pendulumnData.push([count, speed*sign, force*50]);
+                var energy = velocity.x*velocity.x + velocity.y*velocity.y;
+                pendulumnData.push([count, energy, force*50]);
                 if(pendulumnData.length>50)
                     pendulumnData.splice(0,1);
                 g.updateOptions( { 'file': pendulumnData } );
@@ -295,7 +295,7 @@
             {
                 force = maxForce * Math.sin(time * forceFrequency);
                 for (var i = 0; i < numPendulumns; i++) {
-                    simplePendulumn[i].velocity.x += force;
+                    simplePendulumn[i].angularSpeed += force;
                 }
                 cylGroupForceOscillation.rotation.x = -theta;
                 time += dt;

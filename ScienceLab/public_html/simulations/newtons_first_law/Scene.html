@@ -45,10 +45,40 @@
             Physijs.scripts.ammo = '../../js/lib/three.js/ammo.js';
 
             var initScene, render, renderer, render_stats, physics_stats, scene, ground, light, camera, spawnChair,
-                    ground_material, chair_material;
+                    ground_material, box_material;
             var controls;
-            var doubleCone, cylinder, currentObject;
-            var cone1, cone2;
+            var numBoxes = 10;
+            var boxes = [];
+            var boxCount = 0;
+            var boxWidth = 8;
+            var boxLength = 8;
+            var boxHeight = 3;
+            
+            function ApplyImpulse() {
+                if(boxCount>=0) {
+                    boxes[boxCount].applyCentralImpulse(new THREE.Vector3(50000,0,0));
+                    if(boxCount+1 < numBoxes)
+                        boxes[boxCount+1].applyCentralImpulse(new THREE.Vector3(0,-0.1,0));
+                    boxCount++;
+                    if(boxCount === numBoxes) {
+                        boxCount = 0;
+                    }
+                }
+            };
+            
+            function Reset() {
+                boxCount = 0;
+                var y = 2;
+                for( var i=0; i<numBoxes; i++ ) {
+                    boxes[i].position.y = y;
+                    boxes[i].position.x = 0;
+                    boxes[i].position.z = 0;
+                    boxes[i].setLinearVelocity(new THREE.Vector3(0,0,0));
+                    boxes[i].__dirtyPosition = true;
+                    boxes[i].__dirtyRotation = true;
+                    y += boxHeight;
+                }
+            };
             
             initScene = function () {
                 var container = document.createElement( 'div' );
@@ -88,14 +118,14 @@
                         1,
                         1000
                         );
-                camera.position.set(60, 50, 60);
+                camera.position.set(-60, 50, -60);
                 camera.lookAt(scene.position);
                 scene.add(camera);
                 controls = new THREE.OrbitControls( camera );
                 controls.addEventListener( 'change', render );
                 // Light
                 light = new THREE.DirectionalLight(0xFFFFFF);
-                light.position.set(-20, 60, -15);
+                light.position.set(-40, 20, -15);
                 light.target.position.copy(scene.position);
                 light.castShadow = true;
                 light.shadowCameraLeft = -60;
@@ -104,13 +134,13 @@
                 light.shadowCameraBottom = 60;
                 light.shadowCameraNear = 20;
                 light.shadowCameraFar = 200;
-                light.shadowBias = -.001
+                light.shadowBias = -.001;
                 light.shadowMapWidth = light.shadowMapHeight = 1024;
                 light.shadowDarkness = .5;
                 scene.add(light);
                 
                 var dummyLight = new THREE.DirectionalLight(0xFFFFFF);
-                dummyLight.position.set(10, 10, 5);
+                dummyLight.position.set(40, 20, -15);
                 dummyLight.target.position.copy(scene.position);
                 scene.add(dummyLight);
 
@@ -135,13 +165,13 @@
                 ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
                 ground_material.map.repeat.set(1, 1);
 
-                chair_material = Physijs.createMaterial(
+                box_material = Physijs.createMaterial(
                         new THREE.MeshLambertMaterial({map: THREE.ImageUtils.loadTexture('../../js/lib/three.js/textures/wood.jpg')}),
-                        .8, // medium friction
-                        .0 // low restitution
+                        .3, // medium friction
+                        .2 // low restitution
                         );
-                chair_material.map.wrapS = chair_material.map.wrapT = THREE.RepeatWrapping;
-                chair_material.map.repeat.set(.25, .25);
+                box_material.map.wrapS = box_material.map.wrapT = THREE.RepeatWrapping;
+                box_material.map.repeat.set(.25, .25);
 
                 // Ground
                 ground = new Physijs.BoxMesh(
@@ -159,30 +189,27 @@
             };
             
             function SetupPhysicsGeometry() {
-                var boxWidth = 8;
-                var boxLength = 8;
-                var boxHeight = 3;
-                var numBoxes = 10;
                 var y = 2;
-                //var boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxLength);
-                var boxGeometry = new THREE.CylinderGeometry(boxWidth, boxLength, boxHeight );
+                var boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxLength);
+                //var boxGeometry = new THREE.CylinderGeometry(boxWidth, boxLength, boxHeight );
                 for( var i=0; i<numBoxes; i++ ) {
                     var box = new Physijs.BoxMesh(
                                 boxGeometry,
-                                chair_material
+                                box_material
                                 );    
                     box.castShadow = true;
                     box.receiveShadow = true;    
                     box.position.y = y;
                     y += boxHeight;
-                    scene.add(box);  
+                    scene.add(box);
+                    box.setAngularFactor(new THREE.Vector3(0,0,0));
+                    boxes.push(box);
                 }
             }
 
             function animate() {
                 requestAnimationFrame(animate);
                 controls.update();
-                //render_stats.update();
                 render();
             };
             

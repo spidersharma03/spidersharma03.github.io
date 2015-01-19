@@ -15,21 +15,21 @@
         "id": "Mechanics.json", 
         "imageUrl": "", 
         "description": "",
-        "pageLink"  : "periodic_motion"
+        "pageLink"  : "newton_first_law"
     },
     {
         "name": "Newton's Second Law", 
         "id": "Optics.json", 
         "imageUrl": "", 
         "description": "",
-        "pageLink"  : "fundamental_quantities"
+        "pageLink"  : "newton_second_law"
     },
     {
         "name": "Newton's Third Law", 
         "id": "Electricity.json", 
         "imageUrl": "",
         "description": "",
-        "pageLink"  : "harmonic_motion"
+        "pageLink"  : "newton_third_law"
     },
     {
         "name": "Linear Momentum Conservation", 

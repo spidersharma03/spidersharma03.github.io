@@ -1,0 +1,385 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>periodic_motion</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <script src="../../js/lib/dyGraph/dygraph-combined.js"></script>
+        <script src="../../js/lib/three.js/three.js"></script>
+        <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
+        <script src="../../js/lib/three.js/js/Detector.js"></script>
+        <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+        <script src="../fundamental_quantities/SimplePendulumn.js"></script>
+    </head>
+
+    <body>
+        <div id="pendulumn" style="background-color: white"></div>
+        <div class="row-fluid span12">
+        <div id="energy" style="background-color: white"></div>
+        <div id="composition" style="background-color: white"></div>
+        </div>
+        <script type="text/javascript">
+            var containerComposition = document.getElementById('composition');
+            var containerPendulumn = document.getElementById('pendulumn');
+            var containerEnergy = document.getElementById('energy');
+            var mixed = [];
+            var bars = [];
+            var harmonicsData = [];
+            var gHarmonics = [];
+            var numPoints = 100;
+            
+            function initGraph() {
+//                for (var i = 0; i < 1; i++) {
+//                    harmonicsData.push([i,simplePendulumn.theta,simplePendulumn.speed,simplePendulumn.acceleraion]);
+//                }
+//
+//                bars.push([0, 0]);
+//                bars.push([1, 10]);
+//                bars.push([2, 10]);
+//                bars.push([3, 0]);
+            }
+
+            initGraph();
+
+            // This function draws bars for a single series. See
+            // multiColumnBarPlotter below for a plotter which can draw multi-series
+            // bar charts.
+            function barChartPlotter(e) {
+                var ctx = e.drawingContext;
+                var points = e.points;
+                var y_bottom = e.dygraph.toDomYCoord(0);
+
+                // The RGBColorParser class is provided by rgbcolor.js, which is
+                // packed in with dygraphs.
+                var color = new RGBColorParser(e.color);
+                color.r = Math.floor((255 + color.r) / 2);
+                color.g = Math.floor((255 + color.g) / 2);
+                color.b = Math.floor((255 + color.b) / 2);
+                ctx.fillStyle = color.toRGB();
+
+                // Find the minimum separation between x-values.
+                // This determines the bar width.
+                var min_sep = Infinity;
+                for (var i = 1; i < points.length; i++) {
+                    var sep = points[i].canvasx - points[i - 1].canvasx;
+                    if (sep < min_sep)
+                        min_sep = sep;
+                }
+                var bar_width = Math.floor(1.0 / 3 * min_sep);
+
+                // Do the actual plotting.
+                for (var i = 0; i < points.length; i++) {
+                    var p = points[i];
+                    var center_x = p.canvasx;
+
+                    ctx.fillRect(center_x - bar_width / 2, p.canvasy,
+                            bar_width, y_bottom - p.canvasy);
+
+                    ctx.strokeRect(center_x - bar_width / 2, p.canvasy,
+                            bar_width, y_bottom - p.canvasy);
+                }
+            }
+
+            var labels = ['x'];
+            labels[1] = 'Angle';
+            labels[2] = 'Velocity';
+            labels[3] = 'Acceleration';
+
+            var g = new Dygraph(
+                    containerComposition,
+                    harmonicsData,
+                    {
+                        animatedZooms: true,
+                        series: {
+                            'Angle': {
+                                strokeWidth: 2.5
+                            },
+                            'Velocity': {
+                                strokeWidth: 1.2
+                            },
+                            'Acceleration': {
+                                strokeWidth: 1.0
+                            }
+                        },
+                        labels: labels.slice(),
+                        strokeWidth: 0.2,
+                        strokePattern: Dygraph.DASHED_LINE});
+
+            var gEnergyGraph = new Dygraph(
+                    containerEnergy,
+                    bars, {labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
+            );
+    
+            var count = 1;
+            setInterval(function() {
+//                var theta = simplePendulumn.theta;
+//                var speed = simplePendulumn.speed;
+//                var acceleration = simplePendulumn.acceleration;
+//                harmonicsData.push([count, theta, speed,acceleration]);
+//                if(harmonicsData.length>50)
+//                    harmonicsData.splice(0,1);
+//                g.updateOptions( { 'file': harmonicsData } );
+//                count++;
+//                
+//                bars[1] = [ 1,simplePendulumn.pe];
+//                bars[2] = [ 2,simplePendulumn.ke];
+//                gEnergyGraph.updateOptions( { 'file': bars } );
+              }, 100);
+              
+            var camera, scene, renderer, controls;
+
+            var fov = 70,
+                    isUserInteracting = false,
+                    onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+                    lon = 0, onMouseDownLon = 0,
+                    lat = 0, onMouseDownLat = 0,
+                    phi = 0, theta = 0;
+
+            var mouseX = 0, mouseY = 0;
+
+            var windowHalfX = window.innerWidth / 2;
+            var windowHalfY = window.innerHeight / 2;
+
+            var cubeMaterial;
+            var groundMaterial;
+            var sphereMaterial;
+            var lambertMaterial1, lambertMaterial2;
+
+            var boxMesh;
+
+            var sphereRadius = 0.2;
+            var cradleHeight = 3.0;
+            var cradleLength = 5.0;
+            var groundWidth = 1.5 * cradleLength;
+            var groundDepth = 1.5 * cradleLength;
+            var groundHeight = 0.2;
+
+            var cameraPosition = new THREE.Vector3(0, 0, 5);
+            var time = 0.0;  
+            var block1, block2;
+
+            function initMassForceGeometry(group)
+            {
+                var blockPos1 = new THREE.Vector3(0,1,0);
+                var blockPos2 = new THREE.Vector3(0,1,1);
+                var blockLength = 1;
+                // Create Block 1
+                var boxGeometry1 = new THREE.BoxGeometry(1,1,1);
+                block1 = new THREE.Mesh(boxGeometry1, sphereMaterial);
+                block1.position.z = 2;
+                block1.castShadow = true;
+                block1.receiveShadow = true;
+                // Create Block 2
+                var boxGeometry2 = new THREE.BoxGeometry(1,1,1);
+                block2 = new THREE.Mesh(boxGeometry2, sphereMaterial);
+                block2.position.z = 0;
+                block2.castShadow = true;
+                block2.receiveShadow = true;
+                // Make Force Pointers
+                var forcePointerGroup1 = new THREE.Object3D();
+                var pointerLength = 1; var pointerRadius = 0.3;
+                var cylinder1 = new THREE.CylinderGeometry(0,pointerRadius,pointerLength/2,10,10);
+                var cylinder2 = new THREE.CylinderGeometry(pointerRadius/2,pointerRadius/2,pointerLength,10,10);
+                var mesh1 = new THREE.Mesh(cylinder1, lambertMaterial1);
+                mesh1.position.y = pointerLength/2;
+                var mesh2 = new THREE.Mesh(cylinder2, lambertMaterial1);
+                mesh1.castShadow = true;
+                mesh1.receiveShadow = true;
+                mesh2.castShadow = true;
+                mesh2.receiveShadow = true;
+                forcePointerGroup1.rotateZ(Math.PI/2);
+                forcePointerGroup1.add(mesh1);
+                forcePointerGroup1.add(mesh2);
+                
+                var forcePointerGroup2 = new THREE.Object3D();
+                var cylinder1 = new THREE.CylinderGeometry(0,pointerRadius,pointerLength/2,10,10);
+                var cylinder2 = new THREE.CylinderGeometry(pointerRadius/2,pointerRadius/2,pointerLength,10,10);
+                var mesh1 = new THREE.Mesh(cylinder1, lambertMaterial2);
+                mesh1.position.y = pointerLength/2;
+                var mesh2 = new THREE.Mesh(cylinder2, lambertMaterial2);
+                mesh1.castShadow = true;
+                mesh1.receiveShadow = true;
+                mesh2.castShadow = true;
+                mesh2.receiveShadow = true;
+                forcePointerGroup2.rotateZ(Math.PI/2);
+                forcePointerGroup2.add(mesh1);
+                forcePointerGroup2.add(mesh2);
+                
+                var blockGroup1 = new THREE.Object3D();
+                blockGroup1.position.set(blockPos1.x, blockPos1.y, blockPos1.z);
+                var blockGroup2 = new THREE.Object3D();
+                blockGroup2.position.set(blockPos2.x, blockPos2.y, blockPos2.z);
+                
+                blockGroup1.add(block1);
+                blockGroup1.add(forcePointerGroup1);
+                blockGroup2.add(block2);
+                blockGroup2.add(forcePointerGroup2);
+                scene.add(blockGroup1);
+                scene.add(blockGroup2);
+                
+                // Base Plane
+                var boxGeometry = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
+                boxMesh = new THREE.Mesh(boxGeometry, groundMaterial);
+                group.add(boxMesh);
+
+                boxMesh.castShadow = true;
+                boxMesh.receiveShadow = true;
+            }
+            // Initialize Geometry
+            function initGeometry()
+            {
+                // Make Root Group
+                var group = new THREE.Object3D();
+                scene.add(group);
+                // Init Geometry for the Structure
+                initMassForceGeometry(group);
+            }
+
+            function updatePhysicalBodies()
+            {
+                time += 0.016;               
+            }
+
+            function onDocumentMouseMove(event)
+            {
+                var pos = camera.position;
+
+                if (pos.y < 2)
+                {
+                    //pos.y = 2;
+                }
+            }
+
+            function onDocumentMouseWheel(event)
+            {
+                var pos = camera.position;
+                var d = pos.length();
+                cameraPosition.x = pos.x;
+                cameraPosition.y = pos.y;
+                cameraPosition.z = pos.z;
+                if (d < 1)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * 1;
+                    pos.y = cameraPosition.y * 1;
+                    pos.z = cameraPosition.z * 1;
+                }
+                if (d > 10)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * 10;
+                    pos.y = cameraPosition.y * 10;
+                    pos.z = cameraPosition.z * 10;
+                }
+
+            }
+
+            function onDocumentMouseDown(e)
+            {
+            }
+
+            function onDocumentMouseUp(e)
+            {
+            }
+
+            function onWindowResize() {
+
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+            }
+            function animate() {
+                requestAnimationFrame(animate);
+                //controls.update();
+                updatePhysicalBodies();
+                render();
+            }
+
+            function render() {
+                renderer.setClearColor(0xffffff, 1);
+                renderer.render(scene, camera);
+            }
+            function init() {
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight*2, 1, 100);
+                camera.position.z = -4;
+                camera.position.y = 4;
+                camera.lookAt(new THREE.Vector3(0, 0, 1));
+                //controls = new THREE.OrbitControls(camera);
+                //controls.addEventListener('change', render);
+                // scene
+                scene = new THREE.Scene();
+                var ambient = new THREE.AmbientLight(0x101030);
+                scene.add(ambient);
+
+                var light = new THREE.DirectionalLight(0xffeedd);
+                light.position.set(50, 200, -100);
+                light.castShadow = true;
+                light.shadowMapWidth = 1024;
+                light.shadowMapHeight = 1024;
+
+                var d = 5;
+
+                light.shadowCameraLeft = -d;
+                light.shadowCameraRight = d;
+                light.shadowCameraTop = d;
+                light.shadowCameraBottom = -d;
+
+                light.shadowCameraFar = 1000;
+                light.shadowDarkness = 0.5;
+                scene.add(light);
+
+                // texture
+
+                var manager = new THREE.LoadingManager();
+                manager.onProgress = function (item, loaded, total) {
+                    console.log(item, loaded, total);
+
+                };
+
+                var path = "../../js/lib/three.js/textures/cube/pisa/";
+                var format = '.png';
+                var urls = [
+                    path + 'px' + format, path + 'nx' + format,
+                    path + 'py' + format, path + 'ny' + format,
+                    path + 'pz' + format, path + 'nz' + format
+                ];
+
+                var reflectionCube = THREE.ImageUtils.loadTextureCube(urls);
+                reflectionCube.format = THREE.RGBFormat;
+                var texture = THREE.ImageUtils.loadTexture("../../js/lib/three.js/textures/wood.jpg");
+                //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
+                lambertMaterial1 = new THREE.MeshLambertMaterial({color:0x8888ff, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+                lambertMaterial2 = new THREE.MeshLambertMaterial({color:0xff8888, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+                groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map: texture});
+                sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess: 1000});
+                
+                
+                renderer = new THREE.WebGLRenderer({antialias: true});
+                renderer.setSize(window.innerWidth, window.innerHeight/2);
+                containerPendulumn.appendChild(renderer.domElement);
+
+                document.addEventListener('mousemove', onDocumentMouseMove, false);
+                document.addEventListener('mousedown', onDocumentMouseDown, false);
+                document.addEventListener('mouseup', onDocumentMouseUp, false);
+                document.addEventListener('mousewheel', onDocumentMouseWheel, false);
+
+                window.addEventListener('resize', onWindowResize, false);
+
+                renderer.shadowMapEnabled = true;
+                renderer.shadowMapSoft = true;
+
+                initGeometry();
+            }
+
+            init();
+            animate();
+
+        </script>
+    </body>
+</html>

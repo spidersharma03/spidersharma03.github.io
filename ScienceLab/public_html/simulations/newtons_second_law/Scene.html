@@ -25,116 +25,52 @@
             var containerEnergy = document.getElementById('energy');
             var mixed = [];
             var bars = [];
-            var harmonicsData = [];
-            var gHarmonics = [];
+            var velocityData = [];
             var numPoints = 100;
             
+            var block1, block2;
+            var blockGroup1, blockGroup2; 
+            
             function initGraph() {
-//                for (var i = 0; i < 1; i++) {
-//                    harmonicsData.push([i,simplePendulumn.theta,simplePendulumn.speed,simplePendulumn.acceleraion]);
-//                }
-//
-//                bars.push([0, 0]);
-//                bars.push([1, 10]);
-//                bars.push([2, 10]);
-//                bars.push([3, 0]);
+                for (var i = 0; i < 1; i++) {
+                    //velocityData.push([i,0,0]);
+                }
             }
 
             initGraph();
 
-            // This function draws bars for a single series. See
-            // multiColumnBarPlotter below for a plotter which can draw multi-series
-            // bar charts.
-            function barChartPlotter(e) {
-                var ctx = e.drawingContext;
-                var points = e.points;
-                var y_bottom = e.dygraph.toDomYCoord(0);
-
-                // The RGBColorParser class is provided by rgbcolor.js, which is
-                // packed in with dygraphs.
-                var color = new RGBColorParser(e.color);
-                color.r = Math.floor((255 + color.r) / 2);
-                color.g = Math.floor((255 + color.g) / 2);
-                color.b = Math.floor((255 + color.b) / 2);
-                ctx.fillStyle = color.toRGB();
-
-                // Find the minimum separation between x-values.
-                // This determines the bar width.
-                var min_sep = Infinity;
-                for (var i = 1; i < points.length; i++) {
-                    var sep = points[i].canvasx - points[i - 1].canvasx;
-                    if (sep < min_sep)
-                        min_sep = sep;
-                }
-                var bar_width = Math.floor(1.0 / 3 * min_sep);
-
-                // Do the actual plotting.
-                for (var i = 0; i < points.length; i++) {
-                    var p = points[i];
-                    var center_x = p.canvasx;
-
-                    ctx.fillRect(center_x - bar_width / 2, p.canvasy,
-                            bar_width, y_bottom - p.canvasy);
-
-                    ctx.strokeRect(center_x - bar_width / 2, p.canvasy,
-                            bar_width, y_bottom - p.canvasy);
-                }
-            }
-
             var labels = ['x'];
-            labels[1] = 'Angle';
-            labels[2] = 'Velocity';
-            labels[3] = 'Acceleration';
-
+            labels[1] = 'Velocity 1';
+            labels[2] = 'Velocity 2';
+            
             var g = new Dygraph(
                     containerComposition,
-                    harmonicsData,
+                    velocityData,
                     {
+                        dateWindow:[0,100],
+                        valueRange:[0.0,4.0],
                         animatedZooms: true,
                         series: {
-                            'Angle': {
-                                strokeWidth: 2.5
+                            'Velocity 1': {
+                                strokeWidth: 1.0
                             },
-                            'Velocity': {
-                                strokeWidth: 1.2
-                            },
-                            'Acceleration': {
+                            'Velocity 2': {
                                 strokeWidth: 1.0
                             }
                         },
                         labels: labels.slice(),
                         strokeWidth: 0.2,
                         strokePattern: Dygraph.DASHED_LINE});
-
-            var gEnergyGraph = new Dygraph(
-                    containerEnergy,
-                    bars, {labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
-            );
     
-            var count = 1;
-            setInterval(function() {
-//                var theta = simplePendulumn.theta;
-//                var speed = simplePendulumn.speed;
-//                var acceleration = simplePendulumn.acceleration;
-//                harmonicsData.push([count, theta, speed,acceleration]);
-//                if(harmonicsData.length>50)
-//                    harmonicsData.splice(0,1);
-//                g.updateOptions( { 'file': harmonicsData } );
-//                count++;
-//                
-//                bars[1] = [ 1,simplePendulumn.pe];
-//                bars[2] = [ 2,simplePendulumn.ke];
-//                gEnergyGraph.updateOptions( { 'file': bars } );
-              }, 100);
-              
+            
             var camera, scene, renderer, controls;
 
             var fov = 70,
-                    isUserInteracting = false,
-                    onMouseDownMouseX = 0, onMouseDownMouseY = 0,
-                    lon = 0, onMouseDownLon = 0,
-                    lat = 0, onMouseDownLat = 0,
-                    phi = 0, theta = 0;
+            isUserInteracting = false,
+            onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+            lon = 0, onMouseDownLon = 0,
+            lat = 0, onMouseDownLat = 0,
+            phi = 0, theta = 0;
 
             var mouseX = 0, mouseY = 0;
 
@@ -143,42 +79,123 @@
 
             var cubeMaterial;
             var groundMaterial;
-            var sphereMaterial;
+            var blockMaterial;
             var lambertMaterial1, lambertMaterial2;
 
             var boxMesh;
-
+            
             var sphereRadius = 0.2;
             var cradleHeight = 3.0;
             var cradleLength = 5.0;
             var groundWidth = 1.5 * cradleLength;
             var groundDepth = 1.5 * cradleLength;
             var groundHeight = 0.2;
-
+            var stopperPosition = -groundWidth/2 + 1;
+            
             var cameraPosition = new THREE.Vector3(0, 0, 5);
             var time = 0.0;  
-            var block1, block2;
-
+            var blockSize = 1.5;
+            var blockPos1 = new THREE.Vector3(0,blockSize/2+0.1,-2);
+            var blockPos2 = new THREE.Vector3(0,blockSize/2+0.1,2.5);
+            var simulationPaused = false;
+            var pointerLength = 1; var pointerRadius = 0.1;
+            var pointerScale1 = 1, pointerScale2 = 1;
+            var forcePointerGroup1, forcePointerGroup2;
+            
+            var count = 0;
+            setInterval(function() {
+                if(simulationPaused)
+                    return;
+                var v1 = blockGroup1.velocity;
+                var v2 = blockGroup2.velocity;
+                velocityData.push([count, -v1, -v2]);
+                if(velocityData.length>100)
+                    velocityData.splice(0,1);
+                g.updateOptions( { 'file': velocityData } );
+                count++;
+              }, 100);
+              
+            function Restart() {
+                simulationPaused = false;
+            }   
+            
+            function Reset() {
+                blockGroup1.acceleration = blockGroup1.force/blockGroup1.mass;
+                blockGroup2.acceleration = blockGroup2.force/blockGroup2.mass;
+                blockGroup1.velocity = 0;
+                blockGroup2.velocity = 0;
+                blockGroup1.position.x = blockPos1.x;
+                blockGroup2.position.x = blockPos2.x;
+                velocityData.splice(0,velocityData.length);
+                simulationPaused = true;
+                count = 0;
+            }
+            
+            function changeMass(index, value) {
+                if(Number(index) === 0) {
+                    blockGroup1.mass = Number(value);
+                    //pointerScale1 = blockGroup1.mass;
+                    //forcePointerGroup1.position.x = blockGroup1.position.x + 0.5*blockSize + pointerLength*pointerScale1/2;
+                }
+                if(Number(index) === 1) {
+                    blockGroup2.mass = Number(value);
+                    //pointerScale2 = blockGroup2.mass;
+                    //forcePointerGroup2.position.x = blockGroup2.position.x + 0.5*blockSize + pointerLength*pointerScale2/2;
+                }
+            }
+            
+            function changeForce(index, value) {
+                if(Number(index) === 0) {
+                    blockGroup1.force = -Number(value);
+                    pointerScale1 = blockGroup1.force/0.1;
+                    forcePointerGroup1.position.x = blockGroup1.position.x + 0.5*blockSize + pointerLength*pointerScale1/2;
+                }
+                if(Number(index) === 1) {
+                    blockGroup2.force = -Number(value);
+                    pointerScale2 = blockGroup2.force/0.1;
+                    forcePointerGroup2.position.x = blockGroup2.position.x + 0.5*blockSize + pointerLength*pointerScale2/2;
+                }
+            }
+            
+            function updateMassSystem(dt) {
+                if(simulationPaused)
+                    return;
+                
+                blockGroup1.acceleration = blockGroup1.force/blockGroup1.mass;
+                blockGroup2.acceleration = blockGroup2.force/blockGroup2.mass;
+                blockGroup1.velocity += blockGroup1.acceleration * dt;
+                blockGroup2.velocity += blockGroup2.acceleration * dt;
+                blockGroup1.position.x += blockGroup1.velocity * dt;
+                blockGroup2.position.x += blockGroup2.velocity * dt;
+                if(blockGroup1.position.x < stopperPosition) {
+                    blockGroup1.position.x = stopperPosition;
+                    blockGroup1.velocity = 0;
+                }
+                if(blockGroup2.position.x < stopperPosition) {
+                    blockGroup2.position.x = stopperPosition;
+                    blockGroup2.velocity = 0;
+                }
+                if(blockGroup1.velocity === 0 && blockGroup2.velocity === 0) {
+                    simulationPaused = true;
+                }
+            }
+            
             function initMassForceGeometry(group)
             {
-                var blockPos1 = new THREE.Vector3(0,1,0);
-                var blockPos2 = new THREE.Vector3(0,1,1);
-                var blockLength = 1;
                 // Create Block 1
-                var boxGeometry1 = new THREE.BoxGeometry(1,1,1);
-                block1 = new THREE.Mesh(boxGeometry1, sphereMaterial);
-                block1.position.z = 2;
+                var boxGeometry1 = new THREE.BoxGeometry(blockSize,blockSize,blockSize);
+                block1 = new THREE.Mesh(boxGeometry1, blockMaterial);
                 block1.castShadow = true;
                 block1.receiveShadow = true;
                 // Create Block 2
-                var boxGeometry2 = new THREE.BoxGeometry(1,1,1);
-                block2 = new THREE.Mesh(boxGeometry2, sphereMaterial);
+                var boxGeometry2 = new THREE.BoxGeometry(blockSize,blockSize,blockSize);
+                block2 = new THREE.Mesh(boxGeometry2, blockMaterial);
                 block2.position.z = 0;
                 block2.castShadow = true;
                 block2.receiveShadow = true;
+                
                 // Make Force Pointers
-                var forcePointerGroup1 = new THREE.Object3D();
-                var pointerLength = 1; var pointerRadius = 0.3;
+                forcePointerGroup1 = new THREE.Object3D();
                 var cylinder1 = new THREE.CylinderGeometry(0,pointerRadius,pointerLength/2,10,10);
                 var cylinder2 = new THREE.CylinderGeometry(pointerRadius/2,pointerRadius/2,pointerLength,10,10);
                 var mesh1 = new THREE.Mesh(cylinder1, lambertMaterial1);
@@ -192,7 +209,7 @@
                 forcePointerGroup1.add(mesh1);
                 forcePointerGroup1.add(mesh2);
                 
-                var forcePointerGroup2 = new THREE.Object3D();
+                forcePointerGroup2 = new THREE.Object3D();
                 var cylinder1 = new THREE.CylinderGeometry(0,pointerRadius,pointerLength/2,10,10);
                 var cylinder2 = new THREE.CylinderGeometry(pointerRadius/2,pointerRadius/2,pointerLength,10,10);
                 var mesh1 = new THREE.Mesh(cylinder1, lambertMaterial2);
@@ -205,10 +222,21 @@
                 forcePointerGroup2.rotateZ(Math.PI/2);
                 forcePointerGroup2.add(mesh1);
                 forcePointerGroup2.add(mesh2);
+                forcePointerGroup1.position.x = 0.5*blockSize + pointerLength/2;
+                forcePointerGroup2.position.x = 0.5*blockSize + pointerLength*2/2;
+                forcePointerGroup2.scale.y = 2;
                 
-                var blockGroup1 = new THREE.Object3D();
+                blockGroup1 = new THREE.Object3D();
+                blockGroup1.mass = 1;
+                blockGroup1.force = -0.1;
+                blockGroup1.acceleration = 0;
+                blockGroup1.velocity = 0;
                 blockGroup1.position.set(blockPos1.x, blockPos1.y, blockPos1.z);
-                var blockGroup2 = new THREE.Object3D();
+                blockGroup2 = new THREE.Object3D();
+                blockGroup2.mass = 1;
+                blockGroup2.force = -0.2;
+                blockGroup2.acceleration = 0;
+                blockGroup2.velocity = 0;
                 blockGroup2.position.set(blockPos2.x, blockPos2.y, blockPos2.z);
                 
                 blockGroup1.add(block1);
@@ -221,10 +249,18 @@
                 // Base Plane
                 var boxGeometry = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
                 boxMesh = new THREE.Mesh(boxGeometry, groundMaterial);
-                group.add(boxMesh);
+                scene.add(boxMesh);
 
                 boxMesh.castShadow = true;
                 boxMesh.receiveShadow = true;
+                
+                // Stopper Geometry
+                boxGeometry = new THREE.BoxGeometry(0.5, 1, groundDepth);
+                var stopperMesh = new THREE.Mesh(boxGeometry, groundMaterial);
+                stopperMesh.castShadow = true;
+                stopperMesh.receiveShadow = true;
+                stopperMesh.position.x = -groundWidth/2;
+                scene.add(stopperMesh);
             }
             // Initialize Geometry
             function initGeometry()
@@ -238,7 +274,7 @@
 
             function updatePhysicalBodies()
             {
-                time += 0.016;               
+                updateMassSystem(0.016);
             }
 
             function onDocumentMouseMove(event)
@@ -310,7 +346,7 @@
                 camera.position.z = -4;
                 camera.position.y = 4;
                 camera.lookAt(new THREE.Vector3(0, 0, 1));
-                //controls = new THREE.OrbitControls(camera);
+                controls = new THREE.OrbitControls(camera);
                 //controls.addEventListener('change', render);
                 // scene
                 scene = new THREE.Scene();
@@ -353,11 +389,12 @@
                 var reflectionCube = THREE.ImageUtils.loadTextureCube(urls);
                 reflectionCube.format = THREE.RGBFormat;
                 var texture = THREE.ImageUtils.loadTexture("../../js/lib/three.js/textures/wood.jpg");
+                var marbleTexture = THREE.ImageUtils.loadTexture("../../img/marble.jpg");
                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
                 lambertMaterial1 = new THREE.MeshLambertMaterial({color:0x8888ff, ambient: 0xaaaaaa, combine: THREE.MixOperation});
                 lambertMaterial2 = new THREE.MeshLambertMaterial({color:0xff8888, ambient: 0xaaaaaa, combine: THREE.MixOperation});
                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map: texture});
-                sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess: 1000});
+                blockMaterial = new THREE.MeshPhongMaterial({map: marbleTexture, envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.4, shininess: 1000});
                 
                 
                 renderer = new THREE.WebGLRenderer({antialias: true});

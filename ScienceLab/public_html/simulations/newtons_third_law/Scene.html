@@ -1,0 +1,494 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>periodic_motion</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <script src="../../js/lib/dyGraph/dygraph-combined.js"></script>
+        <script src="../../js/lib/three.js/three.js"></script>
+        <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
+        <script src="../../js/lib/three.js/js/Detector.js"></script>
+        <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+        <script src="../fundamental_quantities/SimplePendulumn.js"></script>
+    </head>
+
+    <body>
+        <div id="pendulumn" style="background-color: white"></div>
+        <div class="row-fluid span12">
+        <div id="energy" style="background-color: white"></div>
+        <div id="composition" style="background-color: white"></div>
+        </div>
+        <script type="text/javascript">
+            //var containerComposition = document.getElementById('composition');
+            var containerPendulumn = document.getElementById('pendulumn');
+            var containerEnergy = document.getElementById('energy');
+            var mixed = [];
+            var bars = [];
+            var velocityData = [];
+            var numPoints = 100;
+            
+            var block1, block2;
+            var blockGroup1, blockGroup2; 
+            
+            function initGraph() {
+                for (var i = 0; i < 1; i++) {
+                    //velocityData.push([i,0,0]);
+                }
+            }
+
+            initGraph();
+
+            var labels = ['x'];
+            labels[1] = 'Velocity 1';
+            labels[2] = 'Velocity 2';
+            
+//            var g = new Dygraph(
+//                    containerComposition,
+//                    velocityData,
+//                    {
+//                        dateWindow:[0,100],
+//                        valueRange:[0.0,4.0],
+//                        animatedZooms: true,
+//                        series: {
+//                            'Velocity 1': {
+//                                strokeWidth: 1.0
+//                            },
+//                            'Velocity 2': {
+//                                strokeWidth: 1.0
+//                            }
+//                        },
+//                        labels: labels.slice(),
+//                        strokeWidth: 0.2,
+//                        strokePattern: Dygraph.DASHED_LINE});
+    
+            
+            var camera, scene, renderer, controls;
+
+            var fov = 70,
+            isUserInteracting = false,
+            onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+            lon = 0, onMouseDownLon = 0,
+            lat = 0, onMouseDownLat = 0,
+            phi = 0, theta = 0;
+
+            var mouseX = 0, mouseY = 0;
+
+            var windowHalfX = window.innerWidth / 2;
+            var windowHalfY = window.innerHeight / 2;
+
+            var cubeMaterial;
+            var groundMaterial;
+            var blockMaterial;
+            var lambertMaterial1, lambertMaterial2;
+
+            var boxMesh;
+            
+            var sphereRadius = 0.2;
+            var cradleHeight = 3.0;
+            var cradleLength = 5.0;
+            var groundWidth = 2.0 * cradleLength;
+            var groundDepth = 1.5 * cradleLength;
+            var groundHeight = 0.2;
+            var stopperPosition = -groundWidth/2 + 1;
+            
+            var cameraPosition = new THREE.Vector3(0, 0, 5);
+            var time = 0.0;  
+            var blockSize = 1.0;
+            var blockPos1 = new THREE.Vector3(2.5*blockSize,blockSize/2+0.1,0);
+            var blockPos2 = new THREE.Vector3(-2.5*blockSize,blockSize/2+0.1,0);
+            var simulationPaused = false;
+            var pointerLength = 0.5; var pointerRadius = 0.06;
+            var pointerScale = 1;
+            var pointerScale1 = 1, pointerScale2 = 1;
+            var forcePointerGroup1, forcePointerGroup2, forcePointerGroup3, forcePointerGroup4;
+            var springScale = 1;
+            var springLength = 1.0;
+            var springRadius = 0.01;
+            var spiralRadius = 0.08;
+            var springConstant = 1;
+            var springCompression = 0.0;
+            var springMesh;
+                        
+            var count = 0;
+//            setInterval(function() {
+//                if(simulationPaused)
+//                    return;
+//                var v1 = blockGroup1.velocity;
+//                var v2 = blockGroup2.velocity;
+//                velocityData.push([count, -v1, -v2]);
+//                if(velocityData.length>100)
+//                    velocityData.splice(0,1);
+//                g.updateOptions( { 'file': velocityData } );
+//                count++;
+//              }, 100);
+              
+            function Restart() {
+                simulationPaused = false;
+            }   
+            
+            function Reset() {
+                blockGroup1.acceleration = blockGroup1.force/blockGroup1.mass;
+                blockGroup2.acceleration = blockGroup2.force/blockGroup2.mass;
+                blockGroup1.velocity = 0;
+                blockGroup2.velocity = 0;
+                blockGroup1.position.x = blockPos1.x;
+                blockGroup2.position.x = blockPos2.x;
+                velocityData.splice(0,velocityData.length);
+                simulationPaused = true;
+                count = 0;
+            }
+            
+            function changeMass(index, value) {
+                if(Number(index) === 0) {
+                    blockGroup1.mass = Number(value);
+                    //pointerScale1 = blockGroup1.mass;
+                    //forcePointerGroup1.position.x = blockGroup1.position.x + 0.5*blockSize + pointerLength*pointerScale1/2;
+                }
+                if(Number(index) === 1) {
+                    blockGroup2.mass = Number(value);
+                    //pointerScale2 = blockGroup2.mass;
+                    //forcePointerGroup2.position.x = blockGroup2.position.x + 0.5*blockSize + pointerLength*pointerScale2/2;
+                }
+            }
+            
+            function changeForce(index, value) {
+                if(Number(index) === 0) {
+                    blockGroup1.force = -Number(value);
+                    pointerScale1 = blockGroup1.force/0.1;
+                    forcePointerGroup1.position.x = blockGroup1.position.x + 0.5*blockSize + pointerLength*pointerScale1/2;
+                }
+                if(Number(index) === 1) {
+                    blockGroup2.force = -Number(value);
+                    pointerScale2 = blockGroup2.force/0.1;
+                    forcePointerGroup2.position.x = blockGroup2.position.x + 0.5*blockSize + pointerLength*pointerScale2/2;
+                }
+            }
+            
+            function updateMassSystem(dt) {                
+                if(simulationPaused)
+                    return;
+                var dx = blockGroup1.position.x - blockGroup2.position.x;
+                var dy = blockGroup1.position.y - blockGroup2.position.y;
+                var dz = blockGroup1.position.z - blockGroup2.position.z;
+                var d = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                if( d < springLength + blockSize) {
+                    // Compression of Spring
+                    springCompression = d - springLength - blockSize;
+                    var springForce = springConstant * springCompression;
+                    // Apply Force on both masses
+                    blockGroup1.acceleration = -springForce/blockGroup1.mass;
+                    blockGroup2.acceleration = springForce/blockGroup2.mass;
+                    // Show Force Pointer
+                    forcePointerGroup1.visible = true;
+                    forcePointerGroup2.visible = true;
+                    forcePointerGroup3.visible = true;
+                    forcePointerGroup4.visible = true;
+                } else {
+                    blockGroup1.acceleration = 0.0;
+                    blockGroup2.acceleration = 0.0;
+                    forcePointerGroup1.visible = false;
+                    forcePointerGroup2.visible = false;
+                    forcePointerGroup3.visible = false;
+                    forcePointerGroup4.visible = false;
+                }       
+                springScale = (springLength + springCompression)/springLength;
+                springMesh.scale.y = springScale;
+                
+                pointerScale = (pointerLength - springCompression)/pointerLength;
+                forcePointerGroup1.scale.y = pointerScale;
+                forcePointerGroup2.scale.y = -pointerScale;
+                forcePointerGroup3.scale.y = pointerScale;
+                forcePointerGroup4.scale.y = -pointerScale;
+                 
+                blockGroup1.velocity += blockGroup1.acceleration * dt;
+                blockGroup2.velocity += blockGroup2.acceleration * dt;
+                blockGroup1.position.x += blockGroup1.velocity * dt;
+                blockGroup2.position.x += blockGroup2.velocity * dt;
+                if(blockGroup1.position.x < stopperPosition) {
+                    blockGroup1.position.x = stopperPosition;
+                    blockGroup1.velocity = 0;
+                }
+                if(blockGroup2.position.x < stopperPosition) {
+                    blockGroup2.position.x = stopperPosition;
+                    blockGroup2.velocity = 0;
+                }
+                if(blockGroup1.position.x > -stopperPosition) {
+                    blockGroup1.position.x = -stopperPosition;
+                    blockGroup1.velocity = 0;
+                }
+                if(blockGroup2.position.x > -stopperPosition) {
+                    blockGroup2.position.x = -stopperPosition;
+                    blockGroup2.velocity = 0;
+                }
+                if(blockGroup1.velocity === 0 && blockGroup2.velocity === 0) {
+                    simulationPaused = true;
+                }
+                //console.log(blockGroup1.velocity + blockGroup2.velocity);
+                //console.log(0.5*(blockGroup1.velocity*blockGroup1.velocity + blockGroup2.velocity*blockGroup2.velocity));
+                //console.log(0.5*springConstant*springCompression*springCompression);
+            }
+            
+            function initMassForceGeometry(group)
+            {
+                // Create Block 1
+                var boxGeometry1 = new THREE.BoxGeometry(blockSize,blockSize,blockSize);
+                block1 = new THREE.Mesh(boxGeometry1, blockMaterial);
+                block1.castShadow = true;
+                block1.receiveShadow = true;
+                // Create Block 2
+                var boxGeometry2 = new THREE.BoxGeometry(blockSize,blockSize,blockSize);
+                block2 = new THREE.Mesh(boxGeometry2, blockMaterial);
+                block2.position.z = 0;
+                block2.castShadow = true;
+                block2.receiveShadow = true;
+                // Make Geometry for Spring
+                var helixPoints = [];
+                var theta = 0;
+                for ( var i = 0; i < 500; i ++ ) {
+                        var x = spiralRadius * Math.cos(theta*50);
+                        var z = spiralRadius * Math.sin(theta*50);
+                        var y = theta;
+                        theta += springLength/500;
+                        helixPoints.push( new THREE.Vector3( x, y, z) );
+                }
+                var helixSpline =  new THREE.SplineCurve3( helixPoints );
+                var extrudeSettings = {
+                        steps		: 200,
+                        bevelEnabled	: false,
+                        extrudePath		: helixSpline
+                };
+                // Create
+                var pts = [], count = 20;
+                for ( var i = 0; i < count; i ++ ) {
+                        var a = 2 * i / count * Math.PI;
+                        pts.push( new THREE.Vector2 ( Math.cos( a ) * springRadius, Math.sin( a ) * springRadius ) );
+                }
+                var shape = new THREE.Shape( pts );
+
+                var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+                springMesh = new THREE.Mesh( geometry, groundMaterial );
+                springMesh.rotateZ(Math.PI/2);
+                springMesh.position.x = - springLength/2;
+                springMesh.castShadow = true;
+                springMesh.receiveShadow = true;
+                // Make Force Pointers
+                forcePointerGroup1 = new THREE.Object3D();
+                var cylinder1 = new THREE.CylinderGeometry(0,pointerRadius,pointerLength/2,10,10);
+                var cylinder2 = new THREE.CylinderGeometry(pointerRadius/2,pointerRadius/2,pointerLength,10,10);
+                var mesh1 = new THREE.Mesh(cylinder1, lambertMaterial1);
+                mesh1.position.y = pointerLength/2;
+                var mesh2 = new THREE.Mesh(cylinder2, lambertMaterial1);
+                mesh1.castShadow = true;
+                mesh1.receiveShadow = false;
+                mesh2.castShadow = true;
+                mesh2.receiveShadow = false;
+                forcePointerGroup1.rotateZ(Math.PI/2);
+                forcePointerGroup1.add(mesh1);
+                forcePointerGroup1.add(mesh2);
+                
+                forcePointerGroup2 = forcePointerGroup1.clone();// new THREE.Object3D();
+                forcePointerGroup3 = forcePointerGroup1.clone();
+                forcePointerGroup4 = forcePointerGroup1.clone();
+                forcePointerGroup1.position.x = -blockSize/2;
+                forcePointerGroup2.position.x = -blockSize/2;
+                forcePointerGroup2.scale.y = -1;
+                forcePointerGroup3.position.x = blockSize/2;
+                forcePointerGroup4.position.x = blockSize/2;
+                forcePointerGroup4.scale.y = -1;
+
+                forcePointerGroup1.visible = false;
+                forcePointerGroup2.visible = false;
+                forcePointerGroup3.visible = false;
+                forcePointerGroup4.visible = false;
+                
+                blockGroup1 = new THREE.Object3D();
+                blockGroup1.mass = 1;
+                blockGroup1.force = -0.1;
+                blockGroup1.acceleration = 0;
+                blockGroup1.velocity = 0;
+                blockGroup1.position.set(blockPos1.x, blockPos1.y, blockPos1.z);
+                blockGroup2 = new THREE.Object3D();
+                blockGroup2.mass = 1;
+                blockGroup2.force = -0.2;
+                blockGroup2.acceleration = 0;
+                blockGroup2.velocity = 1;
+                blockGroup2.position.set(blockPos2.x, blockPos2.y, blockPos2.z);
+                
+                blockGroup1.add(block1);
+                blockGroup1.add(springMesh);
+                blockGroup1.add(forcePointerGroup1);
+                blockGroup1.add(forcePointerGroup2);
+                blockGroup2.add(block2);
+                blockGroup2.add(forcePointerGroup3);
+                blockGroup2.add(forcePointerGroup4);
+                scene.add(blockGroup1);
+                scene.add(blockGroup2);
+                
+                // Base Plane
+                var boxGeometry = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
+                boxMesh = new THREE.Mesh(boxGeometry, groundMaterial);
+                scene.add(boxMesh);
+
+                boxMesh.castShadow = true;
+                boxMesh.receiveShadow = true;
+            }
+            // Initialize Geometry
+            function initGeometry()
+            {
+                // Make Root Group
+                var group = new THREE.Object3D();
+                scene.add(group);
+                // Init Geometry for the Structure
+                initMassForceGeometry(group);
+            }
+
+            function updatePhysicalBodies()
+            {
+                updateMassSystem(0.016);
+            }
+
+            function onDocumentMouseMove(event)
+            {
+                var pos = camera.position;
+
+                if (pos.y < 2)
+                {
+                    //pos.y = 2;
+                }
+            }
+
+            function onDocumentMouseWheel(event)
+            {
+                var pos = camera.position;
+                var d = pos.length();
+                cameraPosition.x = pos.x;
+                cameraPosition.y = pos.y;
+                cameraPosition.z = pos.z;
+                if (d < 1)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * 1;
+                    pos.y = cameraPosition.y * 1;
+                    pos.z = cameraPosition.z * 1;
+                }
+                if (d > 10)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * 10;
+                    pos.y = cameraPosition.y * 10;
+                    pos.z = cameraPosition.z * 10;
+                }
+
+            }
+
+            function onDocumentMouseDown(e)
+            {
+            }
+
+            function onDocumentMouseUp(e)
+            {
+            }
+
+            function onWindowResize() {
+
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+            }
+            function animate() {
+                requestAnimationFrame(animate);
+                //controls.update();
+                updatePhysicalBodies();
+                render();
+            }
+
+            function render() {
+                renderer.setClearColor(0xffffff, 1);
+                renderer.render(scene, camera);
+            }
+            function init() {
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight*2, 1, 100);
+                camera.position.z = -4;
+                camera.position.y = 4;
+                camera.lookAt(new THREE.Vector3(0, 0, 1));
+                controls = new THREE.OrbitControls(camera);
+                //controls.addEventListener('change', render);
+                // scene
+                scene = new THREE.Scene();
+                var ambient = new THREE.AmbientLight(0x101030);
+                scene.add(ambient);
+
+                var light = new THREE.DirectionalLight(0xffeedd);
+                light.position.set(50, 200, -100);
+                light.castShadow = true;
+                light.shadowMapWidth = 1024;
+                light.shadowMapHeight = 1024;
+
+                var d = 5;
+
+                light.shadowCameraLeft = -d;
+                light.shadowCameraRight = d;
+                light.shadowCameraTop = d;
+                light.shadowCameraBottom = -d;
+
+                light.shadowCameraFar = 1000;
+                light.shadowDarkness = 0.5;
+                scene.add(light);
+
+                // texture
+
+                var manager = new THREE.LoadingManager();
+                manager.onProgress = function (item, loaded, total) {
+                    console.log(item, loaded, total);
+
+                };
+
+                var path = "../../js/lib/three.js/textures/cube/pisa/";
+                var format = '.png';
+                var urls = [
+                    path + 'px' + format, path + 'nx' + format,
+                    path + 'py' + format, path + 'ny' + format,
+                    path + 'pz' + format, path + 'nz' + format
+                ];
+
+                var reflectionCube = THREE.ImageUtils.loadTextureCube(urls);
+                reflectionCube.format = THREE.RGBFormat;
+                var texture = THREE.ImageUtils.loadTexture("../../js/lib/three.js/textures/wood.jpg");
+                var marbleTexture = THREE.ImageUtils.loadTexture("../../img/marble.jpg");
+                //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
+                lambertMaterial1 = new THREE.MeshLambertMaterial({color:0x8888ff, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+                lambertMaterial2 = new THREE.MeshLambertMaterial({color:0xff8888, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+                groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map: texture});
+                blockMaterial = new THREE.MeshPhongMaterial({map: marbleTexture, envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.4, shininess: 1000});
+                blockMaterial.transparent = true;
+                blockMaterial.opacity = 0.4;
+                
+                renderer = new THREE.WebGLRenderer({antialias: true});
+                renderer.setSize(window.innerWidth, window.innerHeight/2);
+                containerPendulumn.appendChild(renderer.domElement);
+
+                document.addEventListener('mousemove', onDocumentMouseMove, false);
+                document.addEventListener('mousedown', onDocumentMouseDown, false);
+                document.addEventListener('mouseup', onDocumentMouseUp, false);
+                document.addEventListener('mousewheel', onDocumentMouseWheel, false);
+
+                window.addEventListener('resize', onWindowResize, false);
+
+                renderer.shadowMapEnabled = true;
+                renderer.shadowMapSoft = true;
+
+                initGeometry();
+            }
+
+            init();
+            animate();
+
+        </script>
+    </body>
+</html>

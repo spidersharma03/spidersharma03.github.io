@@ -15,6 +15,19 @@
         "id": "Mechanics.json", 
         "imageUrl": "", 
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Periodic Motion Examples",
+                   "description":"Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples ",
+                   "image" : "test.png"
+               },
+               {
+                   "name": "Oscilloscope",
+                   "description":"Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "periodic_motion"
     },
     {
@@ -22,6 +35,19 @@
         "id": "Optics.json", 
         "imageUrl": "", 
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Fundamental Quantities",
+                   "description":"Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities",
+                   "image" : "test.png"
+               },
+               {
+                   "name": "Phase",
+                   "description":"Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "fundamental_quantities"
     },
     {
@@ -29,6 +55,19 @@
         "id": "Electricity.json", 
         "imageUrl": "",
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Shadow Projector",
+                   "description":"Shadow Projector Shadow Projector Shadow Projector Shadow Projector Shadow Projector Shadow Projector Shadow Projector Shadow Projector",
+                   "image" : "test.png"
+               },
+               {
+                   "name": "Uniform Circular Motion",
+                   "description":"Uniform Circular Motion Uniform Circular Motion Uniform Circular Motion Uniform Circular Motion Uniform Circular Motion Uniform Circular Motion",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "harmonic_motion"
     },
     {
@@ -36,6 +75,14 @@
         "id": "Electricity.json", 
         "imageUrl": "",
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Pendulumn Dynamics",
+                   "description":"Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics ",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "pendulumn_dynamics"
     },
     {
@@ -43,6 +90,19 @@
         "id": "Megnatism.json", 
         "imageUrl": "",
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Resonance",
+                   "description":"Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance",
+                   "image" : "test.png"
+               },
+               {
+                   "name": "Resonance Response",
+                   "description":"Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "resonance"
     },
     {
@@ -50,19 +110,44 @@
         "id": "ElectroMagnetics.json", 
         "imageUrl": "", 
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Damping",
+                   "description":"Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "frictional_effects"
     },
     {
         "name": "Non Harmonic Motion", 
         "id": "Thermodynamics.json", 
         "imageUrl": "", 
-        "pageLink"  : "resonance_nonharmonic",
-        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
+        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed",
+        "simulations":
+            [
+               {
+                   "name": "Non Harmonic Forced Oscillator",
+                   "description":"Non Harmonic Forced Oscillator Non Harmonic Forced Oscillator Non Harmonic Forced Oscillator Non Harmonic Forced Oscillator Non Harmonic Forced Oscillator",
+                   "image" : "test.png"
+               }
+            ],
+        "pageLink"  : "resonance_nonharmonic"
     },
     {
         "name": "Shape of Periodic Oscillations", 
         "id": "Modern Physics.json", 
         "imageUrl": "", 
+        "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Summation of Harmonics",
+                   "description":"Summation of Harmonics Summation of Harmonics Summation of Harmonics Summation of Harmonics Summation of Harmonics Summation of Harmonics Summation of Harmonics",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "harmonic_composition"
     }
 ]

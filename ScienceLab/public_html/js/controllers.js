@@ -39,6 +39,8 @@ controllers.controller('SubTopicsLoadController', function ($scope, $routeParams
     .success(function(data) {
     $scope.categoryTopicsData = data;
     $scope.SubTopic = $scope.categoryTopicsData.topics[0].pageLink;
+    $scope.SimulationList = $scope.categoryTopicsData.topics[0].simulations;
+    $scope.SimulationName = $scope.categoryTopicsData.topics[0].name;
   });
 });
 
@@ -54,5 +56,14 @@ controllers.controller('SubTopicsDataLoadController', function ($scope, $routePa
     contentLoadingServiceAPI.getSubTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase(),$scope.Topic.toLowerCase())
     .success(function(data) {
     $scope.categoryTopicsData = data;
+    for(var i = 0; i < $scope.categoryTopicsData.topics.length; i++)
+    {
+        if($scope.categoryTopicsData.topics[i].pageLink === $scope.SubTopic) {
+            $scope.SimulationList = $scope.categoryTopicsData.topics[i].simulations;
+            $scope.SimulationName = $scope.categoryTopicsData.topics[i].name;
+            break;
+        }
+    }
+    
   });
 });

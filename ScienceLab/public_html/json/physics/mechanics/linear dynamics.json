@@ -15,6 +15,14 @@
         "id": "Mechanics.json", 
         "imageUrl": "", 
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Stack of Boxes",
+                   "description":"Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "newton_first_law"
     },
     {
@@ -22,6 +30,14 @@
         "id": "Optics.json", 
         "imageUrl": "", 
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Constant Force",
+                   "description":"Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "newton_second_law"
     },
     {
@@ -29,6 +45,14 @@
         "id": "Electricity.json", 
         "imageUrl": "",
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Forces on Spring",
+                   "description":"Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "newton_third_law"
     },
     {
@@ -36,6 +60,19 @@
         "id": "Electricity.json", 
         "imageUrl": "",
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Elastic Collision",
+                   "description":"Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision",
+                   "image" : "test.png"
+               },
+               {
+                   "name": "InElastic Collision",
+                   "description":"InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "pendulumn_dynamics"
     },
     {
@@ -43,27 +80,25 @@
         "id": "Megnatism.json", 
         "imageUrl": "",
         "description": "",
+        "simulations":
+            [
+               {
+                   "name": "Centre of Mass goes Uphill!!",
+                   "description":"Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!!",
+                   "image" : "test.png"
+               },
+               {
+                   "name": "Motion of Centre of Mass",
+                   "description":"Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass",
+                   "image" : "test.png"
+               },
+               {
+                   "name": "Experimental Determination of Centre of Mass",
+                   "description":"Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass",
+                   "image" : "test.png"
+               }
+            ],
         "pageLink"  : "com"
-    },
-    {
-        "name": "Frictional Effects", 
-        "id": "ElectroMagnetics.json", 
-        "imageUrl": "", 
-        "description": "",
-        "pageLink"  : "frictional_effects"
-    },
-    {
-        "name": "Non Harmonic Motion", 
-        "id": "Thermodynamics.json", 
-        "imageUrl": "", 
-        "pageLink"  : "resonance_nonharmonic",
-        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
-    },
-    {
-        "name": "Shape of Periodic Oscillations", 
-        "id": "Modern Physics.json", 
-        "imageUrl": "", 
-        "pageLink"  : "harmonic_composition"
     }
 ]
 }

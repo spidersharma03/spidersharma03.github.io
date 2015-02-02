@@ -112,7 +112,7 @@
 
             var gEnergyGraph = new Dygraph(
                     containerEnergy,
-                    bars, {labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
+                    bars, {valueRange:[0.0,2.0],labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
             );
     
             var count = 1;

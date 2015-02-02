@@ -18,14 +18,16 @@
         "simulations":
             [
                {
-                   "name": "Periodic Motion Examples",
+                   "display_name": "Periodic Motion Examples",
                    "description":"Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples ",
-                   "image" : "test.png"
+                   "image" : "test.png",
+                   "scene_name" : "ScenePeriodic_Motion"
                },
                {
-                   "name": "Oscilloscope",
+                   "display_name": "Oscilloscope",
                    "description":"Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope Oscilloscope",
-                   "image" : "test.png"
+                   "image" : "oscilloscope.png",
+                    "scene_name" : "SceneSimpleOscilloscope"
                }
             ],
         "pageLink"  : "periodic_motion"
@@ -38,14 +40,16 @@
         "simulations":
             [
                {
-                   "name": "Fundamental Quantities",
+                   "display_name": "Fundamental Quantities",
                    "description":"Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities Fundamental Quantities",
-                   "image" : "test.png"
+                   "image" : "test.png",
+                   "scene_name" : "ScenePhaseShift"
                },
                {
-                   "name": "Phase",
+                   "display_name": "Phase",
                    "description":"Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase Phase",
-                   "image" : "test.png"
+                   "image" : "phase_shift.png",
+                   "scene_name" : "ScenePhaseShift"
                }
             ],
         "pageLink"  : "fundamental_quantities"
@@ -58,14 +62,16 @@
         "simulations":
             [
                {
-                   "name": "Shadow Projector",
+                   "display_name": "Uniform Circular Motion",
                    "description":"Shadow Projector Shadow Projector Shadow Projector Shadow Projector Shadow Projector Shadow Projector Shadow Projector Shadow Projector",
-                   "image" : "test.png"
+                   "image" : "test.png",
+                   "scene_name" : "SceneCircularMotion"
                },
                {
-                   "name": "Uniform Circular Motion",
+                   "display_name": "Shadow Projector",
                    "description":"Uniform Circular Motion Uniform Circular Motion Uniform Circular Motion Uniform Circular Motion Uniform Circular Motion Uniform Circular Motion",
-                   "image" : "test.png"
+                   "image" : "shadow_projector.png",
+                   "scene_name" : "SceneShadowProjector"
                }
             ],
         "pageLink"  : "harmonic_motion"
@@ -78,9 +84,10 @@
         "simulations":
             [
                {
-                   "name": "Pendulumn Dynamics",
+                   "display_name": "Pendulumn Dynamics",
                    "description":"Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics Pendulumn Dynamics ",
-                   "image" : "test.png"
+                   "image" : "test.png",
+                   "scene_name" : "SceneSHMQuantities"
                }
             ],
         "pageLink"  : "pendulumn_dynamics"
@@ -93,14 +100,16 @@
         "simulations":
             [
                {
-                   "name": "Resonance",
+                   "display_name": "Resonance",
                    "description":"Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance Resonance",
-                   "image" : "test.png"
+                   "image" : "resonance.png",
+                   "scene_name" : "SceneResonance"
                },
                {
-                   "name": "Resonance Response",
+                   "display_name": "Resonance Response",
                    "description":"Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response Resonance Response",
-                   "image" : "test.png"
+                   "image" : "resonance_response.png",
+                   "scene_name" : "SceneResonanceResponse"
                }
             ],
         "pageLink"  : "resonance"
@@ -113,9 +122,10 @@
         "simulations":
             [
                {
-                   "name": "Damping",
+                   "display_name": "Damping",
                    "description":"Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping Damping",
-                   "image" : "test.png"
+                   "image" : "test.png",
+                   "scene_name" : "SceneFrictionalEffects"
                }
             ],
         "pageLink"  : "frictional_effects"
@@ -128,12 +138,13 @@
         "simulations":
             [
                {
-                   "name": "Non Harmonic Forced Oscillator",
+                   "display_name": "Non Harmonic Forced Oscillator",
                    "description":"Non Harmonic Forced Oscillator Non Harmonic Forced Oscillator Non Harmonic Forced Oscillator Non Harmonic Forced Oscillator Non Harmonic Forced Oscillator",
-                   "image" : "test.png"
+                   "image" : "non_harmonic.png",
+                   "scene_name" : "SceneResonance_NonHarmonic"
                }
             ],
-        "pageLink"  : "resonance_nonharmonic"
+        "pageLink"  : "resonance_non_harmonic_force"
     },
     {
         "name": "Shape of Periodic Oscillations", 
@@ -143,9 +154,16 @@
         "simulations":
             [
                {
-                   "name": "Summation of Harmonics",
+                   "display_name": "Summation of Harmonics",
                    "description":"Summation of Harmonics Summation of Harmonics Summation of Harmonics Summation of Harmonics Summation of Harmonics Summation of Harmonics Summation of Harmonics",
-                   "image" : "test.png"
+                   "image" : "test.png",
+                   "scene_name" : "SceneHarmonicComposition"
+               },
+               {
+                   "display_name": "Waveforms",
+                   "description":"Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms Waveforms",
+                   "image" : "test.png",
+                   "scene_name" : "SceneHarmonicComposition"
                }
             ],
         "pageLink"  : "harmonic_composition"

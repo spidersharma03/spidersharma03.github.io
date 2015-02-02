@@ -111,7 +111,7 @@
             } 
             gSpectrum = new Dygraph(
                     containerSpectrum,
-                    bars, {labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
+                    bars, {valueRange:[0.0,1.0],labels: ['x', 'y1'], plotter: barChartPlotter, rollPeriod: 1}
             );
             var labels = ['x'];
             for (var i = 0; i < nHarmonics+1; ++i) {

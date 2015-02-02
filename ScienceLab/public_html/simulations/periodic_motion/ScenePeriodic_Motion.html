@@ -324,7 +324,7 @@
         			document.addEventListener( 'mousedown', onDocumentMouseDown, false );
         			document.addEventListener( 'mouseup', onDocumentMouseUp, false );
         			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
-
+        			window.addEventListener( 'dblclick', keydown, false );
 				window.addEventListener( 'resize', onWindowResize, false );
                                 
                                 renderer.shadowMapEnabled = true;
@@ -367,15 +367,18 @@
                             
                         }
                         
+                        function keydown(e) {
+                            var newwindow = window.open("");
+                            var dataUrl = renderer.domElement.toDataURL("image/png");
+                            var img = new Image();
+                            img.src = dataUrl;
+                            img.width/=2;
+                            img.height/=2;
+                            newwindow.document.body.appendChild(img);
+                        }
+                        
                         function onDocumentMouseDown(e)
                         {       
-                              var newwindow = window.open("");
-                              var dataUrl = renderer.domElement.toDataURL("image/png");
-                              var img = new Image();
-                              img.src = dataUrl;
-                              img.width/=2;
-                              img.height/=2;
-                              newwindow.document.body.appendChild(img);
                         }
                         
                         function onDocumentMouseUp(e)

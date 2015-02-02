@@ -19,6 +19,10 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
         templateUrl: 'partials/mission.html',
         controller: ''
       }).
+      when('/Simulation/:simulationPageName/:simulationName', {
+        templateUrl: 'partials/SimulationPage.html',
+        controller: 'SimulationDataLoadController'
+      }).
       when('/:subjectID', {         // this is for loading subject.( ex: physics,mathematics etc)
          templateUrl: 'partials/SubjectPage.html',
          controller: 'SubjectsLoadController'

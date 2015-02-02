@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<div>
+    <input type="button" onclick="(function(){document.getElementById('IFrame').contentWindow.Reset();})(value)" value="Reset">
+    <input type="button" onclick="(function(){document.getElementById('IFrame').contentWindow.Restart();})(value)" value="Restart">
+    <br>
+    Mass 1<input style = "width:100px" type="range" min="1" max="3" step ="0.5" value = "1" onchange="(function(){document.getElementById('IFrame').contentWindow.changeMass(0,value);})(value)">
+    Mass 2<input style = "width:100px" type="range" min="1" max="3" step ="0.5" value = "1" onchange="(function(){document.getElementById('IFrame').contentWindow.changeMass(1,value);})(value)">
+    Force 1<input style = "width:100px" type="range" min="0.1" max="3" step ="0.05" value = "0.1" onchange="(function(){document.getElementById('IFrame').contentWindow.changeForce(0,value);})(value)">
+    Force 2<input style = "width:100px" type="range" min="0.1" max="3" step ="0.05" value = "0.1" onchange="(function(){document.getElementById('IFrame').contentWindow.changeForce(1,value);})(value)">   
+</div> 

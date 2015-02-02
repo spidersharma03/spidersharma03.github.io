@@ -40,7 +40,9 @@ controllers.controller('SubTopicsLoadController', function ($scope, $routeParams
     $scope.categoryTopicsData = data;
     $scope.SubTopic = $scope.categoryTopicsData.topics[0].pageLink;
     $scope.SimulationList = $scope.categoryTopicsData.topics[0].simulations;
-    $scope.SimulationName = $scope.categoryTopicsData.topics[0].name;
+    $scope.SimulationDisplayName = $scope.categoryTopicsData.topics[0].display_name;
+    $scope.SimulationFolderName = $scope.categoryTopicsData.topics[0].pageLink;
+    $scope.SimulationSceneName = $scope.categoryTopicsData.topics[0].scene_name; 
   });
 });
 
@@ -60,10 +62,18 @@ controllers.controller('SubTopicsDataLoadController', function ($scope, $routePa
     {
         if($scope.categoryTopicsData.topics[i].pageLink === $scope.SubTopic) {
             $scope.SimulationList = $scope.categoryTopicsData.topics[i].simulations;
-            $scope.SimulationName = $scope.categoryTopicsData.topics[i].name;
+            $scope.SimulationDisplayName = $scope.categoryTopicsData.topics[i].display_name;
+            $scope.SimulationFolderName = $scope.categoryTopicsData.topics[i].pageLink;
+            $scope.SimulationSceneName = $scope.categoryTopicsData.topics[i].scene_name;            
             break;
         }
     }
     
   });
+});
+
+// Loads the simulation data. this includes, the simulation name, gui html etc.
+controllers.controller('SimulationDataLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
+    $scope.LinkName =  "simulations/" + $routeParams.simulationPageName + '/' + $routeParams.simulationName;
+    $scope.guiName = "partials/" + $routeParams.simulationPageName + ".html";
 });

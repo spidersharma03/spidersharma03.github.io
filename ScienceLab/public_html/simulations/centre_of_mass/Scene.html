@@ -28,7 +28,7 @@
 
     <body>
 
-        <script src="../../js/lib/three.js/three.js"></script>
+        <script src="../../js/lib/three.js/three.min.js"></script>
         <script src="../../js/lib/three.js/ammo.js"></script>
         <script src="../../js/lib/physi.js"></script>
          
@@ -46,11 +46,16 @@
 
             var initScene, render, renderer, render_stats, physics_stats, scene, ground, light, camera, spawnChair,
                     ground_material, chair_material;
+            var coneMaterial;
+            var rampMaterial;
             var controls;
             var doubleCone, cylinder, currentObject;
             var cone1, cone2;
-            
-            initScene = function () {
+            var fixedCamera = false;
+            var inclination = Math.PI/80;
+            var divergentAngle = Math.PI/35;
+                
+                initScene = function () {
                 var container = document.createElement( 'div' );
                 document.body.appendChild( container );
                 
@@ -81,7 +86,7 @@
                             physics_stats.update();
                         }
                 );
-
+                
                 camera = new THREE.PerspectiveCamera(
                         35,
                         window.innerWidth / window.innerHeight,
@@ -94,7 +99,7 @@
                 controls = new THREE.OrbitControls( camera );
                 controls.addEventListener( 'change', render );
                 // Light
-                light = new THREE.DirectionalLight(0xFFFFFF);
+                light = new THREE.DirectionalLight(0xaaaaaa);
                 light.position.set(-20, 60, -15);
                 light.target.position.copy(scene.position);
                 light.castShadow = true;
@@ -109,7 +114,7 @@
                 light.shadowDarkness = .5;
                 scene.add(light);
                 
-                var dummyLight = new THREE.DirectionalLight(0xFFFFFF);
+                var dummyLight = new THREE.DirectionalLight(0xaaaaaa);
                 dummyLight.position.set(10, 10, 5);
                 dummyLight.target.position.copy(scene.position);
                 scene.add(dummyLight);
@@ -127,6 +132,18 @@
                 reflectionCube.format = THREE.RGBFormat;
                 var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
                 var groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
+                var cone_Material = new THREE.MeshLambertMaterial({color: 0xaabbff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2});
+                var ramp_Material = new THREE.MeshLambertMaterial({color: 0xbbffaa, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2});
+                coneMaterial = Physijs.createMaterial(
+                        cone_Material,
+                        .8, // high friction
+                        .4 // low restitution
+                        );
+                rampMaterial = Physijs.createMaterial(
+                        ramp_Material,
+                        .8, // high friction
+                        .4 // low restitution
+                        );
                 ground_material = Physijs.createMaterial(
                         groundMaterial,
                         .8, // high friction
@@ -158,20 +175,19 @@
                 requestAnimationFrame(render);
                 scene.simulate();
             };
-            
+           
             function SetupPhysicsGeometry() {
-                var inclination = Math.PI/80;
-                var divergentAngle = -Math.PI/35;
+                
                 var boxWidth = 2;
                 var boxLength = 8;
                 var boxHeight = 60;
                 var baseBox1 = new Physijs.BoxMesh(
                             new THREE.BoxGeometry(boxWidth, boxLength, boxHeight),
-                            chair_material,0
+                            rampMaterial,0
                             );
                 baseBox1.rotation.set(
                        inclination,
-                       -divergentAngle,
+                       divergentAngle,
                        0
                         );    
                 baseBox1.position.x = 0;    
@@ -179,11 +195,11 @@
                 baseBox1.receiveShadow = true;    
                 var baseBox2 = new Physijs.BoxMesh(
                             new THREE.BoxGeometry(boxWidth, boxLength, boxHeight),
-                            chair_material,0
+                            rampMaterial,0
                             ); 
                 baseBox2.rotation.set(
                        inclination,
-                       divergentAngle,
+                       -divergentAngle,
                        0
                         );     
                 baseBox2.position.x = boxLength;    
@@ -197,7 +213,7 @@
                             new THREE.BoxGeometry(5, 15, 5),
                             chair_material,0
                             );
-                stopperBox1.position.z = boxHeight/2;
+                stopperBox1.position.z = boxHeight/2+5;
                 stopperBox1.position.x = boxLength/2;
                 stopperBox1.castShadow = true;
                 stopperBox1.receiveShadow = true;     
@@ -211,6 +227,17 @@
                 stopperBox2.receiveShadow = true;     
                 scene.add(stopperBox1);
                 scene.add(stopperBox2);
+            }
+            
+            function FixedCameraView(value) {
+               if(value) {
+                  camera.position.set(60, 10, 0);
+                  fixedCamera = true;
+              }
+               else {
+                 camera.position.set(60, 50, 60);
+                 fixedCamera = false;
+              }
             }
             
             function SwitchObject() {
@@ -252,8 +279,8 @@
                 doubleCone.position.z = height*2.8;
                 doubleCone.position.x = height/2;
                 cone1 = new Physijs.ConeMesh(
-                        new THREE.CylinderGeometry(0, radius*1.2, height,20,1),
-                        ground_material,1
+                        new THREE.CylinderGeometry(0, radius*1.0, height,20,1),
+                        coneMaterial,1
                         );
                 cone1.castShadow = true;
                 cone1.receiveShadow = true;
@@ -265,8 +292,8 @@
                         );
 
                 cone2 = new Physijs.ConeMesh(
-                        new THREE.CylinderGeometry(0, radius*1.2, height,20,1),
-                        ground_material,1
+                        new THREE.CylinderGeometry(0, radius*1.0, height,20,1),
+                        coneMaterial,1
                         );
                 cone2.castShadow = true;
                 cone2.receiveShadow = true;
@@ -282,7 +309,7 @@
                 
                 cylinder = new Physijs.CylinderMesh(
                         new THREE.CylinderGeometry(radius, radius, 2*height,30,5),
-                        ground_material,1
+                        coneMaterial,1
                         );
                 cylinder.rotation.set(
                        0,
@@ -290,15 +317,34 @@
                        -Math.PI/2
                         );
                 cylinder.position.y = 10;
-                cylinder.position.z = height*2.8;
+                cylinder.position.z = height*2 + 13;
                 cylinder.position.x = height/2;
                 cylinder.castShadow = true;
                 cylinder.receiveShadow = true;
                 scene.add(cylinder);
                 currentObject = cylinder;
                 SwitchObject();
+                
+                // Create Line Geometries
+                var geometryCentralLine = new THREE.Geometry();
+                var z = -100/2;
+                for( var i=0; i<140; i++) {
+                    geometryCentralLine.vertices[ i ] = new THREE.Vector3(15, 10, z);
+                    z += 100/140;
+                }
+		var object = new THREE.Line( geometryCentralLine, new THREE.LineDashedMaterial( { color: 0x0000ff, dashSize: 1, gapSize: 1 } ), THREE.LinePieces );
+                scene.add(object);
+                
+//                var geometryCentralLine = new THREE.Geometry();
+//                var z = -100/2;
+//                for( var i=0; i<40; i++) {
+//                    geometryCentralLine.vertices[ i ] = new THREE.Vector3(15, 10, z);
+//                    z += 100/40;
+//                }
+//		var object = new THREE.Line( geometryCentralLine, new THREE.LineDashedMaterial( { color: 0x0000ff, dashSize: 3, gapSize: 2.5 } ), THREE.LinePieces );
+//                scene.add(object);
             };
-
+            
             function animate() {
                 requestAnimationFrame(animate);
                 controls.update();

@@ -5,8 +5,8 @@
  */
 
 Spring = function(body1, body2) {
-    this.k = 500.51;
-    this.damping = 0.01;
+    this.k = 100;
+    this.damping = 0.1;
     this.body1 = body1;
     this.body2 = body2;
 };
@@ -49,7 +49,7 @@ init : function()
             body = new PhysicalBody(2,0.2,0.2,1);
         this.addBody(body);
         body.position.y = h;
-        h += 0.4;
+        h += 0.8;
     }
     for( var i=0; i<this.numBodies-1; i++) {
         this.springs.push(new Spring(this.bodies[i], this.bodies[i+1]));

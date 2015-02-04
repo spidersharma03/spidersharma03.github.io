@@ -59,7 +59,7 @@
                         var groundMaterial;
                         var rodMaterial;
                         
-                        var numBodies = 120;
+                        var numBodies = 60;
                         var rods = [];
                         var physicsBodies = [];
                         var boxMesh;
@@ -108,6 +108,7 @@
                         {
                             // Make Root Group
                             var group = new THREE.Object3D();
+                            group.rotateX(Math.PI/2);
                             scene.add(group);
                             var cylGroup = new THREE.Object3D();
                             var cyl1 = new THREE.CylinderGeometry(0.2,0.2,cradleHeight);
@@ -145,7 +146,7 @@
                             boxMesh.castShadow = true;
                             boxMesh.receiveShadow = true;
                             // Create Bodies
-                            var boxGeometry = new THREE.BoxGeometry(4,0.2,0.2);
+                            var boxGeometry = new THREE.BoxGeometry(8,0.2,0.2);
                             
                             for( var i=0; i<numBodies; i++ )
                             {
@@ -244,11 +245,11 @@
 
 				var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
 				reflectionCube.format = THREE.RGBFormat;    
-                                var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
+                                var texture = THREE.ImageUtils.loadTexture( "../../img/metal.jpg");
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
-                                cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } )
+                                cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } );
                                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
-                                rodMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
+                                rodMaterial = new THREE.MeshPhongMaterial({ map:texture, envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.3, shininess:100 });
                                 
 				renderer = new THREE.WebGLRenderer({antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );

@@ -23,7 +23,7 @@ PhysicalBody = function(l, w, b, mass)
     this.torque = 0;
 };
 
-TorisionWaveSimulation = function(N)
+TorisionWaveSimulation = function(N, positions)
 {
     this.springs = [];
     this.bodies = [];
@@ -31,6 +31,7 @@ TorisionWaveSimulation = function(N)
     this.length = 15.0;
     this.height = 3.0;
     this.time = 0;
+    this.bodyPositions = positions;
     this.tempVector = new THREE.Vector3();
 };
 
@@ -39,7 +40,6 @@ constructor : TorisionWaveSimulation,
 
 init : function()
 {
-    var h = 0.0;
     for( var i=0; i<this.numBodies; i++) {
         // Create body
         var body;
@@ -48,14 +48,15 @@ init : function()
         else
             body = new PhysicalBody(2,0.2,0.2,1);
         this.addBody(body);
-        body.position.y = h;
-        h += 0.8;
+        body.position.x = this.bodyPositions[i].x;
+        body.position.y = this.bodyPositions[i].y;
+        body.position.z = this.bodyPositions[i].z;
     }
     for( var i=0; i<this.numBodies-1; i++) {
         this.springs.push(new Spring(this.bodies[i], this.bodies[i+1]));
     }
     this.springs.push(new Spring(this.bodies[this.numBodies-1]));
-    this.bodies[this.numBodies-1].angularSpeed = 50;//Math.PI/2;
+    this.bodies[this.numBodies-1].angularSpeed = 50;
 },
 
 addBody : function(body)

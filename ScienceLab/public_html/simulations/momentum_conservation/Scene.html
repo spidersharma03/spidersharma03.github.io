@@ -101,9 +101,68 @@
                                 body.velocity.x = -3;
                             }
                         }
+                        function makeBaseGeometry() {
+                            var arcPointCount = 10;
+                            var arcRadius = 3;
+                            var arcPathAngle = Math.PI/2;
+                            var trackWallHeight = 0.1;
+                            var trackWallWidth = 0.2;
+                            var trackWidth = 0.4;
+                            var offset = 0.2;
+                            
+                            var pathLength = 10.0;
+                            var pathHeight = 2.0;
+                            var basePath = [];
+                            var theta = -arcPathAngle;
+                            
+                            basePath.push(new THREE.Vector2( 0, 0 ));
+                            basePath.push(new THREE.Vector2( -pathLength/2, 0));
+                            basePath.push(new THREE.Vector2( -pathLength/2, arcRadius ));
+                            //basePath.push(new THREE.Vector2( -pathLength/2+arcRadius, 0 ));
+                            //basePath.push(new THREE.Vector2( pathLength/2-arcRadius, 0 ));
+                            var cx = -pathLength/2 + arcRadius; var cy = arcRadius;
+                            for( var i=0; i<arcPointCount; i++ ) {
+                                theta += arcPathAngle/(arcPointCount);
+                                var x = cx + arcRadius * Math.sin(theta);
+                                var y = cy - arcRadius * Math.cos(theta);
+                                basePath.push(new THREE.Vector2( x, y));
+                            }
+                            basePath.push(new THREE.Vector2(0,0));
+                            cx = pathLength/2 - arcRadius;
+                            theta = 0;
+                            basePath.push(new THREE.Vector2(cx,0));
+                            for( var i=0; i<arcPointCount; i++ ) {
+                                var x = cx + arcRadius * Math.sin(theta);
+                                var y = cy - arcRadius * Math.cos(theta);
+                                basePath.push(new THREE.Vector2( x, y ));
+                                theta += arcPathAngle/(arcPointCount);
+                            }
+                            basePath.push(new THREE.Vector2( pathLength/2, 0 ));
+                            basePath.push(new THREE.Vector2( 0, 0));
+                            
+                            var extrudeSettings = {
+					amount			: 1,
+					steps			: 2,
+					material		: 1,
+					extrudeMaterial : 0,
+					bevelEnabled	: false,
+					bevelThickness  : 2,
+					bevelSize       : 4,
+					bevelSegments   : 1
+                            };
+                                
+                            var shape = new THREE.Shape( basePath );
+                            var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+                            var mesh = new THREE.Mesh( geometry, groundMaterial );
+                            
+                            mesh.castShadow = true;
+                            mesh.receiveShadow = true;                            
+                            scene.add( mesh );
+                        }
                         
                         function initCradleGeometry()
                         {
+                            makeBaseGeometry();
                             // Make Root Group
                             var group = new THREE.Object3D();
                             scene.add(group);
@@ -165,12 +224,12 @@
                             
                             mesh.castShadow = true;
                             mesh.receiveShadow = true;                            
-                            group.add( mesh );
+                            //group.add( mesh );
                             
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
-                            group.add( boxMesh );
+                            //group.add( boxMesh );
                             
                             boxMesh.castShadow = true;
                             boxMesh.receiveShadow = true;
@@ -236,7 +295,7 @@
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
-				camera.position.z = -8;
+				camera.position.z = 8;
 				camera.position.y = 4;
                                 controls = new THREE.OrbitControls( camera );
                                 controls.addEventListener( 'change', render );

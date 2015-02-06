@@ -91,24 +91,19 @@
                         //initPhysics();
                         //updatePhysicalBodies();
                         
-                        function changeNumPendulumns(value)
+                        function changeTorsionFactor(value)
                         {
-                            // reset all the pendulumns
-                            var x = -cradleLength/2+0.5;
-                            for( var i=0; i<numBodies; i++)
-                            {
-                                var body = simulation.bodies[i];
-                                body.velocity.x = 0;
-                                body.position.x = x;
-                                body.position.y = 1.0;
-                                body.position.z = 0;
-                                x += sphereRadius*1.9;
-                            }
-                            // give impulse
-                            for( var i=0; i<value; i++ ) {
-                                var body = simulation.bodies[i];
-                                body.velocity.x = -3;
-                            }
+                            simulation.torsion_factor = Number(value);
+                        }
+                        
+                        function changeDampingFactor(value)
+                        {
+                            simulation.damping = Number(value);
+                        }
+                        
+                        function ResetSimulation()
+                        {
+                            
                         }
                         
                         function initGeometry()
@@ -284,7 +279,7 @@
                                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:groundTexture});
                                 rodMaterial = new THREE.MeshPhongMaterial({ map:texture, envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.3, shininess:100 });
                                 
-				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true,antialias:true});
+				renderer = new THREE.WebGLRenderer({antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 
@@ -292,7 +287,6 @@
         			document.addEventListener( 'mousedown', onDocumentMouseDown, false );
         			document.addEventListener( 'mouseup', onDocumentMouseUp, false );
         			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
-        			window.addEventListener( 'dblclick', keydown, false );
 
 				window.addEventListener( 'resize', onWindowResize, false );
                                 
@@ -306,15 +300,7 @@
 
                                 initPhysics();                                
 			}
-                        function keydown(e) {
-                            var newwindow = window.open("");
-                            var dataUrl = renderer.domElement.toDataURL("image/png");
-                            var img = new Image();
-                            img.src = dataUrl;
-                            img.width/=2;
-                            img.height/=2;
-                            newwindow.document.body.appendChild(img);
-                        }
+                        
                         function onDocumentMouseMove(event)
                         {
                             var pos = camera.position;

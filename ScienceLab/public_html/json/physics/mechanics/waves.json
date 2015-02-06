@@ -18,10 +18,16 @@
         "simulations":
             [
                {
-                   "display_name": "Wave Motion Examples",
-                   "description":"Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples Periodic Motion Examples ",
+                   "display_name": "Torsion Waves",
+                   "description":"Torsion Waves Torsion Waves Torsion Waves Torsion Waves Torsion Waves Torsion Waves Torsion Waves Torsion Waves Torsion Waves Torsion Waves Torsion Waves",
                    "image" : "torsion_waves.png",
                    "scene_name" : "Scene"
+               },
+               {
+                   "display_name": "Pendulumn Waves",
+                   "description":"Pendulumn Waves Pendulumn Waves Pendulumn Waves Pendulumn Waves Pendulumn Waves Pendulumn Waves Pendulumn Waves Pendulumn Waves Pendulumn Waves Pendulumn Waves",
+                   "image" : "pendulumn_waves.png",
+                   "scene_name" : "ScenePendulumnWaves"
                }
             ],
         "pageLink"  : "torsion_waves"

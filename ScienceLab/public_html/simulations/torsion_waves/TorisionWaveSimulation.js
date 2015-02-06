@@ -6,7 +6,7 @@
 
 Spring = function(body1, body2) {
     this.k = 100;
-    this.damping = 0.1;
+    this.damping = 0.51;
     this.body1 = body1;
     this.body2 = body2;
 };
@@ -33,6 +33,8 @@ TorisionWaveSimulation = function(N, positions)
     this.time = 0;
     this.bodyPositions = positions;
     this.tempVector = new THREE.Vector3();
+    this.torsion_factor = 50;
+    this.damping = 0.1;
 };
 
 TorisionWaveSimulation.prototype = {
@@ -56,7 +58,7 @@ init : function()
         this.springs.push(new Spring(this.bodies[i], this.bodies[i+1]));
     }
     this.springs.push(new Spring(this.bodies[this.numBodies-1]));
-    this.bodies[this.numBodies-1].angularSpeed = 50;
+//    this.bodies[this.numBodies-1].angularSpeed = 50;
 },
 
 addBody : function(body)
@@ -83,13 +85,13 @@ updateSpringForces : function() {
            a1 = body1.angle;
         if(body2)
            a2 = body2.angle;
-        var forceMagnitude = this.springs[i].k * (a1 - a2);
+        var forceMagnitude = this.torsion_factor * (a1 - a2);
         var w1 = 0, w2 = 0;
         if(body1)
            w1 = body1.angularSpeed;
         if(body2)
            w2 = body2.angularSpeed;
-        var dampingForce = this.springs[i].damping * (w1 - w2);
+        var dampingForce = this.damping * (w1 - w2);
         if(body1)
            body1.torque -= forceMagnitude + dampingForce;         
         if(body2)
@@ -99,11 +101,12 @@ updateSpringForces : function() {
 // Update
 updateSimulation : function(dt)
 {
+    this.time += dt;
+    this.bodies[this.numBodies-1].angle = Math.PI/6*Math.sin(15*this.time);
     for( var i=0; i<this.bodies.length; i++ ) {
         this.bodies[i].torque = 0;
     }
     //this.bodies[this.numBodies-1].angularSpeed += -3.1*Math.sin(this.time*1);
-    this.time += dt;
     
     this.updateSpringForces();
     

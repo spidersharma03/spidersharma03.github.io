@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-MomentumConservationSimulation = function(N)
+MomentumConservationSimulation = function(N, pathRadius)
 {
     this.contacts = [];
     this.constraints = [];
@@ -14,7 +14,7 @@ MomentumConservationSimulation = function(N)
     this.numIterations = 0;
     this.numPendulumns = N;
     this.solverMethod = 0;
-    this.constraintPathRadius = 5.0;
+    this.constraintPathRadius = pathRadius;
     this.pivotPoint = new THREE.Vector2(0,this.constraintPathRadius);
     this.tempVector = new THREE.Vector2(0,0);
 };
@@ -23,6 +23,15 @@ var MomentumConservationSimulation = new MomentumConservationSimulation(2);
 
 MomentumConservationSimulation.init = function()
 {
+    // Initialize body positions
+//    this.bodies[0].position.x = 0;
+//    this.bodies[0].position.x = 0;
+//    this.bodies[0].position.x = 0;
+//    
+//    this.bodies[0].position.x = 0;
+//    this.bodies[0].position.x = 0;
+//    this.bodies[0].position.x = 0;
+
     // Create and push contacts
     for( var i=0; i<this.numPendulumns-1; i++)
     {
@@ -81,6 +90,8 @@ MomentumConservationSimulation.PhysicalBody = function(mass, radius)
     this.mass   = mass;
     this.massInv   = 1/this.mass;
     this.radius = radius;
+    this.generalizedAngularSpeed = 0.0;
+    this.generalizedAngle = 0.0;
 };
 
 // Integrator
@@ -95,8 +106,8 @@ MomentumConservationSimulation.integrate = function(dt)
         var speed = Math.sqrt(dvx*dvx + dvy*dvy) * sign;
         body.angularSpeed =  body.radius * speed;
         body.rotation += body.angularSpeed * dt;
-        body.position.x += body.velocity.x * dt;
-        body.position.y += body.velocity.y * dt;
+        //body.position.x += body.velocity.x * dt;
+        //body.position.y += body.velocity.y * dt;
     }
 };
 
@@ -255,32 +266,55 @@ CircularTrackConstraint.prototype.satisfy = function(body) {
     var xLocal = body.position.x - this.position.x;
     var yLocal = body.position.y - this.position.y;
     var abs_xLocal = Math.abs(xLocal);
+    var x = this.length/2;
+    if(xLocal < -this.length/2)
+       x = -this.length/2;
+    var y = this.radius;
+    var g = -10.0;
+    var dt = 0.016;
     // Curved Sections
     if(abs_xLocal > this.length/2 ) {
-        var dx = this.length/2 - xLocal;
-        var dy = this.radius - yLocal;
-        if(xLocal < -this.length/2)
-            dx = -this.length/2 - xLocal;
-        var error = body.radius + Math.sqrt(dx*dx+ dy*dy) - this.radius;
-        // Direction of Constraint impulse
-        this.tempVector.x = dx; this.tempVector.y = dy;
-        this.tempVector.normalize();
-        var vel = body.velocity;
-        var vDotN = vel.x * this.tempVector.x + vel.y * this.tempVector.y;
+        var dx = body.position.x - x; var dy = body.position.y - y;
+        var d = Math.sqrt(dx*dx + dy*dy);// Distance from Circle centre to body centre
+        var diff = d + body.radius - this.radius;
+        if(diff < 1e-6) { // Free fall
+            body.velocity.y += g * dt;
+            body.position.y += body.velocity.y * dt;
+            var theta = Math.atan2((body.position.y - this.radius), (body.position.x-x)) + Math.PI/2;
+            body.generalizedAngle = theta;
+            //console.log("free fall");
+        }
+        else { // move on the circular track  
+            var f = 2.0/5.0;
+            var sinTheta = (body.position.x-x)/(this.radius - body.radius);
+            sinTheta = sinTheta > 1 ? 1 : sinTheta;
+            sinTheta = sinTheta < -1 ? -1 : sinTheta;
+            var denom = (1.0+f)*(this.radius - body.radius);
+            body.generalizedAngularSpeed += g/denom * sinTheta * dt; 
+            body.generalizedAngularSpeed /= ( 1.0 + 0.0);
+            body.generalizedAngle += body.generalizedAngularSpeed * dt;
 
-        this.tempVector.multiplyScalar(-vDotN + error);
-        if(error > 0) 
-        {
-            body.velocity.x += this.tempVector.x;
-            body.velocity.y += this.tempVector.y;
+            var cosTheta = Math.sqrt(1.0 - sinTheta * sinTheta);
+            
+            body.position.x = x + (this.radius - body.radius + 0.01) * Math.sin(body.generalizedAngle);//Math.sin(body.generalizedAngle);
+            body.position.y = y - (this.radius - body.radius + 0.01) * Math.cos(body.generalizedAngle);//Math.cos(body.generalizedAngle);
+            body.velocity.x = body.generalizedAngularSpeed * cosTheta * this.radius;
+            body.velocity.y = body.generalizedAngularSpeed * sinTheta * this.radius;
+            //body.angularSpeed += 1/(1+f)*g*sinTheta * dt;
+            //console.log(d);
         }
     }
     // Linear Section
     if(xLocal <= this.length/2 && xLocal >= -this.length/2) {
-        var error =  body.radius - yLocal;
-        var vel = body.velocity;
-        if( error > 0 ) {
-            body.velocity.y += (-vel.y + error);
+        if(body.position.y > body.radius) {
+            body.velocity.y += g * dt;
+            body.position.y += body.velocity.y * dt;
+        } else {
+            body.velocity.y = 0.0;
+            body.position.y = body.radius;
+            //console.log(body.velocity.x);
+            body.position.x += body.velocity.x * dt;
+            body.generalizedAngularSpeed = body.velocity.x/this.radius;
         }
     }
     

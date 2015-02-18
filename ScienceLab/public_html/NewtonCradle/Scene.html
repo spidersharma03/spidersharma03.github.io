@@ -392,7 +392,7 @@
 				reflectionCube.format = THREE.RGBFormat;    
                                 var texture = THREE.ImageUtils.loadTexture( "../js/lib/three.js/textures/wood.jpg");
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
-                                cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } )
+                                cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } );
                                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
                                 sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
                                 

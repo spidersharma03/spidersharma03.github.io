@@ -83,6 +83,22 @@
         "pageLink"  : "newtons_third_law"
     },
     {
+        "name": "Friction", 
+        "id": "Electricity.json", 
+        "imageUrl": "",
+        "description": "",
+        "simulations":
+            [
+               {
+                   "display_name": "Static Friction",
+                   "description":"Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction v Static Friction Static Friction Static Friction",
+                   "image" : "newton_third_law_1.png",
+                   "scene_name" : "Scene_StaticFriction"
+               }
+            ],
+        "pageLink"  : "friction"
+    },
+    {
         "name": "Linear Momentum Conservation", 
         "id": "Electricity.json", 
         "imageUrl": "",
@@ -94,6 +110,12 @@
                    "description":"Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision Elastic Collision",
                    "image" : "elastic_collisions.png",
                    "scene_name" : "Scene"
+               },
+               {
+                   "display_name": "InElastic Collision",
+                   "description":"InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision InElastic Collision",
+                   "image" : "test.png",
+                   "scene_name" : "Scene_AirTrack"
                },
                {
                    "display_name": "InElastic Collision",

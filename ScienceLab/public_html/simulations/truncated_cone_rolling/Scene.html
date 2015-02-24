@@ -62,8 +62,8 @@
                         var coneRadius1 = 0.5;
                         var coneRadius2 = 1.0;
                         var coneHeight = 3.0;
-                        var groundWidth = 10;
-                        var groundDepth = 10;
+                        var groundWidth = 20;
+                        var groundDepth = 20;
                         var groundHeight = 0.2;
                                                 
                         var cameraPosition = new THREE.Vector3(0,0,5);
@@ -72,6 +72,8 @@
                         var angularSpeed = 2.0;
                         var theta = 0.0;
                         var phi = 0.0;
+                        var curvatureRadius;
+                        var centreOfCurvature = new THREE.Vector2();
                         
                         init();
                         animate();
@@ -86,13 +88,17 @@
                             phi   += angularSpeed * dt;
                             coneMeshGroup.rotation.y = theta;
                             coneMesh.rotation.x = phi;
+                            curvatureRadius = coneHeight*coneRadius1/(coneRadius2 - coneRadius1);
+                            centreOfCurvature.x = -curvatureRadius;
+                            coneMeshGroup.position.x = curvatureRadius - curvatureRadius * Math.cos(theta);
+                            coneMeshGroup.position.z = curvatureRadius * Math.sin(theta);
                         }
                         
                         function initGeometry()
                         {
                             // Truncated Cone
                             var coneGeometry = new THREE.CylinderGeometry(coneRadius2, coneRadius1, coneHeight, 30, 2);
-                            coneMesh = new THREE.Mesh(coneGeometry, groundMaterial);
+                            coneMesh = new THREE.Mesh(coneGeometry, sphereMaterial);
                             coneMesh.castShadow = true;
                             coneMesh.receiveShadow = true;
                             coneMesh.rotation.z = Math.PI/2;
@@ -143,7 +149,7 @@
                                 light.shadowMapWidth = 1024;
 				light.shadowMapHeight = 1024;
                                 
-                                var d = 5;
+                                var d = 12;
 
 				light.shadowCameraLeft = -d;
 				light.shadowCameraRight = d;
@@ -163,7 +169,7 @@
 
 				};
                                     
-                                var path = "../../js/lib/three.js/textures/cube/pisa/";
+                                var path = "../../img/pisa/";
 				var format = '.png';
 				var urls = [
 						path + 'px' + format, path + 'nx' + format,
@@ -172,11 +178,16 @@
 					];
 
 				var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
-				reflectionCube.format = THREE.RGBFormat;    
+				reflectionCube.format = THREE.RGBFormat;  
+                                //var textureMetal = THREE.ImageUtils.loadTexture("../../img/dark-metal-texture.jpg");
+                                //texture.wrapS = THREE.RepeatWrapping;
+                                //texture.wrapT = THREE.RepeatWrapping;
+                                //texture.repeat.set(1, 1);
+                                var sphereTexture = THREE.ImageUtils.loadTexture("../../img/number2.jpeg");
                                 var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
                                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
-                                sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
+                                sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: sphereTexture, color: 0xff0000, specular: 0xffffff, combine: THREE.MixOperation, ambient: 0x555555, reflectivity: 1, shininess: 10});
                                 
 				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
@@ -219,12 +230,12 @@
                                pos.y = cameraPosition.y*1;
                                pos.z = cameraPosition.z*1;
                             }
-                            if( d > 10 )
+                            if( d > 30 )
                             {
                                cameraPosition.normalize();
-                               pos.x = cameraPosition.x*10;
-                               pos.y = cameraPosition.y*10;
-                               pos.z = cameraPosition.z*10;
+                               pos.x = cameraPosition.x*30;
+                               pos.y = cameraPosition.y*30;
+                               pos.z = cameraPosition.z*30;
                             }
                             
                         }

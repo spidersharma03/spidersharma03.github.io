@@ -1,0 +1,30 @@
+{
+   "Info":
+    {
+        "name" : "Rotational Kinematics",
+        "subject"    : "Physics",
+        "category" : "Mechanics",
+        "nextTopic" : "Rotational Dynamics",
+        "description": ""
+    }
+,
+"topics":
+[
+    {
+        "name": "Angular Velocity", 
+        "id": "Mechanics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "simulations":
+            [
+               {
+                   "display_name": "Rolling of Truncated Cone",
+                   "description":"Rolling of Truncated Cone Rolling of Truncated Cone Rolling of Truncated Cone Rolling of Truncated Cone Rolling of Truncated Cone Rolling of Truncated Cone Rolling of Truncated Cone Rolling of Truncated Cone Rolling of Truncated Cone",
+                   "image" : "newton_first_law_1.png",
+                   "scene_name" : "Scene"
+               }
+            ],
+        "pageLink"  : "truncated_cone_rolling"
+    }
+]
+}

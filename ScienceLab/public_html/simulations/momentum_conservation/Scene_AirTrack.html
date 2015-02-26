@@ -66,7 +66,7 @@
             var spheres = [];
             var physicsBodies = [];
             var boxMesh;
-
+            
             var geometry;
             var sphereRadius = 1.0;
             var cradleWidth = 3.0;
@@ -308,20 +308,27 @@
                 body1.position.x = -2;
                 var body2 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body2.position.x = 2;
-                var spring = new SpringMassSystems1D.Spring(4,1,body1,body2);
-                var body3 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
-                body3.position.x = -8;
-                body3.velocity.x = 2;
+                var body3 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body3.position.x = 6;
+                var spring1 = new SpringMassSystems1D.Spring(4,1,body1,body2);
+                var spring2 = new SpringMassSystems1D.Spring(4,1,body2,body3);
+                var body4 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
+                body4.position.x = -8;
+                body4.velocity.x = 2;
 
                 //body1.velocity.x = 2.0;
                 simulation.addBody(body1);
                 simulation.addBody(body2);
                 simulation.addBody(body3);
-                simulation.addSpring(spring);
+                simulation.addBody(body4);
+                simulation.addSpring(spring1);
+                simulation.addSpring(spring2);
                 scene.add(body1.model);
                 scene.add(body2.model);
                 scene.add(body3.model);
-                scene.add(spring.model);
+                scene.add(body4.model);
+                scene.add(spring1.model);
+                scene.add(spring2.model);
             }
             
             function onDocumentMouseMove(event)

@@ -116,6 +116,28 @@ SpringMassSystems1D = function () {
 SpringMassSystems1D.prototype = {
     constructor: SpringMassSystems1D,
     
+    com : function() {
+      var ravg = 0.0;
+      for( var i=0; i<this.bodies.length; i++) {
+          var body = this.bodies[i];
+          ravg += body.position.x * body.mass;
+      }
+       return ravg/this.totalMass();
+    },
+    
+    v_com : function() {
+        return this.momentum()/this.totalMass();
+    },
+    
+    mass : function() {
+      var totalmass = 0.0;
+      for( var i=0; i<this.bodies.length; i++) {
+          var body = this.bodies[i];
+          totalmass += body.mass;
+      }
+      return totalmass;
+    },
+    
     momentum: function() {
       var totalmomentum = 0.0;
       for( var i=0; i<this.bodies.length; i++) {

@@ -104,20 +104,20 @@
                             projectileBaseGeometryMesh.position.y = poleHeight;
                             projectileBaseGeometryMesh.rotation.x = Math.PI/2;
                             standGeometryGroup.add(projectileBaseGeometryMesh);     
-                            standGeometryGroup.castShadow = true;
-                            standGeometryGroup.receiveShadow = true;
+                            projectileBaseGeometryMesh.castShadow = true;
+                            projectileBaseGeometryMesh.receiveShadow = true;
                             scene.add(standGeometryGroup);
                             // Projectiles
-                            var sphereGeometry = new THREE.SphereGeometry(projectileRadius);
+                            var sphereGeometry = new THREE.SphereGeometry(projectileRadius, 30, 30);
                             projectileDropMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
                             projectileDropMesh.position.x = projectileBaseWidth/2 - projectileRadius;
-                            projectileDropMesh.position.y = poleHeight + baseThickness;
+                            projectileDropMesh.position.y = poleHeight + baseThickness + projectileRadius;
                             projectileDropMesh.castShadow = true;
                             projectileDropMesh.receiveShadow = true;
                             
                             projectileShotMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
                             projectileShotMesh.position.x = -projectileBaseWidth/2 + projectileRadius;
-                            projectileShotMesh.position.y = poleHeight + baseThickness;
+                            projectileShotMesh.position.y = poleHeight + baseThickness + projectileRadius;
                             projectileShotMesh.castShadow = true;
                             projectileShotMesh.receiveShadow = true;
                             
@@ -157,7 +157,7 @@
 				scene.add( ambient );
 
 				var light = new THREE.DirectionalLight( 0xffeedd );
-				light.position.set( 10, 100, -10 );
+				light.position.set( 10, 100, -60 );
                                 //var light1 = new THREE.SpotLight( 0xffffff );
                                 //light1.position.set( 85, 85, 85 );
                                 //light1.target.position.set(0, 0, 0 );
@@ -203,7 +203,7 @@
                                 var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
                                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
-                                sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: sphereTexture, color: 0xff0000, specular: 0xffffff, combine: THREE.MixOperation, ambient: 0x555555, reflectivity: 1, shininess: 10});
+                                sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: sphereTexture, color: 0xff0000, specular: 0xffffff, combine: THREE.MixOperation, ambient: 0x555555, reflectivity: 0.8, shininess: 10});
                                 
 				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );

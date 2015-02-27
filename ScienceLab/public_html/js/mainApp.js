@@ -51,3 +51,17 @@ mainApp.controller('homePageLoadController', function ($scope, $http) {
 //  });
 
 });
+
+mainApp.directive('iframeSetDimentionsOnload', [function(){
+return {
+    restrict: 'A',
+    link: function(scope, element, attrs){
+        element.on('load', function(){
+               var iFrameHeight = element[0].contentWindow.document.body.scrollHeight + 'px';
+//               element[0].contentWindow.onWindowResize();
+               var iFrameWidth = '100%';
+               element.css('width', iFrameWidth);
+               element.css('height', iFrameHeight);
+        });
+    }
+};}]);

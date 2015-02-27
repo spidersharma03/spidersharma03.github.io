@@ -83,11 +83,20 @@
             var pathLength = 10.0;
             var trackSize = 2.0;
             var trackLength = 40.0;
+            var inclinationAngle = Math.PI/7;
             var simulation;
-
+            var inclinedPlaneTGroup = new THREE.Object3D();
+            var inclinedPlaneTyGroup = new THREE.Object3D();
+            var inclinedPlaneRGroup = new THREE.Object3D();
             init();
             animate();
 
+            function setInclinationAngle(angle) {
+                inclinationAngle = angle;
+                inclinedPlaneRGroup.rotation.z = inclinationAngle;
+                inclinedPlaneTyGroup.position.y = trackLength * Math.sin(inclinedPlaneRGroup.rotation.z);
+                inclinedPlaneTyGroup.position.x = trackLength * Math.cos(inclinedPlaneRGroup.rotation.z) - trackLength;
+            }
             
             function makeBaseGeometry() {
 
@@ -113,28 +122,41 @@
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
                 mesh.rotation.y = Math.PI / 2;
-                mesh.position.x = -trackLength / 2;
+                //mesh.position.x = -trackLength / 2;
                 mesh.position.y -= trackSize - 0.7 * 0.5;
                 scene.add(mesh);
 
                 var baseGroup = new THREE.Object3D();
-                var baseGeometry1 = new THREE.BoxGeometry(trackLength, trackSize, 0.1);
-                var baseMesh1 = new THREE.Mesh(baseGeometry1, groundMaterial);
+                var baseGeometry1 = new THREE.BoxGeometry(trackLength,0.1, 1.2*trackSize);
+                var baseMesh = new THREE.Mesh(baseGeometry1, groundMaterial);
+                var baseGeometry2 = new THREE.BoxGeometry(trackLength, 1.2*trackSize, 0.1);
+                var baseMesh1 = new THREE.Mesh(baseGeometry2, groundMaterial);
                 baseMesh1.castShadow = false;
                 baseMesh1.receiveShadow = true;
                 var baseMesh2 = baseMesh1.clone();
                 baseMesh1.position.z = trackSize / 2;
                 baseMesh2.position.z = -trackSize / 2;
-                baseGroup.position.y = -trackSize / 2;
+                //baseGroup.position.y = -trackSize / 2;
+                baseGroup.add(baseMesh);
                 baseGroup.add(baseMesh1);
                 baseGroup.add(baseMesh2);
                 baseGroup.position.y -= trackSize - 0.7 * 0.5;
                 scene.add(baseGroup);
                 
-                simulation = new InclinedPlaneSystem(trackLength);
-
-                scene.add(simulation.body1.model);
-                scene.add(simulation.body2.model);
+                simulation = new InclinedPlaneSystem(trackLength, inclinationAngle);
+                
+                inclinedPlaneTGroup.add(inclinedPlaneRGroup);
+                inclinedPlaneTGroup.add(inclinedPlaneTyGroup);
+                inclinedPlaneTyGroup.add(simulation.body2.model);
+                
+                inclinedPlaneRGroup.add(simulation.body3.model);
+                inclinedPlaneRGroup.add(simulation.body1.model);
+                inclinedPlaneRGroup.add(mesh);
+                inclinedPlaneTGroup.position.x = -trackLength/2;
+                inclinedPlaneRGroup.rotation.z = inclinationAngle;
+                inclinedPlaneTyGroup.position.y = trackLength * Math.sin(inclinedPlaneRGroup.rotation.z);
+                setInclinationAngle(inclinationAngle);
+                scene.add(inclinedPlaneTGroup);
             }
 
             function syncSimulation()
@@ -232,21 +254,6 @@
                 renderer.shadowMapSoft = true;
 
                 makeBaseGeometry();
-
-                //createMassesWithSpringConstraints();
-            }
-
-            function createMassesWithoutSprings() {
-                // Create Physical System bodies
-//                var body1 = new SpringMassSystems1D.Body(1.0, 1.0);
-//                body1.velocity.x = 5.0;
-//                body1.position.x = -7;
-//                var body2 = new SpringMassSystems1D.Body(1.0, 1.0);
-//                body2.position.x = 2;
-//                simulation.addBody(body1);
-//                simulation.addBody(body2);
-//                scene.add(body1.model);
-//                scene.add(body2.model);
             }
  
             function onDocumentMouseMove(event)

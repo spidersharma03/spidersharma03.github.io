@@ -1,81 +1,43 @@
 
 
-     <div class='container' >
-    <div class ='well  text-center' style="padding:   0px 0px 0px 0px">
-              <h4>
-                  Thought of the week.
-              </h4>
-          </div>
-     <div id='content' class='span10 row-fluid'>
-    
+<div class='container row-fluid' >
 
-    <!--<div class = 'span2' style="overflow-y: scroll; overflow-x: hidden; height: 500px;">-->
-<!--        <ul class="nav nav-list">
-            <li><label class="tree-toggler nav-header" style="font-size: 110%">Science for Everyone</label>
-            </li>
-            <li><label class="tree-toggler nav-header" style="font-size: 110%">Physics</label>
-                <ul class="nav nav-list tree">
-                    <li><a href="partials/MechanicsPage.html">Mechanics</a></li>
-                    <li><a href="#">ElectroMagnetics</a></li>
-                    <li><a href="#">Optics</a></li>
-                    <li><a href="#">Thermodynamics</a></li>                   
-                </ul>
-            </li>
-            <li><label class="tree-toggler nav-header" style="font-size: 110%">Chemistry</label>
-                <ul class="nav nav-list tree">
-                    <li><a href="#">Organic</a></li>
-                    <li><a href="#">InOrganic</a></li>
-                   
-                </ul>
-            </li>
-            <li><label class="tree-toggler nav-header" style="font-size: 110%">Mathematics</label>
-                <ul class="nav nav-list tree">
-                    <li><a href="#">Algebra</a></li>
-                    <li><a href="#">Geometry</a></li>
-                    <li><a href="#">Calculus</a></li>
-                    <li><a href="#">Trigonometry</a></li>
-                    <li><a href="#">Analysis</a></li>                   
-                </ul>
-            </li>
-            <li><label class="tree-toggler nav-header" style="font-size: 110%">Computer Science</label>
-                <ul class="nav nav-list tree">
-                    <li><a href="#">Computer Graphics</a></li>
-                    <li><a href="#">Algorithms</a></li>
-                    <li><a href="#">Simulations</a></li>
-                </ul>
-            </li>
-        </ul>-->
-        </div>
-        
-      <div class='span10 main'>     
-          <div class = 'row-fluid'>
-              <div class = 'span4 text-center' style="height: 200px" >
-                    <img src="http://upload.wikimedia.org/wikipedia/commons/3/39/GodfreyKneller-IsaacNewton-1689.jpg" width="70%" height="70%" >
-                    <h4>Sir Isaac Newton</h4>
-                    <div class = 'span12 text-center'>
-                        <em>"Truth is ever to be found in the simplicity, and not in the multiplicity and confusion of things".
-                        </em>
-                    </div>
-              </div>
-              <div class = 'well span8 text-success text-center' style="height: 400px ">
-                  <!--<iframe id="newtonCradleFrame" style="width:100%; height:100%;" src="simulations/pendulumn_waves/ScenePendulumnWaves.html"></iframe>-->
-                  <iframe id="newtonCradleFrame" style="width:100%; height:100%;" src="NewtonCradle/Scene.html"></iframe>
-                  <div class = 'span12 row-fluid'>
-                  <!--<h4>Cycle</h4>-->
-                  <!--<input type="range" min="50" max="70" value="60" step= "5" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeCycleTime(value)})(value)">-->
-                  <!--<input type="range" min="100" max="150" value="100" step= "10" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeNumOscillations(value)})(value)">-->
-                  <input type="range" min="1" value="0" max="10" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeNumPendulumns(value)})(value)" orient="vertical">
-                  </div>
-              </div>
-          </div>  
-<!--          <div class ='well text-center ' style="padding:   0px 0px 0px 0px">
-              <h4>
-                  <em>Quote.</em>
-              </h4>
-          </div>-->
-      </div>
-      
+    <div class ='well  text-center' style="padding:   0px 0px 0px 0px">
+        <h4>
+            Thought of the week.
+        </h4>
     </div>
+    <div class='span10 main'>     
+        <div class = 'row-fluid'>
+            <div class = 'span4 text-center' style="height: 200px" >
+                <img src="http://upload.wikimedia.org/wikipedia/commons/3/39/GodfreyKneller-IsaacNewton-1689.jpg" width="50%" height="50%" >
+                <h4>Sir Isaac Newton</h4>
+                <div class = 'span12 text-center'>
+                    <em>"Truth is ever to be found in the simplicity, and not in the multiplicity and confusion of things".
+                    </em>
+                </div>
+            </div>
+            <div class = 'well span8 text-success text-center' style="height: 400px ">
+                <!--<iframe id="newtonCradleFrame" style="width:100%; height:100%;" src="simulations/pendulumn_waves/ScenePendulumnWaves.html"></iframe>-->
+                <iframe iframe-set-dimentions-onload id="IFrame" style="width:100%; height:100%;" src="simulations/friction/Scene_StaticFriction.html"></iframe>
+                <div class = 'span12 row-fluid'>
+                    <!--<h4>Cycle</h4>-->
+                    <!--<input type="range" min="50" max="70" value="60" step= "5" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeCycleTime(value)})(value)">-->
+                    <!--<input type="range" min="100" max="150" value="100" step= "10" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeNumOscillations(value)})(value)">-->
+                    <input type="range" min="1" value="0" max="10" onchange="(function () {
+                                document.getElementById('IFrame').contentWindow.changeNumPendulumns(value)
+                            })(value)">
+                </div>
+            </div>
+        </div>  
+        <!--          <div class ='well text-center ' style="padding:   0px 0px 0px 0px">
+                      <h4>
+                          <em>Quote.</em>
+                      </h4>
+                  </div>-->
+    </div>
+
+</div>
 
 
 

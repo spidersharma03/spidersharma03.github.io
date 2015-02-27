@@ -27,7 +27,7 @@
                    "display_name": "Can the Monkey Escape the Bullet?",
                    "description":"Can the Monkey Escape the Bullet? Can the Monkey Escape the Bullet? Can the Monkey Escape the Bullet? Can the Monkey Escape the Bullet? Can the Monkey Escape the Bullet? Can the Monkey Escape the Bullet?",
                    "image" : "test.png",
-                   "scene_name" : "Scene"
+                   "scene_name" : "Scene_DropShot"
                }
             ],
         "pageLink"  : "projectile_motion"

@@ -50,16 +50,17 @@ var fragmentShaderIBL = "precision highp float;\n\
       phi_refl = phi_refl < 0.0 ? 2.0*PI + phi_refl : phi_refl;\n\
       phi_refl /= (2.0*PI);\n\
       float theta_refl = (asin(reflectionVector.y) + PI * 0.5)/PI;\n\
-      //float theta_refl = ((reflectionVector.y + 1.0) * 0.5);\n\
+      //theta_refl = theta_refl < 0.0 ? 0.0 : theta_refl;\n\
+      //float theta_refl = ((reflectionVector.z + 1.0) * 0.5);\n\
       vec2 uvLatLongRefl = vec2(phi_refl, theta_refl);\n\
       float phi_diffuse = atan(normalizedWorldNormal.z, normalizedWorldNormal.x); \n\
       phi_diffuse = phi_diffuse < 0.0 ? 2.0*PI + phi_diffuse : phi_diffuse;\n\
       phi_diffuse /= (2.0*PI);\n\
       float theta_diffuse = (asin(normalizedWorldNormal.y) + PI * 0.5)/PI;\n\
       vec2 uvLatLongDiffuse = vec2(phi_diffuse, theta_diffuse);\n\
-      float roughness = 0.70;\n\
-      vec3 specularColor = vec3(1.0,0.76,0.33);\n\
-      vec4 diffuseColor = vec4(0.0095,0.0095,0.005,1.0);\n\
+      float roughness = 0.0;\n\
+      vec3 specularColor = vec3(0.95,0.65,0.53);\n\
+      vec4 diffuseColor = vec4(0.0,0.0,0.0,1.0);\n\
       //vec3 schlick = specularColor + (vec3(1.0) - specularColor ) * pow(1.0-ndotv,5.0);\n\
       vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, roughness, ndotv),1.0);\n\
       //vec4 specularContribution = vec4(schlick,1.0);\n\
@@ -77,7 +78,47 @@ var shaderSource =
     fragmentShader: fragmentShaderIBL
 };
 
+function readIBL_Info(file, library)
+{
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file);
+    rawFile.onreadystatechange = function ()
+    {
+        if(rawFile.readyState === 4)
+        {
+            if(rawFile.status === 200 || rawFile.status === 0)
+            {
+                var jsonArray = JSON.parse(rawFile.responseText);
+                library.IBL_TextureWidth = Number(jsonArray.TextureWidth);
+                library.IBL_TextureHeight = Number(jsonArray.TextureHeight);
+                for( var data in jsonArray.TextureCoordInfo) {
+                    library.IBL_RoughnessArray.push(Number(jsonArray.TextureCoordInfo[data].roughness));
+                    var texRect = new TextureRect();
+                    texRect.x = jsonArray.TextureCoordInfo[data].x;
+                    texRect.y = jsonArray.TextureCoordInfo[data].y;
+                    texRect.w = jsonArray.TextureCoordInfo[data].w;
+                    texRect.h = jsonArray.TextureCoordInfo[data].h;
+                    library.IBL_TextureRectInfoArray.push(texRect);
+                }
+            }
+        }
+  };
+  rawFile.send(null);
+}
+
+function TextureRect() {
+  this.x = 0;
+  this.y = 0;
+  this.w = 0;
+  this.h = 0;
+}
+
 MaterialLibrary = function() {
   this.shaderSource = shaderSource;   
+  this.IBL_TextureWidth = 0;
+  this.IBL_TextureHeight = 0;
+  this.IBL_TextureRectInfoArray = [];
+  this.IBL_RoughnessArray = new Array();
+  readIBL_Info("../../img/IBL_Info.txt", this);
 };
 

@@ -25,6 +25,38 @@ var fragmentShaderIBL = "precision highp float;\n\
    varying vec3 Normal;\n\
    uniform sampler2D IBLReflectionTexture;\n\
    uniform sampler2D IBLDiffuseTexture;\n\
+   uniform vec4 TextureCoordSetArray[8];\n\
+   uniform float RoughnessArray[8];\n\
+   \n\
+   vec4 SampleEnvMap(vec3 direction, float roughness) {\n\
+      vec4 texCoordSetLowerSampler;\n\
+      vec4 texCoordSetUpperSampler;\n\
+      float dRoughness = 0.0;\n\
+      bool bFound = false;\n\
+      for(int i=8-2; i>=1; i--) {\n\
+         if(roughness > RoughnessArray[i]) {\n\
+            texCoordSetLowerSampler = TextureCoordSetArray[i];\n\
+            texCoordSetUpperSampler = TextureCoordSetArray[i+1];\n\
+            dRoughness = RoughnessArray[i+1] - RoughnessArray[i];\n\
+            bFound = true;\n\
+            break;\n\
+         }\n\
+      }\n\
+      if(!bFound) {\n\
+         texCoordSetLowerSampler = TextureCoordSetArray[0];\n\
+         texCoordSetUpperSampler = TextureCoordSetArray[1];\n\
+         dRoughness = RoughnessArray[1] - RoughnessArray[0];\n\
+      }\n\
+      \n\
+      float phi_refl = atan(direction.z, direction.x); \n\
+      phi_refl = phi_refl < 0.0 ? 2.0*PI + phi_refl : phi_refl;\n\
+      phi_refl /= (2.0*PI);\n\
+      float theta_refl = (asin(direction.y) + PI * 0.5)/PI;\n\
+      vec2 texCoordLower = vec2(texCoordSetLowerSampler.x + phi_refl * texCoordSetLowerSampler.y, texCoordSetLowerSampler.z + phi_refl * texCoordSetLowerSampler.w);\n\
+      vec2 texCoordUpper = vec2(texCoordSetUpperSampler.x + theta_refl * texCoordSetUpperSampler.y, texCoordSetUpperSampler.z + theta_refl * texCoordSetUpperSampler.w);\n\
+      return texture2D(IBLReflectionTexture, texCoordLower)*(1.0-dRoughness) + texture2D(IBLReflectionTexture, texCoordUpper)*dRoughness;\n\
+   }\n\
+   \n\
    \n\
    vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV ) {\n\
      vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);\n\
@@ -50,8 +82,6 @@ var fragmentShaderIBL = "precision highp float;\n\
       phi_refl = phi_refl < 0.0 ? 2.0*PI + phi_refl : phi_refl;\n\
       phi_refl /= (2.0*PI);\n\
       float theta_refl = (asin(reflectionVector.y) + PI * 0.5)/PI;\n\
-      //theta_refl = theta_refl < 0.0 ? 0.0 : theta_refl;\n\
-      //float theta_refl = ((reflectionVector.z + 1.0) * 0.5);\n\
       vec2 uvLatLongRefl = vec2(phi_refl, theta_refl);\n\
       float phi_diffuse = atan(normalizedWorldNormal.z, normalizedWorldNormal.x); \n\
       phi_diffuse = phi_diffuse < 0.0 ? 2.0*PI + phi_diffuse : phi_diffuse;\n\

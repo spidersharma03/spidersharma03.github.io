@@ -59,25 +59,35 @@
 
             var cubeMaterial;
             var groundMaterial;
-            var sphereMaterial;
+            var sphereMaterial, sphereMaterial1;
            
             var cameraPosition = new THREE.Vector3();
             var library = new MaterialLibrary();
-            var sphereMesh;
+            var sphereMesh, sphereMesh1;
+            var clonedUniforms1, clonedUniforms2;
             
             init();
             animate();
             
             function makeBaseGeometry() {
-                var sphereGeometry = new THREE.SphereGeometry(2,30,30);
-//                var sphereGeometry = new THREE.TorusKnotGeometry(3, 1, 64, 8, 2, 3, 1);
+//                var sphereGeometry = new THREE.CylinderGeometry(2,2,6,50,20);
+                var sphereGeometry = new THREE.SphereGeometry(2,50,50);
+//                var sphereGeometry = new THREE.TorusKnotGeometry(3, 1, 64, 18, 2, 3, 1);
+                sphereGeometry.computeTangents();
+                sphereGeometry.computeVertexNormals(true);
                 sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                sphereMesh.position.x = 5;
                 sphereMesh.position.y = 5;
+                sphereMesh1 = new THREE.Mesh(sphereGeometry, sphereMaterial1);
+                sphereMesh1.position.x = -5;
+                sphereMesh1.position.y = 5;
                 //sphereMesh.castShadow = true;
                 //sphereMesh.receiveShadow = true;
                 scene.add(sphereMesh);
+                scene.add(sphereMesh1);
                 
                 var groundGeometry = new THREE.BoxGeometry(20,0.1,20);
+                groundGeometry.computeTangents();
                 var groundMesh = new THREE.Mesh(groundGeometry, sphereMaterial);
                 groundMesh.position.y = -1.0;
                 //groundMesh.castShadow = true;
@@ -141,38 +151,48 @@
                     console.log(item, loaded, total);
 
                 };
-
-                var path = "../../img/pisa/";
-                var format = '.png';
-                var urls = [
-                    path + 'px' + format, path + 'nx' + format,
-                    path + 'py' + format, path + 'ny' + format,
-                    path + 'pz' + format, path + 'nz' + format
-                ];
-
-                var reflectionCube = THREE.ImageUtils.loadTextureCube(urls);
-                reflectionCube.format = THREE.RGBFormat;
-                var texture = THREE.ImageUtils.loadTexture("../../img/dark-metal-texture.jpg");
-                texture.wrapS = THREE.RepeatWrapping;
-                texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(1, 1);
-                var sphereTexture = THREE.ImageUtils.loadTexture("../../img/number2.jpeg");
+                
                 var reflTexture = THREE.ImageUtils.loadTexture("../../img/mips.jpg");
-                var diffuseTexture = THREE.ImageUtils.loadTexture("../../img/7.jpg");
+                reflTexture.wrapS = THREE.ClampToEdgeWrapping;
+                reflTexture.wrapT = THREE.ClampToEdgeWrapping;
+                reflTexture.generateMipmaps = false;
+                reflTexture.magFilter = THREE.LinearFilter;
+                reflTexture.minFilter = THREE.LinearFilter;
+                //reflTexture.repeat.set(10, 10);
+                
+                var normalTexture = THREE.ImageUtils.loadTexture("../../img/metal_normal_map.jpg");
+                //normalTexture.repeat.set(10, 10);
+                normalTexture.wrapS = THREE.RepeatWrapping;
+                normalTexture.wrapT = THREE.RepeatWrapping;
+                
+                library.shaderSource.uniforms['IBLTexture'].value = reflTexture;
+                library.shaderSource.uniforms['NormalMap'].value = normalTexture;                                
+                library.shaderSource.uniforms['SpecularColor'].value = new THREE.Vector4(0.95,0.63,0.53,1.0);                
+                library.shaderSource.uniforms['DiffuseColor'].value = new THREE.Vector4(0.0,0.0,0.0,1.0);                
 
-                cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine: THREE.MixOperation});
-                groundMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: texture, color: 0xffffff, specular: 0xffffff, combine: THREE.MixOperation, bumpScale: 0.010, bumpMap: texture, ambient: 0x555555, reflectivity: 0.5, metal: true, shininess: 1000});
-                sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: sphereTexture, color: 0xff0000, specular: 0xffffff, combine: THREE.MixOperation, ambient: 0x555555, reflectivity: 0.8, shininess: 10});
+                var clonedUniforms1 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
+                clonedUniforms1['IBLTexture'].value = reflTexture;
+                clonedUniforms1['NormalMap'].value = normalTexture;
+                clonedUniforms1['Roughness'].value = 0.0;
+                clonedUniforms1['SpecularColor'].value = new THREE.Vector4(0.12,0.12,0.12,1.0); ;
+                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.92,0.82,0.92,1.0); ;
 
-                library.shaderSource.uniforms['IBLReflectionTexture'].value = reflTexture;
-                library.shaderSource.uniforms['IBLDiffuseTexture'].value = diffuseTexture;
                 sphereMaterial = new THREE.ShaderMaterial(
-                        {uniforms:library.shaderSource.uniforms, 
+                        {uniforms: clonedUniforms1, 
                         vertexShader:library.shaderSource.vertexShader,
                         fragmentShader:library.shaderSource.fragmentShader});
                 sphereMaterial.map = true;
+                var clonedUniforms2 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
+                clonedUniforms2['IBLTexture'].value = reflTexture;
+                clonedUniforms2['NormalMap'].value = normalTexture;
+                clonedUniforms2['Roughness'].value = 0.50;
+
+                sphereMaterial1 = new THREE.ShaderMaterial(
+                        {uniforms:clonedUniforms2, 
+                        vertexShader:library.shaderSource.vertexShader,
+                        fragmentShader:library.shaderSource.fragmentShader});
+                sphereMaterial1.map = true;
                 
-                                
                 renderer = new THREE.WebGLRenderer({antialias: true});
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 container.appendChild(renderer.domElement);
@@ -209,7 +229,7 @@
                 cameraPosition.y = pos.y;
                 cameraPosition.z = pos.z;
                 var min = 5;
-                var max = 40;
+                var max = 100;
                 if (d < min)
                 {
                     cameraPosition.normalize();
@@ -255,9 +275,13 @@
 //			}
 
             //
-
+            var time = 0.0;
             function animate() {
-                //sphereMesh.rotation.y += 0.01;
+                time += 0.016*0.3;
+//                sphereMesh1.rotation.y += 0.01;
+                var roughness = Math.sin(time);
+                roughness *= roughness;
+                //library.shaderSource.uniforms['Roughness'].value = 0.5; 
                 requestAnimationFrame(animate);
                 controls.update();
                 syncSimulation();

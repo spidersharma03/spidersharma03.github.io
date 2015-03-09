@@ -13,22 +13,37 @@ var vertexShaderIBL = "varying vec2 vUv; \n\
    vecPos = (modelMatrix * vec4(position, 1.0 )).xyz;\n\
    viewPos = (modelViewMatrix * vec4(position, 1.0 )).xyz;\n\
    worldNormal = (modelMatrix * vec4(normal,0.0)).xyz;\n\
-   Normal = normal;\n\
+   Normal = normalMatrix * normal;\n\
    gl_Position = projectionMatrix * viewMatrix * vec4(vecPos, 1.0);\n\
 }";
 var fragmentShaderIBL = "precision highp float;\n\
+   #extension GL_OES_standard_derivatives : enable\n\
    #define PI 3.14\n\
    varying vec2 vUv; \n\
    varying vec3 vecPos;\n\
    varying vec3 viewPos;\n\
    varying vec3 worldNormal;\n\
    varying vec3 Normal;\n\
-   uniform sampler2D IBLReflectionTexture;\n\
-   uniform sampler2D IBLDiffuseTexture;\n\
+   uniform vec4 SpecularColor;\n\
+   uniform vec4 DiffuseColor;\n\
+   uniform sampler2D IBLTexture;\n\
+   uniform sampler2D NormalMap;\n\
    uniform vec4 TextureCoordSetArray[8];\n\
    uniform float RoughnessArray[8];\n\
+   uniform float Roughness;\n\
    \n\
-   vec4 SampleEnvMap(vec3 direction, float roughness) {\n\
+   vec4 SampleDiffuseContribution(vec3 direction, float roughness) {\n\
+     vec4 texCoordSetSample = TextureCoordSetArray[7];\n\
+     float phi = atan(direction.z, direction.x); \n\
+     phi = phi < 0.0 ? 2.0*PI + phi : phi;\n\
+     phi /= (2.0*PI);\n\
+     float theta = (asin(direction.y) + PI * 0.5)/PI;\n\
+     vec2 texCoord = vec2(texCoordSetSample.x + phi * texCoordSetSample.y, texCoordSetSample.z + theta * texCoordSetSample.w);\n\
+     return texture2D(IBLTexture, texCoord);\n\
+   }\n\
+   \n\
+   \n\
+   vec4 SampleSpecularContribution(vec3 direction, float roughness) {\n\
       vec4 texCoordSetLowerSampler;\n\
       vec4 texCoordSetUpperSampler;\n\
       float dRoughness = 0.0;\n\
@@ -37,7 +52,7 @@ var fragmentShaderIBL = "precision highp float;\n\
          if(roughness > RoughnessArray[i]) {\n\
             texCoordSetLowerSampler = TextureCoordSetArray[i];\n\
             texCoordSetUpperSampler = TextureCoordSetArray[i+1];\n\
-            dRoughness = RoughnessArray[i+1] - RoughnessArray[i];\n\
+            dRoughness = (roughness - RoughnessArray[i])/(RoughnessArray[i+1] - RoughnessArray[i]);\n\
             bFound = true;\n\
             break;\n\
          }\n\
@@ -45,18 +60,30 @@ var fragmentShaderIBL = "precision highp float;\n\
       if(!bFound) {\n\
          texCoordSetLowerSampler = TextureCoordSetArray[0];\n\
          texCoordSetUpperSampler = TextureCoordSetArray[1];\n\
-         dRoughness = RoughnessArray[1] - RoughnessArray[0];\n\
+         dRoughness = (roughness - RoughnessArray[0])/(RoughnessArray[1] - RoughnessArray[0]);\n\
       }\n\
       \n\
       float phi_refl = atan(direction.z, direction.x); \n\
       phi_refl = phi_refl < 0.0 ? 2.0*PI + phi_refl : phi_refl;\n\
       phi_refl /= (2.0*PI);\n\
       float theta_refl = (asin(direction.y) + PI * 0.5)/PI;\n\
-      vec2 texCoordLower = vec2(texCoordSetLowerSampler.x + phi_refl * texCoordSetLowerSampler.y, texCoordSetLowerSampler.z + phi_refl * texCoordSetLowerSampler.w);\n\
-      vec2 texCoordUpper = vec2(texCoordSetUpperSampler.x + theta_refl * texCoordSetUpperSampler.y, texCoordSetUpperSampler.z + theta_refl * texCoordSetUpperSampler.w);\n\
-      return texture2D(IBLReflectionTexture, texCoordLower)*(1.0-dRoughness) + texture2D(IBLReflectionTexture, texCoordUpper)*dRoughness;\n\
+      theta_refl = theta_refl > 1.0 ? 1.0 : theta_refl;\n\
+      vec2 texCoordLower = vec2(texCoordSetLowerSampler.x + phi_refl * texCoordSetLowerSampler.y, texCoordSetLowerSampler.z + theta_refl * texCoordSetLowerSampler.w);\n\
+      vec2 texCoordUpper = vec2(texCoordSetUpperSampler.x + phi_refl * texCoordSetUpperSampler.y, texCoordSetUpperSampler.z + theta_refl * texCoordSetUpperSampler.w);\n\
+      return texture2D(IBLTexture, texCoordLower)*(1.0-dRoughness)\n\
+       + texture2D(IBLTexture, texCoordUpper)*dRoughness;\n\
    }\n\
    \n\
+   mat3 getTBNMatrix( vec3 eye_pos, vec3 surf_norm ) {\n\
+      vec3 q0 = dFdx( eye_pos.xyz );\n\
+      vec3 q1 = dFdy( eye_pos.xyz );\n\
+      vec2 st0 = dFdx( vUv.st );\n\
+      vec2 st1 = dFdy( vUv.st );\n\
+      vec3 S = normalize( q0 * st1.t - q1 * st0.t );\n\
+      vec3 T = normalize( -q0 * st1.s + q1 * st0.s );\n\
+      vec3 N = normalize( surf_norm );\n\
+      return mat3( S, T, N );\n\
+   }\n\
    \n\
    vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV ) {\n\
      vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);\n\
@@ -68,41 +95,42 @@ var fragmentShaderIBL = "precision highp float;\n\
    }\n\
    vec4 rgbToSrgb(vec4 rgbColor){\n\
      float a = 0.055;\n\
-     bvec4 bRes = lessThan(rgbColor, vec4(0.003));\n\
      return (1.0 + a) * pow(rgbColor, vec4(1.0/2.4)) - a;\n\
    }\n\
    \n\
    void main() {\n\
       vec3 viewVector = normalize(vecPos - cameraPosition);\n\
       vec3 normalizedWorldNormal = normalize(worldNormal);\n\
+      vec3 tangentNormal = texture2D( NormalMap, vUv ).xyz * 2.0 - 1.0;\n\
+      tangentNormal.xy = tangentNormal.xy * 0.5;\n\
+      mat3 tbnMatrix = getTBNMatrix(-viewPos, Normal);\n\
+      normalizedWorldNormal = normalize( tbnMatrix * tangentNormal );\n\
+      normalizedWorldNormal = (vec4(normalizedWorldNormal,1.0) * viewMatrix).xyz;\n\
+      vec3 tViewVector = normalize(viewPos) * tbnMatrix;\n\
+      tViewVector = normalize(tViewVector * vec3(1.0,1.0,1.0));\n\
+      tViewVector = tbnMatrix * tViewVector;\n\
+      viewVector = (vec4(tViewVector,1.0) * viewMatrix).xyz;\n\
       float ndotv = dot(-normalizedWorldNormal, viewVector);\n\
       ndotv = ndotv < 0.0 ? 0.0 : ndotv;\n\
       vec3 reflectionVector = reflect( viewVector, normalizedWorldNormal );\n\
-      float phi_refl = atan(reflectionVector.z, reflectionVector.x); \n\
-      phi_refl = phi_refl < 0.0 ? 2.0*PI + phi_refl : phi_refl;\n\
-      phi_refl /= (2.0*PI);\n\
-      float theta_refl = (asin(reflectionVector.y) + PI * 0.5)/PI;\n\
-      vec2 uvLatLongRefl = vec2(phi_refl, theta_refl);\n\
-      float phi_diffuse = atan(normalizedWorldNormal.z, normalizedWorldNormal.x); \n\
-      phi_diffuse = phi_diffuse < 0.0 ? 2.0*PI + phi_diffuse : phi_diffuse;\n\
-      phi_diffuse /= (2.0*PI);\n\
-      float theta_diffuse = (asin(normalizedWorldNormal.y) + PI * 0.5)/PI;\n\
-      vec2 uvLatLongDiffuse = vec2(phi_diffuse, theta_diffuse);\n\
-      float roughness = 0.0;\n\
-      vec3 specularColor = vec3(0.95,0.65,0.53);\n\
-      vec4 diffuseColor = vec4(0.0,0.0,0.0,1.0);\n\
-      //vec3 schlick = specularColor + (vec3(1.0) - specularColor ) * pow(1.0-ndotv,5.0);\n\
-      vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, roughness, ndotv),1.0);\n\
-      //vec4 specularContribution = vec4(schlick,1.0);\n\
-      vec4 finalColor = specularContribution * texture2D(IBLReflectionTexture, uvLatLongRefl) + diffuseColor * texture2D(IBLDiffuseTexture, uvLatLongDiffuse);\n\
+      vec3 specularColor = vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
+      vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv),1.0);\n\
+      vec4 IblSpecularColor = SampleSpecularContribution(reflectionVector,Roughness);\n\
+      vec4 finalColor = specularContribution * IblSpecularColor + \n\
+                        DiffuseColor * SampleDiffuseContribution(normalizedWorldNormal, Roughness);\n\
       gl_FragColor = (finalColor);\n\
    }";
 
 var shaderSource =
 {
     uniforms: {
-        IBLReflectionTexture: {type: 't', value: null},
-        IBLDiffuseTexture: {type: 't', value: null}
+        IBLTexture: {type: 't', value: null},
+        NormalMap: {type: 't', value: null},
+        TextureCoordSetArray: { type: 'v4v', value: null},
+        RoughnessArray: { type: 'fv1', value: null},
+        Roughness: {type: 'f', value: 0.0},
+        SpecularColor: { type: 'v4', value: null},
+        DiffuseColor: { type: 'v4', value: null}       
     },
     vertexShader: vertexShaderIBL,
     fragmentShader: fragmentShaderIBL
@@ -111,7 +139,7 @@ var shaderSource =
 function readIBL_Info(file, library)
 {
     var rawFile = new XMLHttpRequest();
-    rawFile.open("GET", file);
+    rawFile.open("GET", file, false);
     rawFile.onreadystatechange = function ()
     {
         if(rawFile.readyState === 4)
@@ -121,26 +149,43 @@ function readIBL_Info(file, library)
                 var jsonArray = JSON.parse(rawFile.responseText);
                 library.IBL_TextureWidth = Number(jsonArray.TextureWidth);
                 library.IBL_TextureHeight = Number(jsonArray.TextureHeight);
-                for( var data in jsonArray.TextureCoordInfo) {
-                    library.IBL_RoughnessArray.push(Number(jsonArray.TextureCoordInfo[data].roughness));
-                    var texRect = new TextureRect();
-                    texRect.x = jsonArray.TextureCoordInfo[data].x;
-                    texRect.y = jsonArray.TextureCoordInfo[data].y;
-                    texRect.w = jsonArray.TextureCoordInfo[data].w;
-                    texRect.h = jsonArray.TextureCoordInfo[data].h;
+                for( var data in jsonArray.TextureRectInfo) {
+                    library.IBL_RoughnessArray.push(Number(jsonArray.TextureRectInfo[data].roughness)/255);
+                    var texRect = new TextureCoordSet();
+                    var x = Number(jsonArray.TextureRectInfo[data].x);
+                    var y = Number(jsonArray.TextureRectInfo[data].y);
+                    var w = Number(jsonArray.TextureRectInfo[data].w);
+                    var h = Number(jsonArray.TextureRectInfo[data].h);
+                    var offsetx = 0.5/library.IBL_TextureWidth;
+                    var offsety = 0.5/library.IBL_TextureHeight;
+                    
+                    texRect.u1 = x/library.IBL_TextureWidth + offsetx;
+                    var u2 = ( x + w)/library.IBL_TextureWidth - offsetx;
+                    texRect.u2_u1 = u2 - texRect.u1;
+                    texRect.v1 = y/library.IBL_TextureHeight + offsety;
+                    var v2 = ( y + h)/library.IBL_TextureHeight - offsety;
+                    texRect.v2_v1 = v2 - texRect.v1;
                     library.IBL_TextureRectInfoArray.push(texRect);
                 }
+                var uniformTexCoordSetArray = [];
+                for( var i=0; i<library.IBL_TextureRectInfoArray.length; i++) {
+                    var data = library.IBL_TextureRectInfoArray[i];
+                    uniformTexCoordSetArray.push(new THREE.Vector4(data.u1, data.u2_u1, data.v1, data.v2_v1));
+                }
+                library.shaderSource.uniforms['TextureCoordSetArray'].value = uniformTexCoordSetArray;
+                library.shaderSource.uniforms['RoughnessArray'].value = library.IBL_RoughnessArray; 
+                library.shaderSource.uniforms['Roughness'].value = 0.0; 
             }
         }
   };
   rawFile.send(null);
 }
 
-function TextureRect() {
-  this.x = 0;
-  this.y = 0;
-  this.w = 0;
-  this.h = 0;
+function TextureCoordSet() {
+  this.u1 = 0;
+  this.u2_u1 = 0;
+  this.v1 = 0;
+  this.v2_v1 = 0;
 }
 
 MaterialLibrary = function() {

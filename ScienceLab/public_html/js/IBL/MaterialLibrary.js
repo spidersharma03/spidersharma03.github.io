@@ -4,16 +4,21 @@
  * and open the template in the editor.
  */
 var vertexShaderIBL = "varying vec2 vUv; \n\
+   attribute vec4 tangent;\n\
    varying vec3 vecPos;\n\
    varying vec3 viewPos;\n\
    varying vec3 worldNormal;\n\
    varying vec3 Normal;\n\
+   varying mat3 tbn;\n\
    void main() {\n\
    vUv = uv;\n\
    vecPos = (modelMatrix * vec4(position, 1.0 )).xyz;\n\
    viewPos = (modelViewMatrix * vec4(position, 1.0 )).xyz;\n\
    worldNormal = (modelMatrix * vec4(normal,0.0)).xyz;\n\
    Normal = normalMatrix * normal;\n\
+   vec3 vTangent = normalize( normalMatrix * tangent.xyz );\n\
+   vec3 vBinormal = normalize(cross( Normal, vTangent ) * tangent.w);\n\
+   tbn = mat3(vTangent, vBinormal, Normal);\n\
    gl_Position = projectionMatrix * viewMatrix * vec4(vecPos, 1.0);\n\
 }";
 var fragmentShaderIBL = "precision highp float;\n\
@@ -24,6 +29,7 @@ var fragmentShaderIBL = "precision highp float;\n\
    varying vec3 viewPos;\n\
    varying vec3 worldNormal;\n\
    varying vec3 Normal;\n\
+   varying mat3 tbn;\n\
    uniform vec4 SpecularColor;\n\
    uniform vec4 DiffuseColor;\n\
    uniform sampler2D IBLTexture;\n\
@@ -81,7 +87,7 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec2 st1 = dFdy( vUv.st );\n\
       vec3 S = normalize( q0 * st1.t - q1 * st0.t );\n\
       vec3 T = normalize( -q0 * st1.s + q1 * st0.s );\n\
-      vec3 N = normalize( surf_norm );\n\
+      vec3 N = normalize( cross(S,T) );\n\
       return mat3( S, T, N );\n\
    }\n\
    \n\
@@ -103,12 +109,12 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec3 normalizedWorldNormal = normalize(worldNormal);\n\
       vec3 tangentNormal = texture2D( NormalMap, vUv ).xyz * 2.0 - 1.0;\n\
       tangentNormal.xy = tangentNormal.xy * 0.5;\n\
-      mat3 tbnMatrix = getTBNMatrix(-viewPos, Normal);\n\
-      normalizedWorldNormal = normalize( tbnMatrix * tangentNormal );\n\
+      //mat3 tbnMatrix = getTBNMatrix(-viewPos, Normal);\n\
+      normalizedWorldNormal = normalize( tbn * tangentNormal );\n\
       normalizedWorldNormal = (vec4(normalizedWorldNormal,1.0) * viewMatrix).xyz;\n\
-      vec3 tViewVector = normalize(viewPos) * tbnMatrix;\n\
-      tViewVector = normalize(tViewVector * vec3(1.0,1.0,1.0));\n\
-      tViewVector = tbnMatrix * tViewVector;\n\
+      vec3 tViewVector = normalize(viewPos) * tbn;\n\
+      tViewVector = normalize(tViewVector * vec3(0.50,-0.50,1.0));\n\
+      tViewVector = tbn * tViewVector;\n\
       viewVector = (vec4(tViewVector,1.0) * viewMatrix).xyz;\n\
       float ndotv = dot(-normalizedWorldNormal, viewVector);\n\
       ndotv = ndotv < 0.0 ? 0.0 : ndotv;\n\

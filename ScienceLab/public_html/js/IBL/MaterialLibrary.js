@@ -101,19 +101,19 @@ var fragmentShaderIBL = "precision highp float;\n\
    }\n\
    vec4 rgbToSrgb(vec4 rgbColor){\n\
      float a = 0.055;\n\
-     return (1.0 + a) * pow(rgbColor, vec4(1.0/2.4)) - a;\n\
+     return (1.0 + a) * pow(rgbColor, vec4(1.0/2.0)) - a;\n\
    }\n\
    \n\
    void main() {\n\
       vec3 viewVector = normalize(vecPos - cameraPosition);\n\
       vec3 normalizedWorldNormal = normalize(worldNormal);\n\
       vec3 tangentNormal = texture2D( NormalMap, vUv ).xyz * 2.0 - 1.0;\n\
-      tangentNormal.xy = tangentNormal.xy * 0.5;\n\
+      tangentNormal.xy = tangentNormal.xy * 0.85;\n\
       //mat3 tbnMatrix = getTBNMatrix(-viewPos, Normal);\n\
       normalizedWorldNormal = normalize( tbn * tangentNormal );\n\
       normalizedWorldNormal = (vec4(normalizedWorldNormal,1.0) * viewMatrix).xyz;\n\
       vec3 tViewVector = normalize(viewPos) * tbn;\n\
-      tViewVector = normalize(tViewVector * vec3(0.50,-0.50,1.0));\n\
+      tViewVector = normalize(tViewVector * vec3(-1.0,1.0,1.0));\n\
       tViewVector = tbn * tViewVector;\n\
       viewVector = (vec4(tViewVector,1.0) * viewMatrix).xyz;\n\
       float ndotv = dot(-normalizedWorldNormal, viewVector);\n\
@@ -124,7 +124,7 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec4 IblSpecularColor = SampleSpecularContribution(reflectionVector,Roughness);\n\
       vec4 finalColor = specularContribution * IblSpecularColor + \n\
                         DiffuseColor * SampleDiffuseContribution(normalizedWorldNormal, Roughness);\n\
-      gl_FragColor = (finalColor);\n\
+      gl_FragColor = 1.90*(finalColor);\n\
    }";
 
 var shaderSource =

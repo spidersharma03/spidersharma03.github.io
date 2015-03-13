@@ -38,7 +38,8 @@
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
         <script src="../../js/simulate/InclinedPlaneSystems.js"></script>
         <script src="../../js/IBL/MaterialLibrary.js"></script>
-
+        <script src="../../js/lib/three.js/js/loaders/OBJLoader.js"></script>
+        
         <script>
 
             var container, stats;
@@ -70,16 +71,29 @@
             animate();
             
             function makeBaseGeometry() {
-//                var sphereGeometry = new THREE.CylinderGeometry(2,2,6,50,20);
-                var sphereGeometry = new THREE.SphereGeometry(2,50,50);
+//                var sphereGeometry = new THREE.CylinderGeometry(2,2,6,30,20);
+//                var sphereGeometry = new THREE.SphereGeometry(2,30,30);
+                var sphereGeometry = new THREE.RingGeometry(0.5,5,30);
 //                var sphereGeometry = new THREE.TorusKnotGeometry(3, 1, 64, 18, 2, 3, 1);
+//                sphereGeometry.computeVertexNormals();
                 sphereGeometry.computeTangents();
-                sphereGeometry.computeVertexNormals(true);
+//                var tangentattributes = sphereGeometry.getAttribute("tangent");
+//                var tangents = [];
+//                for(var i=0; i<sphereGeometry.vertices.length; i++) {
+//                    var tangent = sphereGeometry.vertexTangents[i];
+//                    tangents.push(new THREE.Vector3(tangent.x, tangent.y, tangent.z));
+//                }
+//
+//                var attributes = {
+//                    tangent: {type:"v4", value: tangents}
+//                };
+                sphereMaterial.side = THREE.DoubleSide;
+                sphereMaterial1.side = THREE.DoubleSide;
                 sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                sphereMesh.position.x = 5;
+                sphereMesh.position.x = 7;
                 sphereMesh.position.y = 5;
                 sphereMesh1 = new THREE.Mesh(sphereGeometry, sphereMaterial1);
-                sphereMesh1.position.x = -5;
+                sphereMesh1.position.x = -8;
                 sphereMesh1.position.y = 5;
                 //sphereMesh.castShadow = true;
                 //sphereMesh.receiveShadow = true;
@@ -93,6 +107,44 @@
                 //groundMesh.castShadow = true;
                 //groundMesh.receiveShadow = true;
                 scene.add(groundMesh);
+                
+                var onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( Math.round(percentComplete, 2) + '% downloaded' );
+					}
+				};
+                var onError = function ( xhr ) {
+				};
+                                
+                var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+
+					console.log( item, loaded, total );
+
+				};
+
+                var loader = new THREE.OBJLoader( manager );
+                loader.load( '../../img/suzanne.obj', function ( object ) {
+
+                        object.traverse( function ( child ) {
+
+                                if ( child instanceof THREE.Mesh ) {
+
+                                        child.material = sphereMaterial1;
+                                        child.geometry.computeVertexNormals();
+                                        child.geometry.computeTangents();
+                                }
+
+                        } );
+                        
+                        object.position.y = 3;
+                        object.scale.x = 4;
+                        object.scale.y = 4;
+                        object.scale.z = 4;
+                        scene.add( object );
+
+                }, onProgress, onError );
             }
 
             function syncSimulation()
@@ -161,7 +213,7 @@
                 //reflTexture.repeat.set(10, 10);
                 
                 var normalTexture = THREE.ImageUtils.loadTexture("../../img/metal_normal_map.jpg");
-                //normalTexture.repeat.set(10, 10);
+                normalTexture.repeat.set(10, 10);
                 normalTexture.wrapS = THREE.RepeatWrapping;
                 normalTexture.wrapT = THREE.RepeatWrapping;
                 
@@ -173,9 +225,9 @@
                 var clonedUniforms1 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
                 clonedUniforms1['IBLTexture'].value = reflTexture;
                 clonedUniforms1['NormalMap'].value = normalTexture;
-                clonedUniforms1['Roughness'].value = 0.0;
+                clonedUniforms1['Roughness'].value = 0.620;
                 clonedUniforms1['SpecularColor'].value = new THREE.Vector4(0.12,0.12,0.12,1.0); ;
-                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.92,0.82,0.92,1.0); ;
+                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.992,0.0932,0.0942,1.0); ;
 
                 sphereMaterial = new THREE.ShaderMaterial(
                         {uniforms: clonedUniforms1, 
@@ -185,7 +237,7 @@
                 var clonedUniforms2 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
                 clonedUniforms2['IBLTexture'].value = reflTexture;
                 clonedUniforms2['NormalMap'].value = normalTexture;
-                clonedUniforms2['Roughness'].value = 0.50;
+                clonedUniforms2['Roughness'].value = 0.90;
 
                 sphereMaterial1 = new THREE.ShaderMaterial(
                         {uniforms:clonedUniforms2, 

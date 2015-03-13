@@ -11,6 +11,22 @@
 "topics":
 [
     {
+        "name": "Velocity", 
+        "id": "Mechanics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "simulations":
+            [
+               {
+                   "display_name": "Racing Balls",
+                   "description":"Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls Racing Balls",
+                   "image" : "newton_first_law_1.png",
+                   "scene_name" : "SceneRacingBalls"
+               }
+            ],
+        "pageLink"  : "averageVelocity"
+    },
+    {
         "name": "Projectile Motion", 
         "id": "Mechanics.json", 
         "imageUrl": "", 

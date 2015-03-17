@@ -34,6 +34,8 @@ var fragmentShaderIBL = "precision highp float;\n\
    uniform vec4 DiffuseColor;\n\
    uniform sampler2D IBLTexture;\n\
    uniform sampler2D NormalMap;\n\
+   uniform sampler2D SpecularMap;\n\
+   uniform sampler2D RoughnessMap;\n\
    uniform vec4 TextureCoordSetArray[8];\n\
    uniform float RoughnessArray[8];\n\
    uniform float Roughness;\n\
@@ -48,6 +50,17 @@ var fragmentShaderIBL = "precision highp float;\n\
      return texture2D(IBLTexture, texCoord);\n\
    }\n\
    \n\
+    float MipLevel( vec2 uv ) {\n\
+        vec2 dx = dFdx( uv * 1024.0 );\n\
+        vec2 dy = dFdy( uv * 1024.0 );\n\
+        float d = max( dot( dx, dx ), dot( dy, dy ) );\n\
+        // Clamp the value to the max mip level counts\n\
+        float rangeClamp = pow(2.0, (8.0 - 1.0) * 2.0);\n\
+        d = clamp(d, 1.0, rangeClamp);\n\
+        float mipLevel = 0.5 * log2(d);\n\
+        mipLevel = floor(mipLevel);\n\
+        return mipLevel;\n\
+  }\n\
    \n\
    vec4 SampleSpecularContribution(vec3 direction, float roughness) {\n\
       vec4 texCoordSetLowerSampler;\n\
@@ -90,6 +103,7 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec3 N = normalize( cross(S,T) );\n\
       return mat3( S, T, N );\n\
    }\n\
+  \n\
    \n\
    vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV ) {\n\
      vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);\n\
@@ -108,23 +122,26 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec3 viewVector = normalize(vecPos - cameraPosition);\n\
       vec3 normalizedWorldNormal = normalize(worldNormal);\n\
       vec3 tangentNormal = texture2D( NormalMap, vUv ).xyz * 2.0 - 1.0;\n\
-      tangentNormal.xy = tangentNormal.xy * 0.85;\n\
+      tangentNormal.xy = tangentNormal.xy * 1.0;\n\
       //mat3 tbnMatrix = getTBNMatrix(-viewPos, Normal);\n\
-      normalizedWorldNormal = normalize( tbn * tangentNormal );\n\
+      mat3 normalizedTBN = mat3(normalize(tbn[0]), normalize(tbn[1]), normalize(tbn[2]));\n\
+      normalizedWorldNormal = normalize( normalizedTBN * tangentNormal );\n\
       normalizedWorldNormal = (vec4(normalizedWorldNormal,1.0) * viewMatrix).xyz;\n\
-      vec3 tViewVector = normalize(viewPos) * tbn;\n\
-      tViewVector = normalize(tViewVector * vec3(-1.0,1.0,1.0));\n\
-      tViewVector = tbn * tViewVector;\n\
+      vec3 tViewVector = normalize(viewPos) * normalizedTBN;\n\
+      tViewVector = normalize(tViewVector * vec3(1.0,1.0,1.0));\n\
+      tViewVector = normalizedTBN * tViewVector;\n\
       viewVector = (vec4(tViewVector,1.0) * viewMatrix).xyz;\n\
+      viewVector = normalize(viewVector);\n\
       float ndotv = dot(-normalizedWorldNormal, viewVector);\n\
       ndotv = ndotv < 0.0 ? 0.0 : ndotv;\n\
       vec3 reflectionVector = reflect( viewVector, normalizedWorldNormal );\n\
-      vec3 specularColor = vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
+      vec3 specularColor = texture2D(SpecularMap, vUv).xyz;//vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
       vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv),1.0);\n\
-      vec4 IblSpecularColor = SampleSpecularContribution(reflectionVector,Roughness);\n\
+      float roughnessVal = 1.0 - texture2D(RoughnessMap, vUv).r;\n\
+      vec4 IblSpecularColor = SampleSpecularContribution(reflectionVector,roughnessVal);\n\
       vec4 finalColor = specularContribution * IblSpecularColor + \n\
-                        DiffuseColor * SampleDiffuseContribution(normalizedWorldNormal, Roughness);\n\
-      gl_FragColor = 1.90*(finalColor);\n\
+                        DiffuseColor * SampleDiffuseContribution(normalizedWorldNormal, roughnessVal);\n\
+      gl_FragColor = 2.0*(finalColor);\n\
    }";
 
 var shaderSource =
@@ -132,6 +149,8 @@ var shaderSource =
     uniforms: {
         IBLTexture: {type: 't', value: null},
         NormalMap: {type: 't', value: null},
+        SpecularMap: {type: 't', value: null},
+        RoughnessMap: {type: 't', value: null},
         TextureCoordSetArray: { type: 'v4v', value: null},
         RoughnessArray: { type: 'fv1', value: null},
         Roughness: {type: 'f', value: 0.0},

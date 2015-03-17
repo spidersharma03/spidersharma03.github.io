@@ -31556,7 +31556,7 @@ THREE.RingGeometry = function ( innerRadius, outerRadius, thetaSegments, phiSegm
 			vertex.y = radius * Math.sin( segment );
 
 			this.vertices.push( vertex );
-			uvs.push( new THREE.Vector2( radius / outerRadius, segment) );
+			uvs.push( new THREE.Vector2( radius / outerRadius, segment*0.5/Math.PI) );
 		}
 
 		radius += radiusStep;

@@ -72,8 +72,8 @@
             
             function makeBaseGeometry() {
 //                var sphereGeometry = new THREE.CylinderGeometry(2,2,6,30,20);
-//                var sphereGeometry = new THREE.SphereGeometry(2,30,30);
-                var sphereGeometry = new THREE.RingGeometry(0.5,5,30);
+                var sphereGeometry = new THREE.SphereGeometry(2,30,30);
+//                var sphereGeometry = new THREE.RingGeometry(0.5,5,30);
 //                var sphereGeometry = new THREE.TorusKnotGeometry(3, 1, 64, 18, 2, 3, 1);
 //                sphereGeometry.computeVertexNormals();
                 sphereGeometry.computeTangents();
@@ -102,7 +102,7 @@
                 
                 var groundGeometry = new THREE.BoxGeometry(20,0.1,20);
                 groundGeometry.computeTangents();
-                var groundMesh = new THREE.Mesh(groundGeometry, sphereMaterial);
+                var groundMesh = new THREE.Mesh(groundGeometry, sphereMaterial1);
                 groundMesh.position.y = -1.0;
                 //groundMesh.castShadow = true;
                 //groundMesh.receiveShadow = true;
@@ -125,13 +125,16 @@
 				};
 
                 var loader = new THREE.OBJLoader( manager );
-                loader.load( '../../img/suzanne.obj', function ( object ) {
+                loader.load( '../../img/wateringcan.obj', function ( object ) {
 
                         object.traverse( function ( child ) {
 
                                 if ( child instanceof THREE.Mesh ) {
 
                                         child.material = sphereMaterial1;
+                                        child.scale.x = 0.1;
+                                        child.scale.y = 0.1;
+                                        child.scale.z = 0.1;
                                         child.geometry.computeVertexNormals();
                                         child.geometry.computeTangents();
                                 }
@@ -204,7 +207,7 @@
 
                 };
                 
-                var reflTexture = THREE.ImageUtils.loadTexture("../../img/mips.jpg");
+                var reflTexture = THREE.ImageUtils.loadTexture("../../img/mipsnew.jpg");
                 reflTexture.wrapS = THREE.ClampToEdgeWrapping;
                 reflTexture.wrapT = THREE.ClampToEdgeWrapping;
                 reflTexture.generateMipmaps = false;
@@ -212,22 +215,28 @@
                 reflTexture.minFilter = THREE.LinearFilter;
                 //reflTexture.repeat.set(10, 10);
                 
-                var normalTexture = THREE.ImageUtils.loadTexture("../../img/metal_normal_map.jpg");
+                var normalTexture = THREE.ImageUtils.loadTexture("../../img/plane_norrmal.jpg");
                 normalTexture.repeat.set(10, 10);
                 normalTexture.wrapS = THREE.RepeatWrapping;
                 normalTexture.wrapT = THREE.RepeatWrapping;
+
+                var specularTexture = THREE.ImageUtils.loadTexture("../../img/al.jpg");
+                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_al.jpg");
                 
                 library.shaderSource.uniforms['IBLTexture'].value = reflTexture;
                 library.shaderSource.uniforms['NormalMap'].value = normalTexture;                                
+                library.shaderSource.uniforms['SpecularMap'].value = specularTexture;                                
+                library.shaderSource.uniforms['RoughnessMap'].value = roughnessTexture;                                
                 library.shaderSource.uniforms['SpecularColor'].value = new THREE.Vector4(0.95,0.63,0.53,1.0);                
                 library.shaderSource.uniforms['DiffuseColor'].value = new THREE.Vector4(0.0,0.0,0.0,1.0);                
 
                 var clonedUniforms1 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
                 clonedUniforms1['IBLTexture'].value = reflTexture;
                 clonedUniforms1['NormalMap'].value = normalTexture;
-                clonedUniforms1['Roughness'].value = 0.620;
+                clonedUniforms1['Roughness'].value = 0.0;
                 clonedUniforms1['SpecularColor'].value = new THREE.Vector4(0.12,0.12,0.12,1.0); ;
-                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.992,0.0932,0.0942,1.0); ;
+                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.992,0.932,0.942,1.0); ;
+                clonedUniforms1['RoughnessMap'].value = roughnessTexture;                                
 
                 sphereMaterial = new THREE.ShaderMaterial(
                         {uniforms: clonedUniforms1, 
@@ -237,7 +246,9 @@
                 var clonedUniforms2 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
                 clonedUniforms2['IBLTexture'].value = reflTexture;
                 clonedUniforms2['NormalMap'].value = normalTexture;
-                clonedUniforms2['Roughness'].value = 0.90;
+                clonedUniforms2['Roughness'].value = 0.40;
+                clonedUniforms2['SpecularMap'].value = specularTexture;                                
+                clonedUniforms2['RoughnessMap'].value = roughnessTexture;                                
 
                 sphereMaterial1 = new THREE.ShaderMaterial(
                         {uniforms:clonedUniforms2, 

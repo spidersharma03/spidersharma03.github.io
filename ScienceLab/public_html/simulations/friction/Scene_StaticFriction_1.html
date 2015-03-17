@@ -220,8 +220,8 @@
                 normalTexture.wrapS = THREE.RepeatWrapping;
                 normalTexture.wrapT = THREE.RepeatWrapping;
 
-                var specularTexture = THREE.ImageUtils.loadTexture("../../img/al.jpg");
-                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_al.jpg");
+                var specularTexture = THREE.ImageUtils.loadTexture("../../img/copper01.jpg");
+                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_copper.jpg");
                 
                 library.shaderSource.uniforms['IBLTexture'].value = reflTexture;
                 library.shaderSource.uniforms['NormalMap'].value = normalTexture;                                

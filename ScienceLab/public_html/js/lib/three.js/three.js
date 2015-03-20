@@ -23937,7 +23937,6 @@ THREE.WebGLExtensions = function ( gl ) {
 		}
 
 		var extension;
-
 		switch ( name ) {
 
 			case 'EXT_texture_filter_anisotropic':

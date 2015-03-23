@@ -64,7 +64,7 @@
            
             var cameraPosition = new THREE.Vector3();
             var library = new MaterialLibrary();
-            var sphereMesh, sphereMesh1;
+            var sphereMesh, sphereMesh1, objNode;
             var clonedUniforms1, clonedUniforms2;
             
             init();
@@ -100,7 +100,7 @@
                 scene.add(sphereMesh);
                 scene.add(sphereMesh1);
                 
-                var groundGeometry = new THREE.BoxGeometry(20,0.1,20);
+                var groundGeometry = new THREE.BoxGeometry(100,2,100,10,10,10);
                 groundGeometry.computeTangents();
                 var groundMesh = new THREE.Mesh(groundGeometry, sphereMaterial1);
                 groundMesh.position.y = -1.0;
@@ -126,7 +126,7 @@
 
                 var loader = new THREE.OBJLoader( manager );
                 loader.load( '../../img/wateringcan.obj', function ( object ) {
-
+                        objNode = object;
                         object.traverse( function ( child ) {
 
                                 if ( child instanceof THREE.Mesh ) {
@@ -207,7 +207,7 @@
 
                 };
                 
-                var reflTexture = THREE.ImageUtils.loadTexture("../../img/mipsnew.jpg");
+                var reflTexture = THREE.ImageUtils.loadTexture("../../img/mips.png");
                 reflTexture.wrapS = THREE.ClampToEdgeWrapping;
                 reflTexture.wrapT = THREE.ClampToEdgeWrapping;
                 reflTexture.generateMipmaps = false;
@@ -220,22 +220,26 @@
                 normalTexture.wrapS = THREE.RepeatWrapping;
                 normalTexture.wrapT = THREE.RepeatWrapping;
 
-                var specularTexture = THREE.ImageUtils.loadTexture("../../img/copper01.jpg");
-                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_copper.jpg");
+                var specularTexture = THREE.ImageUtils.loadTexture("../../img/iron03.jpg");
+                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_iron.jpg");
+                roughnessTexture.wrapS = THREE.RepeatWrapping;
+                roughnessTexture.wrapT = THREE.RepeatWrapping;
+                specularTexture.wrapS = THREE.RepeatWrapping;
+                specularTexture.wrapT = THREE.RepeatWrapping;
                 
                 library.shaderSource.uniforms['IBLTexture'].value = reflTexture;
                 library.shaderSource.uniforms['NormalMap'].value = normalTexture;                                
                 library.shaderSource.uniforms['SpecularMap'].value = specularTexture;                                
                 library.shaderSource.uniforms['RoughnessMap'].value = roughnessTexture;                                
                 library.shaderSource.uniforms['SpecularColor'].value = new THREE.Vector4(0.95,0.63,0.53,1.0);                
-                library.shaderSource.uniforms['DiffuseColor'].value = new THREE.Vector4(0.0,0.0,0.0,1.0);                
+                library.shaderSource.uniforms['DiffuseColor'].value = new THREE.Vector4(0.01,0.01,0.01,1.0);                
 
                 var clonedUniforms1 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
                 clonedUniforms1['IBLTexture'].value = reflTexture;
                 clonedUniforms1['NormalMap'].value = normalTexture;
                 clonedUniforms1['Roughness'].value = 0.0;
-                clonedUniforms1['SpecularColor'].value = new THREE.Vector4(0.12,0.12,0.12,1.0); ;
-                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.992,0.932,0.942,1.0); ;
+                clonedUniforms1['SpecularColor'].value = new THREE.Vector4(0.0,0.0,0.0,1.0); ;
+                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.9,0.02,0.02,1.0); ;
                 clonedUniforms1['RoughnessMap'].value = roughnessTexture;                                
 
                 sphereMaterial = new THREE.ShaderMaterial(
@@ -341,7 +345,8 @@
             var time = 0.0;
             function animate() {
                 time += 0.016*0.3;
-//                sphereMesh1.rotation.y += 0.01;
+                sphereMesh1.rotation.y += 0.01;
+                sphereMesh.rotation.y += 0.01;
                 var roughness = Math.sin(time);
                 roughness *= roughness;
                 //library.shaderSource.uniforms['Roughness'].value = 0.5; 

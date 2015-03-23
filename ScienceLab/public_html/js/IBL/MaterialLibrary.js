@@ -11,7 +11,7 @@ var vertexShaderIBL = "varying vec2 vUv; \n\
    varying vec3 Normal;\n\
    varying mat3 tbn;\n\
    void main() {\n\
-   vUv = uv;\n\
+   vUv = fract(uv * 2.0);\n\
    vecPos = (modelMatrix * vec4(position, 1.0 )).xyz;\n\
    viewPos = (modelViewMatrix * vec4(position, 1.0 )).xyz;\n\
    worldNormal = (modelMatrix * vec4(normal,0.0)).xyz;\n\
@@ -24,6 +24,7 @@ var vertexShaderIBL = "varying vec2 vUv; \n\
 var fragmentShaderIBL = "precision highp float;\n\
    #extension GL_OES_standard_derivatives : enable\n\
    #define PI 3.14\n\
+   #define USE_HDR\n\
    varying vec2 vUv; \n\
    varying vec3 vecPos;\n\
    varying vec3 viewPos;\n\
@@ -40,15 +41,6 @@ var fragmentShaderIBL = "precision highp float;\n\
    uniform float RoughnessArray[8];\n\
    uniform float Roughness;\n\
    \n\
-   vec4 SampleDiffuseContribution(vec3 direction, float roughness) {\n\
-     vec4 texCoordSetSample = TextureCoordSetArray[7];\n\
-     float phi = atan(direction.z, direction.x); \n\
-     phi = phi < 0.0 ? 2.0*PI + phi : phi;\n\
-     phi /= (2.0*PI);\n\
-     float theta = (asin(direction.y) + PI * 0.5)/PI;\n\
-     vec2 texCoord = vec2(texCoordSetSample.x + phi * texCoordSetSample.y, texCoordSetSample.z + theta * texCoordSetSample.w);\n\
-     return texture2D(IBLTexture, texCoord);\n\
-   }\n\
    \n\
     float MipLevel( vec2 uv ) {\n\
         vec2 dx = dFdx( uv * 1024.0 );\n\
@@ -61,8 +53,40 @@ var fragmentShaderIBL = "precision highp float;\n\
         mipLevel = floor(mipLevel);\n\
         return mipLevel;\n\
   }\n\
+  vec3 convertRGBEToRGB(vec4 rgbe) {\n\
+	float d = pow(2.0, rgbe.w*256.0 - 128.0);\n\
+	return vec3(rgbe) * d;\n\
+   }\n\
    \n\
-   vec4 SampleSpecularContribution(vec3 direction, float roughness) {\n\
+   vec3 tonemap(vec3 RGB) {\n\
+      float LogAvgLum = 0.32;\n\
+      float key = 0.98;\n\
+      float Ywhite = 1e1;\n\
+      Ywhite *= Ywhite;\n\
+      float sat = 1.0;\n\
+      float Ylum = dot(RGB ,vec3(0.2126, 0.7152, 0.0722));\n\
+      float Y = key/LogAvgLum * Ylum ;\n\
+      float Yd = Y * ( 1.0 + Y/Ywhite)/( 1.0 + Y) ;\n\
+      return Yd * pow(RGB/Ylum ,vec3(sat, sat, sat));\n\
+   }\n\
+   vec4 SampleDiffuseContribution(vec4 difCol,vec3 direction, float roughness) {\n\
+     vec4 texCoordSetSample = TextureCoordSetArray[7];\n\
+     float phi = atan(direction.z, direction.x); \n\
+     phi = phi < 0.0 ? 2.0*PI + phi : phi;\n\
+     phi /= (2.0*PI);\n\
+     float theta = (asin(direction.y) + PI * 0.5)/PI;\n\
+     vec2 texCoord = vec2(texCoordSetSample.x + phi * texCoordSetSample.y, texCoordSetSample.z + theta * texCoordSetSample.w);\n\
+     vec4 rgbe = texture2D(IBLTexture, texCoord);\n\
+     vec3 rgb = tonemap(difCol.xyz*convertRGBEToRGB(rgbe));\n\
+     #ifdef USE_HDR\n\
+        return vec4(rgb, 1.0);\n\
+     #else\n\
+        return texture2D(IBLTexture, texCoord);\n\
+     #endif\n\
+   }\n\
+   \n\
+   \n\
+   vec4 SampleSpecularContribution(vec4 specularColor, vec3 direction, float roughness) {\n\
       vec4 texCoordSetLowerSampler;\n\
       vec4 texCoordSetUpperSampler;\n\
       float dRoughness = 0.0;\n\
@@ -89,8 +113,16 @@ var fragmentShaderIBL = "precision highp float;\n\
       theta_refl = theta_refl > 1.0 ? 1.0 : theta_refl;\n\
       vec2 texCoordLower = vec2(texCoordSetLowerSampler.x + phi_refl * texCoordSetLowerSampler.y, texCoordSetLowerSampler.z + theta_refl * texCoordSetLowerSampler.w);\n\
       vec2 texCoordUpper = vec2(texCoordSetUpperSampler.x + phi_refl * texCoordSetUpperSampler.y, texCoordSetUpperSampler.z + theta_refl * texCoordSetUpperSampler.w);\n\
+      #ifdef USE_HDR\n\
+        vec4 rgbeLower = texture2D(IBLTexture, texCoordLower);\n\
+        vec4 rgbeUpper = texture2D(IBLTexture, texCoordUpper);\n\
+        vec3 rgbLower = tonemap(specularColor.xyz*convertRGBEToRGB(rgbeLower));\n\
+        vec3 rgbUpper = tonemap(specularColor.xyz*convertRGBEToRGB(rgbeUpper));\n\
+        return  vec4(rgbLower, 1.0)*(1.0-dRoughness) +  vec4(rgbUpper, 1.0)*dRoughness;\n\
+      #else\n\
       return texture2D(IBLTexture, texCoordLower)*(1.0-dRoughness)\n\
        + texture2D(IBLTexture, texCoordUpper)*dRoughness;\n\
+      #endif\n\
    }\n\
    \n\
    mat3 getTBNMatrix( vec3 eye_pos, vec3 surf_norm ) {\n\
@@ -138,10 +170,9 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec3 specularColor = texture2D(SpecularMap, vUv).xyz;//vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
       vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv),1.0);\n\
       float roughnessVal = 1.0 - texture2D(RoughnessMap, vUv).r;\n\
-      vec4 IblSpecularColor = SampleSpecularContribution(reflectionVector,roughnessVal);\n\
-      vec4 finalColor = specularContribution * IblSpecularColor + \n\
-                        DiffuseColor * SampleDiffuseContribution(normalizedWorldNormal, roughnessVal);\n\
-      gl_FragColor = 2.0*(finalColor);\n\
+      vec4 IblSpecularColor = SampleSpecularContribution(specularContribution, reflectionVector,roughnessVal);\n\
+      vec4 finalColor = IblSpecularColor + SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal, roughnessVal);\n\
+      gl_FragColor = 1.0*(finalColor);\n\
    }";
 
 var shaderSource =

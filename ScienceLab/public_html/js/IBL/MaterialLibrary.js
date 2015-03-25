@@ -59,8 +59,8 @@ var fragmentShaderIBL = "precision highp float;\n\
    }\n\
    \n\
    vec3 tonemap(vec3 RGB) {\n\
-      float LogAvgLum = 0.32;\n\
-      float key = 0.98;\n\
+      float LogAvgLum = 0.32;//0.08\n\
+      float key = 0.78;\n\
       float Ywhite = 1e1;\n\
       Ywhite *= Ywhite;\n\
       float sat = 1.0;\n\
@@ -69,7 +69,7 @@ var fragmentShaderIBL = "precision highp float;\n\
       float Yd = Y * ( 1.0 + Y/Ywhite)/( 1.0 + Y) ;\n\
       return Yd * pow(RGB/Ylum ,vec3(sat, sat, sat));\n\
    }\n\
-   vec4 SampleDiffuseContribution(vec4 difCol,vec3 direction, float roughness) {\n\
+   vec4 SampleDiffuseContribution(vec4 difCol,vec3 direction) {\n\
      vec4 texCoordSetSample = TextureCoordSetArray[7];\n\
      float phi = atan(direction.z, direction.x); \n\
      phi = phi < 0.0 ? 2.0*PI + phi : phi;\n\

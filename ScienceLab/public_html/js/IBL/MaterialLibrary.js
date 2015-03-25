@@ -169,9 +169,9 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec3 reflectionVector = reflect( viewVector, normalizedWorldNormal );\n\
       vec3 specularColor = texture2D(SpecularMap, vUv).xyz;//vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
       vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv),1.0);\n\
-      float roughnessVal = 1.0 - texture2D(RoughnessMap, vUv).r;\n\
+      float roughnessVal = (1.0 - texture2D(RoughnessMap, vUv).r);\n\
       vec4 IblSpecularColor = SampleSpecularContribution(specularContribution, reflectionVector,roughnessVal);\n\
-      vec4 finalColor = IblSpecularColor + SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal, roughnessVal);\n\
+      vec4 finalColor =  IblSpecularColor + SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal);\n\
       gl_FragColor = 1.0*(finalColor);\n\
    }";
 

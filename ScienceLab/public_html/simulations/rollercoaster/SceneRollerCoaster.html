@@ -84,6 +84,7 @@
                         var normal = new THREE.Vector3();
                         var zVector = new THREE.Vector3(0,0,-1);
                         var negYVector = new THREE.Vector3(0,-1,0);
+                        var contactNormal = new THREE.Vector3(0,-1,0);
                         var freeFlightOn = false;
                         
                         function TrackPath() {
@@ -118,10 +119,11 @@
                             var loopRadius = 6.0;
                             // Loop Path
                             var arcPath = [];
-                            arcPath.push(new THREE.Vector3( -20, 10, 0));
-                            arcPath.push(new THREE.Vector3( -15, 5, 0));
-                            arcPath.push(new THREE.Vector3( -10, 6, 0));
-                            arcPath.push(new THREE.Vector3( -1, 1, 0));
+                            var offset = 5;
+                            arcPath.push(new THREE.Vector3( -30, 10+offset, 0));
+                            arcPath.push(new THREE.Vector3( -20, 5+offset, 0));
+                            arcPath.push(new THREE.Vector3( -10, 9+offset, 0));
+                            arcPath.push(new THREE.Vector3( -0, 5+offset, 0));
 
                             var n = 20;
                             var theta = -Math.PI;
@@ -130,16 +132,35 @@
                             for( var i=0; i<n; i++) {
                                 var y = loopRadius * Math.sin(theta);// * Math.exp(-0.1*Math.abs(x));
                                 x += dx;
-                                arcPath.push(new THREE.Vector3( x, y, 0));
+                                arcPath.push(new THREE.Vector3( x, y+offset, 0));
                                 theta += dTheta1;
                             }
                             var track2 = new TrackPath();
                             TrackPaths.push(track2);
                             track2.spline = new THREE.SplineCurve3(arcPath);
+                            var splineOffsetPoints = [];
+                            var splinePoints = [];
+                            var nDivs = 10;
+                            var normal = new THREE.Vector3();
+                            var offsetRadius = sphereRadius + sphereRadius/5
+                            for(var i=0; i<nDivs; i++) {
+                                var t = i/(nDivs-1);
+                                var point = track2.spline.getPointAt(t);
+                                var tangent = track2.spline.getTangentAt(t);
+                                normal.crossVectors(tangent, zVector);
+                                var px = point.x - normal.x * offsetRadius;
+                                var py = point.y - normal.y * offsetRadius;
+                                splineOffsetPoints.push(new THREE.Vector3(px, py, 0));
+                                splinePoints.push(new THREE.Vector3(point.x, point.y, 0));
+                            }
+                            var offsetSpline = new THREE.SplineCurve3(splineOffsetPoints);
+                            var spline = new THREE.SplineCurve3(splinePoints);
+                            
+                            track2.spline = spline;
                             var extrudeSettings2 = {
                                     steps		: 150,
                                     bevelEnabled	: false,
-                                    extrudePath		: track2.spline
+                                    extrudePath		: offsetSpline
                             };
                            var shape = new THREE.Shape( pathShape );
                            var geometry1 = new THREE.ExtrudeGeometry( shape, extrudeSettings2 );
@@ -183,7 +204,7 @@
                                 mesh.position.z = z;
                                 mesh.velocity = 0.0;
                                 mesh.direction = new THREE.Vector3();
-                                mesh.s = 0.0;
+                                mesh.s = 0.02;
                                 mesh.angle = 0.0;
                                 mesh.angularSpeed = 0.0;
                                 group.add( mesh );
@@ -194,7 +215,7 @@
                         
                         function checkForCollisionWithSpline(collidingSpline, px, py) {
                             var u_low = 0, u_high = 1;
-                            var epsilon = 1e-3/collidingSpline.getLength();
+                            var epsilon = 1e-4/collidingSpline.getLength();
                             var p_low, p_high;
                             while( u_high - u_low > epsilon) {
                                 var u_mid = (u_low + u_high)*0.5;
@@ -207,7 +228,8 @@
                                 }
                             }
                             var ySpline = (p_low.y + p_high.y) * 0.5;
-                            if( ySpline > py - sphereRadius )
+                            var epsilon = 0.05;
+                            if( ySpline > py + epsilon )
                                 return (u_high + u_low) * 0.5;
                             return -1.0;
                         }
@@ -222,7 +244,7 @@
                                     if( !freeFlightOn && t >= 0.0 && t <= 1 ) {
                                         var pathLength = TrackPaths[i].spline.getLength();
                                         var tangent = TrackPaths[i].spline.getTangentAt(t);
-                                        var epsilon = 0.01/TrackPaths[i].spline.getLength();
+                                        var epsilon = 0.001/TrackPaths[i].spline.getLength();
                                         var R = 0.0;
                                         if(t >= epsilon && t <= 1 - epsilon) {
                                             var tangent1 = TrackPaths[i].spline.getTangentAt(t+epsilon);
@@ -244,22 +266,25 @@
                                         normal.z = ax * by - ay * bx;
                                         
                                         var sinTheta = tangent.y/Math.sqrt( tangent.x * tangent.x + tangent.y * tangent.y);
-                                        body.velocity += g * sinTheta * dt;
+                                        body.velocity += 5/7*g * sinTheta * dt;
                                         body.angularSpeed = body.velocity * sphereRadius;
                                         body.angle += body.angularSpeed * dt;
                                         body.s += body.velocity * dt/pathLength;
+                                        if(body.angle >= 4*Math.PI) {
+                                            var test = 0; test++;
+                                        }
                                         var pathPosition = TrackPaths[i].spline.getPointAt(t);
                                         body.position.x = pathPosition.x;
-                                        body.position.y = pathPosition.y + sphereRadius;
+                                        body.position.y = pathPosition.y;
                                         //body.position.z = pathPosition.z - 2*sphereRadius ;
-                                        body.rotation.z = -body.angle;// * 180/Math.PI;
+                                        body.rotation.z = -body.angle;
                                         var v1 = body.velocity*body.velocity/R;
                                         //var dotProd = normal.dot(negYVector);
                                         var v2 = Math.abs(g)*Math.sqrt(1 - sinTheta*sinTheta);
                                         //var diff = v1 - Math.abs(v2);
                                         if( (v1 + v2) <= 0)
                                         {
-                                            console.log(v1 + v2);
+                                            //console.log(v1 + v2);
                                             freeFlightOn = true;
                                             body.direction.x = tangent.x * body.velocity;
                                             body.direction.y = tangent.y * body.velocity;
@@ -270,10 +295,24 @@
                                        body.position.x += body.direction.x * dt;
                                        body.position.y += body.direction.y * dt;
                                        body.position.z += body.direction.z * dt;
+                                       body.velocity = Math.sqrt(body.direction.dot(body.direction));
+                                       body.angle += body.angularSpeed * dt;
+                                       body.rotation.z = -body.angle;// * 180/Math.PI;
                                        var hitT = checkForCollisionWithSpline(TrackPaths[i].spline, body.position.x, body.position.y);
                                        if( hitT > 0){
+                                           var contactTangent = TrackPaths[i].spline.getTangentAt(hitT);
+                                           contactNormal.crossVectors(contactTangent, zVector);  
+                                           // Reflected Velocity
+                                           var NdotV = contactNormal.dot(body.direction);
+                                           var reflVelX = body.direction.x - 2.0*NdotV*contactNormal.x;
+                                           var reflVelY = body.direction.y - 2.0*NdotV*contactNormal.y;
+                                           body.velocity = reflVelX * contactTangent.x + reflVelY * contactTangent.y;
                                            freeFlightOn = false;
                                            body.s = hitT;
+                                           body.s += body.velocity * dt/TrackPaths[i].spline.getLength();
+                                           var pathPosition = TrackPaths[i].spline.getPointAt(hitT);
+                                           body.position.x = pathPosition.x;
+                                           body.position.y = pathPosition.y;
                                        }
                                    }
                                 }
@@ -304,7 +343,7 @@
                                 light.shadowMapWidth = 1024;
 				light.shadowMapHeight = 1024;
                                 
-                                var d = 20;
+                                var d = 30;
 
 				light.shadowCameraLeft = -d;
 				light.shadowCameraRight = d;
@@ -324,9 +363,7 @@
 
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
-
 					console.log( item, loaded, total );
-
 				};
                                     
                                 var path = "../../img/pisa/";
@@ -386,7 +423,7 @@
                             cameraPosition.y = pos.y;
                             cameraPosition.z = pos.z;
                             var min = 5;
-                            var max = 40;
+                            var max = 65;
                             if( d < min )
                             {
                                cameraPosition.normalize();

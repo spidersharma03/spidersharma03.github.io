@@ -72,10 +72,11 @@
             
             function makeBaseGeometry() {
 //                var sphereGeometry = new THREE.CylinderGeometry(2,2,6,30,20);
-                var sphereGeometry = new THREE.SphereGeometry(2,30,30);
+//                var sphereGeometry = new THREE.SphereGeometry(2,30,30);
 //                var sphereGeometry = new THREE.RingGeometry(0.5,5,30);
 //                var sphereGeometry = new THREE.TorusKnotGeometry(3, 1, 64, 18, 2, 3, 1);
 //                sphereGeometry.computeVertexNormals();
+                var sphereGeometry = new THREE.TorusGeometry(2, 1, 50,50);
                 sphereGeometry.computeTangents();
 //                var tangentattributes = sphereGeometry.getAttribute("tangent");
 //                var tangents = [];
@@ -220,8 +221,8 @@
                 normalTexture.wrapS = THREE.RepeatWrapping;
                 normalTexture.wrapT = THREE.RepeatWrapping;
 
-                var specularTexture = THREE.ImageUtils.loadTexture("../../img/al_scratch.jpg");
-                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_al_scratch.jpg");
+                var specularTexture = THREE.ImageUtils.loadTexture("../../img/copper01.jpg");
+                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_copper.jpg");
                 roughnessTexture.wrapS = THREE.RepeatWrapping;
                 roughnessTexture.wrapT = THREE.RepeatWrapping;
                 specularTexture.wrapS = THREE.RepeatWrapping;
@@ -233,7 +234,8 @@
                 library.shaderSource.uniforms['RoughnessMap'].value = roughnessTexture;                                
                 library.shaderSource.uniforms['SpecularColor'].value = new THREE.Vector4(0.95,0.63,0.53,1.0);                
                 library.shaderSource.uniforms['DiffuseColor'].value = new THREE.Vector4(0.01,0.01,0.01,1.0);                
-
+                library.shaderSource.uniforms['uMetal'].value = 0.0;
+                
                 var clonedUniforms1 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
                 clonedUniforms1['IBLTexture'].value = reflTexture;
                 clonedUniforms1['NormalMap'].value = normalTexture;
@@ -241,6 +243,7 @@
                 clonedUniforms1['SpecularColor'].value = new THREE.Vector4(0.0,0.0,0.0,1.0); ;
                 clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.0,0.2,0.02,1.0); ;
                 clonedUniforms1['RoughnessMap'].value = roughnessTexture;                                
+                clonedUniforms1['uMetal'].value = 0.0;
 
                 sphereMaterial = new THREE.ShaderMaterial(
                         {uniforms: clonedUniforms1, 
@@ -253,6 +256,7 @@
                 clonedUniforms2['Roughness'].value = 0.40;
                 clonedUniforms2['SpecularMap'].value = specularTexture;                                
                 clonedUniforms2['RoughnessMap'].value = roughnessTexture;                                
+                clonedUniforms2['uMetal'].value = 0.0;
 
                 sphereMaterial1 = new THREE.ShaderMaterial(
                         {uniforms:clonedUniforms2, 

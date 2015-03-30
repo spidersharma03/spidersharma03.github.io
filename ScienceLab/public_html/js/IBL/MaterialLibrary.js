@@ -40,6 +40,7 @@ var fragmentShaderIBL = "precision highp float;\n\
    uniform vec4 TextureCoordSetArray[8];\n\
    uniform float RoughnessArray[8];\n\
    uniform float Roughness;\n\
+   uniform float uMetal;\n\
    \n\
    \n\
     float MipLevel( vec2 uv ) {\n\
@@ -59,9 +60,9 @@ var fragmentShaderIBL = "precision highp float;\n\
    }\n\
    \n\
    vec3 tonemap(vec3 RGB) {\n\
-      float LogAvgLum = 0.32;//0.08\n\
+      float LogAvgLum = 0.3;//0.08\n\
       float key = 0.78;\n\
-      float Ywhite = 1e1;\n\
+      float Ywhite = 1e2;\n\
       Ywhite *= Ywhite;\n\
       float sat = 1.0;\n\
       float Ylum = dot(RGB ,vec3(0.2126, 0.7152, 0.0722));\n\
@@ -81,7 +82,7 @@ var fragmentShaderIBL = "precision highp float;\n\
      #ifdef USE_HDR\n\
         return vec4(rgb, 1.0);\n\
      #else\n\
-        return texture2D(IBLTexture, texCoord);\n\
+        return difCol * texture2D(IBLTexture, texCoord);\n\
      #endif\n\
    }\n\
    \n\
@@ -120,8 +121,8 @@ var fragmentShaderIBL = "precision highp float;\n\
         vec3 rgbUpper = tonemap(specularColor.xyz*convertRGBEToRGB(rgbeUpper));\n\
         return  vec4(rgbLower, 1.0)*(1.0-dRoughness) +  vec4(rgbUpper, 1.0)*dRoughness;\n\
       #else\n\
-      return texture2D(IBLTexture, texCoordLower)*(1.0-dRoughness)\n\
-       + texture2D(IBLTexture, texCoordUpper)*dRoughness;\n\
+      return specularColor*texture2D(IBLTexture, texCoordLower)*(1.0-dRoughness)\n\
+       + specularColor*texture2D(IBLTexture, texCoordUpper)*dRoughness;\n\
       #endif\n\
    }\n\
    \n\
@@ -172,8 +173,12 @@ var fragmentShaderIBL = "precision highp float;\n\
       float roughnessVal = (1.0 - texture2D(RoughnessMap, vUv).r);\n\
       vec4 IblSpecularColor = SampleSpecularContribution(specularContribution, reflectionVector,roughnessVal);\n\
       vec4 finalColor =  IblSpecularColor + SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal);\n\
-      gl_FragColor = 1.0*(finalColor);\n\
-   }";
+      #ifdef USE_HDR\n\
+       gl_FragColor = (finalColor);\n\
+      #else\n\
+       gl_FragColor = 2.5*(finalColor);\n\
+      #endif\n\
+    }";
 
 var shaderSource =
 {
@@ -186,7 +191,8 @@ var shaderSource =
         RoughnessArray: { type: 'fv1', value: null},
         Roughness: {type: 'f', value: 0.0},
         SpecularColor: { type: 'v4', value: null},
-        DiffuseColor: { type: 'v4', value: null}       
+        DiffuseColor: { type: 'v4', value: null},
+        uMetal: { type: 'f', value: 0.0 }
     },
     vertexShader: vertexShaderIBL,
     fragmentShader: fragmentShaderIBL

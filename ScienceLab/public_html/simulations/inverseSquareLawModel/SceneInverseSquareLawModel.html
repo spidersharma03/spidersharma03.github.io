@@ -64,7 +64,7 @@
                         var boxMesh;
                         
                         var geometry;
-                        var sphereRadius = 0.3;
+                        var sphereRadius = 0.5;
 			var cradleWidth = 3.0;
                         var cradleHeight = 3.0;
                         var cradleLength = 5.0;
@@ -84,9 +84,17 @@
                         var normal = new THREE.Vector3();
                         var zVector = new THREE.Vector3(0,0,-1);
                         var negYVector = new THREE.Vector3(0,-1,0);
+                        var radialVector = new THREE.Vector3(0,-1,0);
+                        var omega = new THREE.Vector3(0,0,0);
+                        var omegaQuat = new THREE.Quaternion(0,0,0);
+                        var thetaVector = new THREE.Vector3(0,0,0);
                         var contactNormal = new THREE.Vector3(0,-1,0);
+                        var rVector = new THREE.Vector3(0,-1,0);
                         var freeFlightOn = false;
-                        
+                        var C = 0.1;//0.5*sphereRadius/2;
+                        var dt = 0.016;
+                        var g = -9.8;
+
                         function TrackPath() {
                             this.spline = null;
                             this.position = new THREE.Vector3();
@@ -101,20 +109,18 @@
                         
 
                         function makeBaseGeometry() {
-                            var modelHeight = 1.0;
                             var trackSpace = 4.0;    
                             var baseGeometry    = new THREE.BoxGeometry(pathLength, 2, 2*trackSpace);
                             var baseMesh = new THREE.Mesh( baseGeometry, groundMaterial );
                             baseMesh.position.y = -1.2;
                             // Shape of the Track Path( Inverse Square)
                             var pathShape = [];
-                            var minHeight = 2.2 * sphereRadius;
                             var x = 0;
                             var dx = 0.2;
-                            for( var i=0; i<20; i++) {
-                                var y = x;//-1.0/(x*x + minHeight);
+                            for( var i=0; i<50; i++) {
+                                var y = 1/(x*x+C);//-1.0/(x*x + minHeight);
                                 x += dx;
-                                pathShape.push(new THREE.Vector2(x,y));
+                                pathShape.push(new THREE.Vector2(y,x));
                             }
                             // Loop Path
                             var arcPath = [];
@@ -122,8 +128,8 @@
                             var nDivs = 20;
                             var dTheta = 2*Math.PI/(nDivs-2);
                             for( var i=0; i<nDivs; i++) {
-                                var x = 2.0 * Math.sin(theta);
-                                var z = 2.0 * Math.cos(theta);
+                                var x = 0.003 * Math.sin(theta);
+                                var z = 0.003 * Math.cos(theta);
                                 arcPath.push(new THREE.Vector3( x, 0, z));
                                 theta += dTheta;
                             }
@@ -132,7 +138,7 @@
                             track2.spline = new THREE.SplineCurve3(arcPath);
                            
                             var extrudeSettings2 = {
-                                    steps		: 350,
+                                    steps		: 150,
                                     bevelEnabled	: false,
                                     extrudePath		: track2.spline
                             };
@@ -166,102 +172,173 @@
                             
                             for( var i=0; i<numSpheres; i++ )
                             {
-                                var x = TrackPaths[i].spline.getPointAt(0).x;
-                                var y = TrackPaths[i].spline.getPointAt(0).y;
-                                var z = TrackPaths[i].spline.getPointAt(0).z;
-                                //var z = TrackPaths[i].mesh.position.z;
                                 var mesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
                                 mesh.castShadow = true;
                                 mesh.receiveShadow = true;
-                                mesh.position.x = x;
-                                mesh.position.y = y;
-                                mesh.position.z = z;
-                                mesh.velocity = 0.0;
-                                mesh.direction = new THREE.Vector3();
-                                mesh.s = 1.0;
+                                var x = 3;
+                                var z = 0;
+                                var d = x * x + z * z + C;
+                                var y = -1.0/d;
+                                mesh.velocity = new THREE.Vector3(0,0,10);
+                                mesh.angleVector = new THREE.Vector3(0,0,0);
+                                mesh.simPosition = new THREE.Vector3(0,0,6);
+                                mesh.simPosition.x = x;
+                                mesh.simPosition.y = y;
+                                mesh.simPosition.z = z;
                                 mesh.angle = 0.0;
                                 mesh.angularSpeed = 0.0;
                                 group.add( mesh );
+                                
+                                var position = mesh.simPosition;
+                                var velocity = mesh.velocity;
+                                var d = position.x*position.x + position.z*position.z + C;
+                                var nx = -2.0*position.x/(d*d);
+                                var nz = -2.0*position.z/(d*d);
+                                var ny = 1.0;
+                                var normalLength = Math.sqrt(nx*nx + ny*ny + nz*nz);
+                                nx /= normalLength;
+                                ny /= normalLength;
+                                nz /= normalLength;
+                                contactNormal.x = nx;
+                                contactNormal.y = ny;
+                                contactNormal.z = nz;
+                                rVector.x = sphereRadius * contactNormal.x;
+                                rVector.y = sphereRadius * contactNormal.y;
+                                rVector.z = sphereRadius * contactNormal.z;
+                                radialVector.x = -position.x;
+                                radialVector.y = 0.0;
+                                radialVector.z = -position.z;
+                                radialVector.normalize();
+                                thetaVector.crossVectors(radialVector, contactNormal);
+                                radialVector.crossVectors(contactNormal, thetaVector);
+                                   
+                                var cosTheta = contactNormal.dot(negYVector);
+                                var gy = g * cosTheta;
+                                radialVector.x *= gy;
+                                radialVector.y *= gy;
+                                radialVector.z *= gy;
+                                   
+                                velocity.x += radialVector.x * dt;
+                                velocity.y += radialVector.y * dt;
+                                velocity.z += radialVector.z * dt;
+                                   
+                                rVector.x = sphereRadius * contactNormal.x;
+                                rVector.y = sphereRadius * contactNormal.y;
+                                rVector.z = sphereRadius * contactNormal.z;
+                                   
+                                omega.crossVectors(rVector, velocity);
+                                
+                                omega.x /= (sphereRadius*sphereRadius);
+                                omega.y /= (sphereRadius*sphereRadius);
+                                omega.z /= (sphereRadius*sphereRadius);
 
+                                omegaQuat.x = omega.x;
+                                omegaQuat.y = omega.y;
+                                omegaQuat.z = omega.z;
+                                omegaQuat.w = 0;
+                                omegaQuat.multiply(mesh.quaternion);
+                                   
+                                mesh.quaternion.x += 0.5 * omegaQuat.x * dt;
+                                mesh.quaternion.y += 0.5 * omegaQuat.y * dt;
+                                mesh.quaternion.z += 0.5 * omegaQuat.z * dt;
+                                mesh.quaternion.w += 0.5 * omegaQuat.w * dt;
+                                // enforce normalization.
+                                var len = mesh.quaternion.length();
+                                mesh.quaternion.x /= len;
+                                mesh.quaternion.y /= len;
+                                mesh.quaternion.z /= len;
+                                mesh.quaternion.w /= len;
+                                   
                                 spheres.push( mesh );
                             }
                         }
                         
-                        function checkForCollisionWithSpline(collidingSpline, px, py) {
-                            var u_low = 0, u_high = 1;
-                            var epsilon = 1e-4/collidingSpline.getLength();
-                            var p_low, p_high;
-                            while( u_high - u_low > epsilon) {
-                                var u_mid = (u_low + u_high)*0.5;
-                                p_low  = collidingSpline.getPointAt(u_low);
-                                p_high = collidingSpline.getPointAt(u_mid);
-                                if( px > p_low.x && px < p_high.x){
-                                    u_high = u_mid;
-                                } else {
-                                    u_low = u_mid;                                    
-                                }
-                            }
-                            var ySpline = (p_low.y + p_high.y) * 0.5;
-                            var epsilon = 0.05;
-                            if( ySpline > py + epsilon )
-                                return (u_high + u_low) * 0.5;
-                            return -1.0;
-                        }
                         
                         function updatePhysicalBodies() 
                         {
-                            return;
-                            var g = -9.8;
-                                var dt = 0.016;
+                            //return;
                                 for( var i=0; i<spheres.length; i++ ) {
-                                    var body = spheres[i];
-                                    var t = body.s;
-                                    if( !freeFlightOn && t >= 0.0 && t <= 1 ) {
-                                        var pathLength = TrackPaths[i].spline.getLength();
-                                        var tangent = TrackPaths[i].spline.getTangentAt(t);                                     
-                                        var cosTheta = negYVector.dot(tangent);
-                                        body.velocity += -g * cosTheta * dt;
-                                        body.angularSpeed = body.velocity * sphereRadius;
-                                        body.angle += body.angularSpeed * dt;
-                                        body.s += body.velocity * dt/pathLength;
-                                        if(body.s <0.005) {
-                                            var test = 0;
-                                            test++;
-                                        }
-                                        var pathPosition = TrackPaths[i].spline.getPointAt(t);
-                                        body.position.x = pathPosition.x;
-                                        body.position.y = pathPosition.y;
-                                        body.position.z = pathPosition.z;
-                                        //body.position.z = pathPosition.z - 2*sphereRadius ;
-                                        //body.rotation.z = -body.angle;
-                                        //var v1 = body.velocity*body.velocity/R;
-                                        //var dotProd = normal.dot(negYVector);
-                                        //var v2 = Math.abs(g)*Math.sqrt(1 - sinTheta*sinTheta);
-                                        //var diff = v1 - Math.abs(v2);
-                                        if( body.s <= 0)
-                                        {
-                                            //console.log(v1 + v2);
-                                            freeFlightOn = true;
-                                            body.direction.x = tangent.x * body.velocity;
-                                            body.direction.y = tangent.y * body.velocity;
-                                            body.direction.z = tangent.z * body.velocity;
-                                        }
-                                   } else { // FreeFlight
-                                       body.direction.y += g * dt;
-                                       body.position.x += body.direction.x * dt;
-                                       body.position.y += body.direction.y * dt;
-                                       body.position.z += body.direction.z * dt;
-                                       body.velocity = Math.sqrt(body.direction.dot(body.direction));
-                                       //body.angle += body.angularSpeed * dt;
-                                       //body.rotation.z = -body.angle;// * 180/Math.PI;
-                                        if( body.position.y < boxMesh.position.y){
-                                           // Reflected Velocity
-                                           body.position.y = boxMesh.position.y;
-                                           body.direction.y = 0.0;
-                                           body.angularSpeed = body.velocity/sphereRadius;
-                                           body.angle += body.angularSpeed * dt;
-                                       }
-                                   }
+                                   var body = spheres[i];
+                                   var velocity = body.velocity;
+                                   var position = body.simPosition;
+                                   var d = position.x*position.x + position.z*position.z + C;
+                                   var nx = -2.0*position.x/(d*d);
+                                   var nz = -2.0*position.z/(d*d);
+                                   var ny = 1.0;
+                                   var normalLength = Math.sqrt(nx*nx + ny*ny + nz*nz);
+                                   nx /= normalLength;
+                                   ny /= normalLength;
+                                   nz /= normalLength;
+                                   contactNormal.x = nx;
+                                   contactNormal.y = ny;
+                                   contactNormal.z = nz;
+                                   radialVector.x = -position.x;
+                                   radialVector.y = 0.0;
+                                   radialVector.z = -position.z;
+                                   radialVector.normalize();
+                                   thetaVector.crossVectors(radialVector, contactNormal);
+                                   radialVector.crossVectors(contactNormal, thetaVector);
+                                   
+                                   var cosTheta = contactNormal.dot(negYVector);
+                                   var gy = g * 5/7*cosTheta;
+                                   radialVector.x *= gy;
+                                   radialVector.y *= gy;
+                                   radialVector.z *= gy;
+                                   
+                                   velocity.x += radialVector.x * dt;
+                                   velocity.y += radialVector.y * dt;
+                                   velocity.z += radialVector.z * dt;
+                                   
+                                   rVector.x = sphereRadius * contactNormal.x;
+                                   rVector.y = sphereRadius * contactNormal.y;
+                                   rVector.z = sphereRadius * contactNormal.z;
+                                   
+                                   omega.crossVectors(rVector, velocity);
+                                   omega.x /= (sphereRadius*sphereRadius);
+                                   omega.y /= (sphereRadius*sphereRadius);
+                                   omega.z /= (sphereRadius*sphereRadius);
+                                   
+                                   omegaQuat.x = omega.x;
+                                   omegaQuat.y = omega.y;
+                                   omegaQuat.z = omega.z;
+                                   omegaQuat.w = 0;
+                                   omegaQuat.multiply(body.quaternion);
+                                   
+                                   body.quaternion.x += 0.5 * omegaQuat.x * dt;
+                                   body.quaternion.y += 0.5 * omegaQuat.y * dt;
+                                   body.quaternion.z += 0.5 * omegaQuat.z * dt;
+                                   body.quaternion.w += 0.5 * omegaQuat.w * dt;
+                                    // enforce normalization.
+
+                                   var len = body.quaternion.length();
+                                   body.quaternion.x /= len;
+                                   body.quaternion.y /= len;
+                                   body.quaternion.z /= len;
+                                   body.quaternion.w /= len;
+                                   
+                                   //body.rotation.x = body.angleVector.x;
+                                   //body.rotation.y = body.angleVector.y;
+                                   //body.rotation.z = body.angleVector.z;
+                                   
+                                   position.x += velocity.x * dt;
+                                   position.y += velocity.y * dt;
+                                   position.z += velocity.z * dt;
+                                   // Correct the position
+                                   d = position.x*position.x + position.z*position.z + C;
+                                   var y = -1.0/d;
+                                   position.y = y;
+                                   body.position.x = position.x;
+                                   body.position.y = position.y;
+                                   body.position.z = position.z; 
+                                   body.position.x += contactNormal.x * sphereRadius;
+                                   body.position.y += contactNormal.y * sphereRadius;
+                                   body.position.z += contactNormal.z * sphereRadius;
+                                   //var omega = speed
+//                                   radialVector.x = -position.x;
+//                                   radialVector.y = -position.y;
+//                                   radialVector.z = -position.z;
+//                                   radialVector.cross(velocity);
+//                                   console.log(velocity.length());
                                 }
                         };
                         
@@ -334,7 +411,7 @@
                                 groundMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: texture, color: 0xffffff, specular: 0xffffff, combine: THREE.MixOperation, bumpScale: 0.010, bumpMap: texture, ambient: 0x555555, reflectivity: 0.5, metal: true, shininess: 1000});
                                 sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, map:sphereTexture, color: 0xffffff, specular: 0x111111, combine:THREE.MixOperation, ambient: 0x555555, reflectivity: 0.3, shininess:100 });
                                 sphereMaterial.wireframe = true;
-
+                                groundMaterial.side = THREE.DoubleSide;
                                 renderer = new THREE.WebGLRenderer({antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );

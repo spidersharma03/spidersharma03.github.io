@@ -11,7 +11,7 @@ var vertexShaderIBL = "varying vec2 vUv; \n\
    varying vec3 Normal;\n\
    varying mat3 tbn;\n\
    void main() {\n\
-   vUv = fract(uv * 2.0);\n\
+   vUv = uv;\n\
    vecPos = (modelMatrix * vec4(position, 1.0 )).xyz;\n\
    viewPos = (modelViewMatrix * vec4(position, 1.0 )).xyz;\n\
    worldNormal = (modelMatrix * vec4(normal,0.0)).xyz;\n\
@@ -136,7 +136,18 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec3 N = normalize( cross(S,T) );\n\
       return mat3( S, T, N );\n\
    }\n\
-  \n\
+   \n\
+   vec3 SchlickApproxFresenel(vec3 SpecularColor, float NoV) {\n\
+      float schlick = pow(1.0 - NoV, 5.0);\n\
+      return SpecularColor * ( 1.0 - schlick) + schlick;\n\
+   }\n\
+   \n\
+   float G_Vis(float NdotL, float NdotV, float roughness) {\n\
+      float k = roughness * 0.5;\n\
+      float gVis_view = NdotV/( NdotV*(1.0-k) + k);\n\
+      float gVis_light = NdotL/( NdotL*(1.0-k) + k);\n\
+      return gVis_view * gVis_light;\n\
+   }\n\
    \n\
    vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV ) {\n\
      vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);\n\
@@ -152,11 +163,11 @@ var fragmentShaderIBL = "precision highp float;\n\
    }\n\
    \n\
    void main() {\n\
+      vec2 uvRepeat = fract(vUv * 4.0);\n\
       vec3 viewVector = normalize(vecPos - cameraPosition);\n\
       vec3 normalizedWorldNormal = normalize(worldNormal);\n\
-      vec3 tangentNormal = texture2D( NormalMap, vUv ).xyz * 2.0 - 1.0;\n\
+      vec3 tangentNormal = texture2D( NormalMap, uvRepeat ).xyz * 2.0 - 1.0;\n\
       tangentNormal.xy = tangentNormal.xy * 1.0;\n\
-      //mat3 tbnMatrix = getTBNMatrix(-viewPos, Normal);\n\
       mat3 normalizedTBN = mat3(normalize(tbn[0]), normalize(tbn[1]), normalize(tbn[2]));\n\
       normalizedWorldNormal = normalize( normalizedTBN * tangentNormal );\n\
       normalizedWorldNormal = (vec4(normalizedWorldNormal,1.0) * viewMatrix).xyz;\n\
@@ -165,16 +176,37 @@ var fragmentShaderIBL = "precision highp float;\n\
       tViewVector = normalizedTBN * tViewVector;\n\
       viewVector = (vec4(tViewVector,1.0) * viewMatrix).xyz;\n\
       viewVector = normalize(viewVector);\n\
-      float ndotv = dot(-normalizedWorldNormal, viewVector);\n\
-      ndotv = ndotv < 0.0 ? 0.0 : ndotv;\n\
-      vec3 reflectionVector = reflect( viewVector, normalizedWorldNormal );\n\
-      vec3 specularColor = texture2D(SpecularMap, vUv).xyz;//vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
-      vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv),1.0);\n\
-      float roughnessVal = (1.0 - texture2D(RoughnessMap, vUv).r);\n\
-      vec4 IblSpecularColor = SampleSpecularContribution(specularContribution, reflectionVector,roughnessVal);\n\
-      vec4 finalColor =  IblSpecularColor + SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal);\n\
-      //vec3 dn = fwidth(normalizedWorldNormal);\n\
-      //float dz = abs(dFdx(vecPos.z)) + abs(dFdy(vecPos.z));\n\
+      float ndotv2 = dot(-normalizedWorldNormal, viewVector);\n\
+      vec3 reflectionVector = reflect( viewVector, normalizedWorldNormal );// Light vector for first layer\n\
+      const float n = 1.4;\n\
+      float f0 = (1.0-n)/(1.0+n);\n\
+      f0 *= f0;\n\
+      float roughnessVal = 0.5*(1.0 - texture2D(RoughnessMap, uvRepeat).r);\n\
+      float layerThickness = 1.60;\n\
+      vec3 specularColorLayer1 = vec3(f0);\n\
+      const vec3 absorptionCoeff = 10.0*vec3(0.01,0.025,0.1);\n\
+      vec3 lSecond = -refract(-reflectionVector, normalizedWorldNormal, 1.0/n);// Light vector for second layer\n\
+      vec3 vSecond = refract(-viewVector, normalizedWorldNormal, 1.0/n);// View vector for second layer\n\
+      float ndotv1 = dot(-normalizedWorldNormal, vSecond);\n\
+      ndotv1 = ndotv1 < 0.0 ? 0.0 : ndotv1;\n\
+      float ndotl1 = dot(-normalizedWorldNormal, lSecond);\n\
+      float ndotl2 = dot(-normalizedWorldNormal, reflectionVector);\n\
+      float opticalThickness = layerThickness * ( 1.0/abs(ndotv1) + 1.0/abs(ndotl1));\n\
+      vec3 absorbption = exp(-absorptionCoeff * opticalThickness);\n\
+      vec3 fresnelLayer1 = SchlickApproxFresenel(specularColorLayer1, abs(ndotv2));\n\
+      //vec3 fresnelLayer2 = SchlickApproxFresenel(specularColorLayer1, abs(ndotv2));\n\
+      vec3 transmission = vec3(1.0) - fresnelLayer1;\n\
+      vec3 specularColor = texture2D(SpecularMap, uvRepeat).xyz;//vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
+      vec4 specularContributionLayer1 = vec4(EnvBRDFApprox(specularColorLayer1, 0.1, ndotv1),1.0);\n\
+      ndotv2 = ndotv2 < 0.0 ? 0.0 : ndotv2;\n\
+      vec4 specularContributionLayer2 = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv2),1.0);\n\
+      vec4 diffuseContributionLayer2 = SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal);\n\
+      float gVis = G_Vis(abs(ndotl2), abs(ndotv2), roughnessVal);\n\
+      vec3 total_internal_refl = vec3( 1.0 - gVis) + transmission * gVis;\n\
+      vec4 IblSpecularColorLayer2 = SampleSpecularContribution(specularContributionLayer2, reflectionVector,roughnessVal);\n\
+      vec4 IblSpecularColorLayer1 = SampleSpecularContribution(specularContributionLayer1, lSecond,roughnessVal);\n\
+      vec3 attenuation =  absorbption * total_internal_refl * transmission;\n\
+      vec4 finalColor =   IblSpecularColorLayer1 + ( diffuseContributionLayer2 + IblSpecularColorLayer2 ) * vec4(attenuation, 1.0);// + diffuseContributionLayer2;\n\
       #ifdef USE_HDR\n\
        gl_FragColor = (finalColor);\n\
       #else\n\

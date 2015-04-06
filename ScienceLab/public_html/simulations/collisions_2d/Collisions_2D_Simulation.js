@@ -11,13 +11,15 @@ Collision2D_Simulation = function(N)
     this.bodies = [];
     this.constraints = [];
     this.gravity = -10;
+    this.momentum = new THREE.Vector2();
+    this.com = new THREE.Vector2();
     this.e = 1.0;
     this.numIterations = 0;
     this.numBodies = N;
     this.solverMethod = 0;
 };
 
-var Collision2D_Simulation = new Collision2D_Simulation(3);
+var Collision2D_Simulation = new Collision2D_Simulation(20);
 
 Collision2D_Simulation.init = function()
 {
@@ -32,6 +34,29 @@ Collision2D_Simulation.init = function()
             this.contacts.push(contact);
         }
     }
+};
+
+Collision2D_Simulation.getMomentum = function() {
+    for( var i=0; i<this.numBodies; i++)
+    {
+        var body = this.bodies[i];
+        this.momentum.x += body.velocity.x * body.mass;
+        this.momentum.y += body.velocity.y * body.mass;
+    }
+};
+
+Collision2D_Simulation.getCom = function() {
+    var totalMass = 0;
+    for( var i=0; i<this.numBodies; i++)
+    {
+        var body = this.bodies[i];
+        this.com.x += body.position.x * body.mass;
+        this.com.y += body.position.y * body.mass;
+        totalMass += body.mass;
+    }
+    this.com.x /= totalMass;
+    this.com.y /= totalMass;
+    return this.com;
 };
 
 Collision2D_Simulation.addContact = function(contact)
@@ -117,15 +142,15 @@ Collision2D_Simulation.processContacts = function()
                 var vMag = body1.velocity.length();
                 if( vMag < 0.2 )
                 {
-                    body1.velocity.x = 0;
-                    body1.velocity.y = 0;
+                    //body1.velocity.x = 0;
+                    //body1.velocity.y = 0;
                 }
                 body2.velocity.x -= contactImpulse * body2.massInv * contact.normal.x;
                 body2.velocity.y -= contactImpulse * body2.massInv * contact.normal.y;
                 if( body2.velocity.length() < 0.2 )
                 {
-                    body2.velocity.x = 0;
-                    body2.velocity.y = 0;
+                    //body2.velocity.x = 0;
+                    //body2.velocity.y = 0;
                 }
                 // Resolve penetration
                 var posImpulse = 0.5*contact.penetration/( body1.massInv + body2.massInv );
@@ -159,9 +184,12 @@ Collision2D_Simulation.checkAndActivateContacts = function()
                 var ny = body_j.position.y - body_i.position.y;
                 var len = Math.sqrt(nx*nx + ny*ny);
                 nx /= len; ny /= len;
-                this.contacts[i].normal.x = nx;
-                this.contacts[i].normal.y = ny;
-                this.contacts[i].penetration = collisionDepth;
+                this.contacts[i+j-1].body1 = body_i;
+                this.contacts[i+j-1].body2 = body_j;
+                
+                this.contacts[i+j-1].normal.x = nx;
+                this.contacts[i+j-1].normal.y = ny;
+                this.contacts[i+j-1].penetration = collisionDepth;
                 // Activate Contact if the bodies are not seperating
                 var v1 = body_i.velocity;
                 var v2 = body_j.velocity;
@@ -171,13 +199,13 @@ Collision2D_Simulation.checkAndActivateContacts = function()
                 var vDotN = rel_v_dx * nx + rel_v_dy * ny;
                 //var eps = Math.sqrt(2*this.gravity*0.01);
                 //if( vDotN < 0 && vDotN <  eps ) 
-                if( vDotN < 0 && Math.abs(vDotN) > 0.1 ) // bodies are reaching 
+                if( vDotN < 0 && Math.abs(vDotN) > 0.01 ) // bodies are reaching 
                 {
-                    this.contacts[i].active = true;
+                    this.contacts[i+j-1].active = true;
                     bResult = false;
                 }
                 else
-                    this.contacts[i].active = false;
+                    this.contacts[i+j-1].active = false;
             }
         }
     }

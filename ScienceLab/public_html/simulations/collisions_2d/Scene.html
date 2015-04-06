@@ -59,10 +59,11 @@
                         var groundMaterial;
                         var sphereMaterial;
                         
-                        var numDisks = 3;
+                        var numDisks = 20;
                         var disks = [];
                         var physicsBodies = [];
                         var boxMesh;
+                        var comMesh;
                         
                         var geometry;
                         var diskRadius = 0.2;
@@ -131,6 +132,15 @@
 
                                 disks.push( mesh );
                             }
+                            // COM Mesh
+                            comMesh = new THREE.Mesh( diskGeometry, groundMaterial );
+                            comMesh.castShadow = true;
+                            comMesh.receiveShadow = true;
+                            comMesh.position.x = 0;
+                            comMesh.position.y = 0.5;
+                            comMesh.position.z = 0;
+                            
+                            group.add( comMesh );
                         }
                         
                         // Initialize Physics
@@ -138,28 +148,34 @@
                         {                            
                             // Create Spheres
                             var x = -cradleLength/2+0.5;
-                            var z = -cradleLength;
+                            var z = 0;//-cradleLength;
                             var n = 1;
                             var sum = 0;
                             while(sum < numDisks)
                             {
-                                x = -cradleLength/2+0.5;
+                                x = -cradleLength/2 - sum*diskRadius/3.5;
                                 for( var i=0; i<n; i++) 
                                 {
-                                    if(sum > numDisks)
+                                    if(sum >= numDisks)
                                         break;
                                     // Create body
                                     var sphereBody = new Collision2D_Simulation.PhysicalBody(diskRadius);
                                     sphereBody.position.x = x;
                                     sphereBody.position.y = z;
-                                    Collision2D_Simulation.addBody(sphereBody);
-                                    sphereBody.mesh = disks[i];
-
-                                    x += diskRadius*2.5;
-                                    if( i === 0 )
+                                    
+                                    if( sum === 0 )
                                     {
-                                        sphereBody.velocity.x = 0.2;
+                                        sphereBody.position.x = 3;
+                                        sphereBody.position.y = -3;
+                                        sphereBody.velocity.x = -2.6;
+                                        sphereBody.velocity.y = 2.6;
                                     }
+                                    
+                                    Collision2D_Simulation.addBody(sphereBody);
+                                    sphereBody.mesh = disks[sum];
+
+                                    x += diskRadius*2.1;
+                                    
                                     sum++;
                                 }
                                 n++;
@@ -181,8 +197,9 @@
                                 body.mesh.position.x = body.position.x;
                                 body.mesh.position.y = 0.5;
                                 body.mesh.position.z = body.position.y;
-                                l += 4;
                             };
+                            comMesh.position.x = Collision2D_Simulation.getCom().x;
+                            comMesh.position.z = Collision2D_Simulation.getCom().y;
                         };
                         
 			function init() {

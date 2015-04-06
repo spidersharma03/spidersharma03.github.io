@@ -64,7 +64,7 @@
                         var boxMesh;
                         
                         var geometry;
-                        var sphereRadius = 0.2;
+                        var sphereRadius = 0.6;
 			var cradleWidth = 3.0;
                         var cradleHeight = 3.0;
                         var cradleLength = 5.0;
@@ -85,6 +85,8 @@
                         var zVector = new THREE.Vector3(0,0,-1);
                         var negYVector = new THREE.Vector3(0,-1,0);
                         var radialVector = new THREE.Vector3(0,-1,0);
+                        var tempVector1 = new THREE.Vector3(0,-1,0);
+                        var tempVector2 = new THREE.Vector3(0,-1,0);
                         var omega = new THREE.Vector3(0,0,0);
                         var omegaQuat = new THREE.Quaternion(0,0,0);
                         var thetaVector = new THREE.Vector3(0,0,0);
@@ -93,8 +95,25 @@
                         var freeFlightOn = false;
                         var C = 0.1;//0.5*sphereRadius/2;
                         var dt = 0.016;
-                        var g = -9.8;
-
+                        var g = 9.8;
+                        var wellRadius = 10.0;
+                        var paraboloid_const = 0.07;
+                        var wellType = 0;
+                        
+                        function computeNormalForParaboloidWell(point) {
+                            contactNormal.x = -paraboloid_const * 2.0 * point.x;
+                            contactNormal.y = 1.0;
+                            contactNormal.z = -paraboloid_const * 2.0 * point.z;
+                            contactNormal.normalize();
+                        }
+                        
+                        function computeNormalForSphericalWell(point) {
+                            contactNormal.x = 2.0 * point.x;
+                            contactNormal.y = 2.0 * (point.y + wellRadius);
+                            contactNormal.z = 2.0 * point.z;
+                            contactNormal.normalize();
+                        }
+                        
                         function TrackPath() {
                             this.spline = null;
                             this.position = new THREE.Vector3();
@@ -107,49 +126,57 @@
                         {
                         }
                         
+                        function makeParabaloidWellShape() {
+                            var points = [];
+                           var x = 0;
+                            var y = 0;
+                            var dx = 0.1;
+                            for ( var i = 0; i < 50; i ++ ) {
+                                y = paraboloid_const * x * x;
+                                points.push( new THREE.Vector3( x, 0, y ) );
+                                x += dx;
+                            }
+                            points.push( new THREE.Vector3( x+1, 0, y ) );
+                            points.push( new THREE.Vector3( x+1, 0, 0 ) );
 
+                            var object = new THREE.Mesh( new THREE.LatheGeometry( points, 20 ), groundMaterial );
+                            object.castShadow = true;
+                            object.receiveShadow = true;                            
+                            scene.add( object );        
+                            object.rotation.x = -Math.PI/2;
+                        }
+                        
+                        function makeSphericalWellShape() {
+                            var points = [];
+                           var x = 0;
+                            var y = 0;
+                            var ndiv = 50;
+                            var dx = wellRadius/ndiv;
+                            for ( var i = 0; i < ndiv; i ++ ) {
+                                y = wellRadius - Math.sqrt( wellRadius * wellRadius - x * x);
+                                points.push( new THREE.Vector3( x, 0, y ) );
+                                x += dx;
+                            }
+                            points.push( new THREE.Vector3( x+1, 0, y ) );
+                            points.push( new THREE.Vector3( x+1, 0, 0 ) );
+
+                            var object = new THREE.Mesh( new THREE.LatheGeometry( points, 20 ), groundMaterial );
+                            object.castShadow = true;
+                            object.receiveShadow = true;                            
+                            scene.add( object );        
+                            object.rotation.x = -Math.PI/2;
+                        }
+                        
                         function makeBaseGeometry() {
                             var trackSpace = 4.0;    
                             var baseGeometry    = new THREE.BoxGeometry(pathLength, 2, 2*trackSpace);
                             var baseMesh = new THREE.Mesh( baseGeometry, groundMaterial );
                             baseMesh.position.y = -1.2;
-                            // Shape of the Track Path( Inverse Square)
-                            var pathShape = [];
-                            var x = 0;
-                            var dx = 0.2;
-                            for( var i=0; i<50; i++) {
-                                var y = 1/(x*x+C);//-1.0/(x*x + minHeight);
-                                x += dx;
-                                pathShape.push(new THREE.Vector2(y,x));
-                            }
-                            // Loop Path
-                            var arcPath = [];
-                            var theta = 0;
-                            var nDivs = 20;
-                            var dTheta = 2*Math.PI/(nDivs-2);
-                            for( var i=0; i<nDivs; i++) {
-                                var x = 0.003 * Math.sin(theta);
-                                var z = 0.003 * Math.cos(theta);
-                                arcPath.push(new THREE.Vector3( x, 0, z));
-                                theta += dTheta;
-                            }
-                            var track2 = new TrackPath();
-                            TrackPaths.push(track2);
-                            track2.spline = new THREE.SplineCurve3(arcPath);
-                           
-                            var extrudeSettings2 = {
-                                    steps		: 150,
-                                    bevelEnabled	: false,
-                                    extrudePath		: track2.spline
-                            };
-                           var shape = new THREE.Shape( pathShape );
-                           var geometry1 = new THREE.ExtrudeGeometry( shape, extrudeSettings2 );
-                           var mesh = new THREE.Mesh( geometry1, groundMaterial );
-                           //mesh.position.z = -trackSpace/2;
-                           track2.mesh = mesh;
-                           mesh.castShadow = true;
-                           mesh.receiveShadow = true;                            
-                           scene.add( mesh );
+                            
+                            if(wellType === 0)
+                                makeSphericalWellShape();
+                            else
+                                makeParabaloidWellShape();
                         }
                         
                         function initCradleGeometry()
@@ -177,9 +204,9 @@
                                 mesh.receiveShadow = true;
                                 var x = 3;
                                 var z = 0;
-                                var d = x * x + z * z + C;
-                                var y = -1.0/d;
-                                mesh.velocity = new THREE.Vector3(-3,0,5);
+                                var d = paraboloid_const * (x * x + z * z);
+                                var y = d;
+                                mesh.velocity = new THREE.Vector3(10,0,0);
                                 mesh.angleVector = new THREE.Vector3(0,0,0);
                                 mesh.simPosition = new THREE.Vector3(0,0,2);
                                 mesh.simPosition.x = x;
@@ -191,17 +218,8 @@
                                 
                                 var position = mesh.simPosition;
                                 var velocity = mesh.velocity;
-                                var d = position.x*position.x + position.z*position.z + C;
-                                var nx = -2.0*position.x/(d*d);
-                                var nz = -2.0*position.z/(d*d);
-                                var ny = 1.0;
-                                var normalLength = Math.sqrt(nx*nx + ny*ny + nz*nz);
-                                nx /= normalLength;
-                                ny /= normalLength;
-                                nz /= normalLength;
-                                contactNormal.x = nx;
-                                contactNormal.y = ny;
-                                contactNormal.z = nz;
+                                computeNormalForParaboloidWell(position);
+                                
                                 rVector.x = sphereRadius * contactNormal.x;
                                 rVector.y = sphereRadius * contactNormal.y;
                                 rVector.z = sphereRadius * contactNormal.z;
@@ -256,39 +274,33 @@
                         
                         function updatePhysicalBodies() 
                         {
-                            //return;
+                           // return;
                                 for( var i=0; i<spheres.length; i++ ) {
                                    var body = spheres[i];
                                    var velocity = body.velocity;
                                    var position = body.simPosition;
-                                   var d = position.x*position.x + position.z*position.z + C;
-                                   var nx = -2.0*position.x/(d*d);
-                                   var nz = -2.0*position.z/(d*d);
-                                   var ny = 1.0;
-                                   var normalLength = Math.sqrt(nx*nx + ny*ny + nz*nz);
-                                   nx /= normalLength;
-                                   ny /= normalLength;
-                                   nz /= normalLength;
-                                   contactNormal.x = nx;
-                                   contactNormal.y = ny;
-                                   contactNormal.z = nz;
-                                   radialVector.x = -position.x;
-                                   radialVector.y = 0.0;
-                                   radialVector.z = -position.z;
-                                   radialVector.normalize();
-                                   thetaVector.crossVectors(radialVector, contactNormal);
-                                   radialVector.crossVectors(contactNormal, thetaVector);
+                                   if(wellType === 0)
+                                        computeNormalForParaboloidWell(position);
+                                   else
+                                       computeNormalForSphericalWell(position);
+//                                   radialVector.x = -position.x;
+//                                   radialVector.y = 0.0;
+//                                   radialVector.z = -position.z;
+//                                   radialVector.normalize();
+//                                   thetaVector.crossVectors(radialVector, contactNormal);
+//                                   radialVector.crossVectors(contactNormal, thetaVector);
                                    
-                                   var cosTheta = contactNormal.dot(negYVector);
-                                   var sinTheta = Math.sqrt(1.0 - cosTheta*cosTheta);
-                                   var gy = g * 5/7*cosTheta;
-                                   radialVector.x *= gy;
-                                   radialVector.y *= gy;
-                                   radialVector.z *= gy;
-                                   
-                                   velocity.x += radialVector.x * dt;
-                                   velocity.y += radialVector.y * dt;
-                                   velocity.z += radialVector.z * dt;
+//                                   var cosTheta = contactNormal.dot(negYVector);
+//                                   var sinTheta = Math.sqrt(1.0 - cosTheta*cosTheta);
+//                                   var gy = g * 5/7*sinTheta;
+//                                   radialVector.x *= gy;
+//                                   radialVector.y *= gy;
+//                                   radialVector.z *= gy;
+                                   var gnew = g * 5/7;
+                                   var lambda = -contactNormal.dot(velocity) + g * contactNormal.y * dt;
+                                   velocity.x += ( gnew * negYVector.x * dt + contactNormal.x * lambda);
+                                   velocity.y += ( gnew * negYVector.y * dt + contactNormal.y * lambda);
+                                   velocity.z += ( gnew * negYVector.z * dt + contactNormal.z * lambda);
                                    
                                    rVector.x = sphereRadius * contactNormal.x;
                                    rVector.y = sphereRadius * contactNormal.y;
@@ -310,23 +322,18 @@
                                    body.quaternion.z += 0.5 * omegaQuat.z * dt;
                                    body.quaternion.w += 0.5 * omegaQuat.w * dt;
                                     // enforce normalization.
-
-                                   var len = body.quaternion.length();
-                                   body.quaternion.x /= len;
-                                   body.quaternion.y /= len;
-                                   body.quaternion.z /= len;
-                                   body.quaternion.w /= len;
-                                   
-                                   //body.rotation.x = body.angleVector.x;
-                                   //body.rotation.y = body.angleVector.y;
-                                   //body.rotation.z = body.angleVector.z;
-                                   
+                                   body.quaternion.normalize();
+                                    
                                    position.x += velocity.x * dt;
                                    position.y += velocity.y * dt;
                                    position.z += velocity.z * dt;
                                    // Correct the position
-                                   d = position.x*position.x + position.z*position.z + C;
-                                   var y = -1.0/d;
+                                   var y;
+                                   if(wellType === 0)
+                                        y = wellRadius - Math.sqrt(wellRadius * wellRadius - position.x*position.x - position.z*position.z);
+                                   else
+                                        y = paraboloid_const*(position.x*position.x + position.z*position.z);
+
                                    position.y = y;
                                    body.position.x = position.x;
                                    body.position.y = position.y;
@@ -335,11 +342,15 @@
                                    body.position.y += contactNormal.y * sphereRadius;
                                    body.position.z += contactNormal.z * sphereRadius;
                                    //var omega = speed
-//                                   radialVector.x = -position.x;
-//                                   radialVector.y = -position.y;
-//                                   radialVector.z = -position.z;
-//                                   radialVector.cross(velocity);
-//                                   console.log(velocity.length());
+                                   radialVector.x = -position.x;
+                                   radialVector.y = -position.y;
+                                   radialVector.z = -position.z;
+                                   radialVector.cross(velocity);
+                                   var lke = velocity.length() * 0.5;
+                                   var moi = 2/5*sphereRadius*sphereRadius;
+                                   var rke = 0.5 * moi * omega.lengthSq();
+                                   var pe =  g * body.position.y;
+                                   //console.log( pe + lke);
                                 }
                         };
                         
@@ -367,6 +378,7 @@
                                 light.castShadow = true;
                                 light.shadowMapWidth = 1024;
 				light.shadowMapHeight = 1024;
+                                light.shadowBias = -0.00004;
                                 
                                 var d = 30;
 

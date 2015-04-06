@@ -37,7 +37,7 @@
         <script src="../../js/lib/three.js/js/Detector.js"></script>
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
         <script src="../../js/simulate/InclinedPlaneSystems.js"></script>
-        <script src="../../js/IBL/MaterialLibrary.js"></script>
+        <script src="../../js/IBL/MaterialLibraryLayered.js"></script>
         <script src="../../js/lib/three.js/js/loaders/OBJLoader.js"></script>
         
         <script>
@@ -221,9 +221,9 @@
                 normalTexture.wrapS = THREE.RepeatWrapping;
                 normalTexture.wrapT = THREE.RepeatWrapping;
 
-                var specularTexture = THREE.ImageUtils.loadTexture("../../img/copper01.jpg");
+                var specularTexture = THREE.ImageUtils.loadTexture("../../img/brass01.jpg");
                 //specularTexture = THREE.ImageUtils.generateDataTexture (4, 4, new THREE.Color("rgb(255,190,100)"));
-                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_copper.jpg");
+                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_brass.jpg");
                 roughnessTexture.wrapS = THREE.RepeatWrapping;
                 roughnessTexture.wrapT = THREE.RepeatWrapping;
                 specularTexture.wrapS = THREE.RepeatWrapping;
@@ -242,7 +242,7 @@
                 clonedUniforms1['NormalMap'].value = normalTexture;
                 clonedUniforms1['Roughness'].value = 0.0;
                 clonedUniforms1['SpecularColor'].value = new THREE.Vector4(0.0,0.0,0.0,1.0); ;
-                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.0,0.2,0.02,1.0); ;
+                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(1.0,1.0,1.0,1.0); ;
                 clonedUniforms1['RoughnessMap'].value = roughnessTexture;                                
                 clonedUniforms1['uMetal'].value = 0.0;
 

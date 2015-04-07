@@ -126,16 +126,16 @@
 				};
 
                 var loader = new THREE.OBJLoader( manager );
-                loader.load( '../../img/wateringcan.obj', function ( object ) {
+                loader.load( '../../img/soccerball_obj.obj', function ( object ) {
                         objNode = object;
                         object.traverse( function ( child ) {
 
                                 if ( child instanceof THREE.Mesh ) {
 
-                                        child.material = sphereMaterial;
-                                        child.scale.x = 0.1;
-                                        child.scale.y = 0.1;
-                                        child.scale.z = 0.1;
+                                        child.material = sphereMaterial1;
+                                        child.scale.x = 0.3;
+                                        child.scale.y = 0.3;
+                                        child.scale.z = 0.3;
                                         child.geometry.computeVertexNormals();
                                         child.geometry.computeTangents();
                                 }
@@ -352,6 +352,8 @@
                 time += 0.016*0.3;
                 sphereMesh1.rotation.y += 0.01;
                 sphereMesh.rotation.y += 0.01;
+                if(objNode)
+                    objNode.rotation.y += 0.01;
                 var roughness = Math.sin(time);
                 roughness *= roughness;
                 //library.shaderSource.uniforms['Roughness'].value = 0.5; 

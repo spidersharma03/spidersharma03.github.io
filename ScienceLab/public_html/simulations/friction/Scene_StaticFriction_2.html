@@ -132,7 +132,7 @@
 
                                 if ( child instanceof THREE.Mesh ) {
 
-                                        child.material = sphereMaterial1;
+                                        child.material = sphereMaterial;
                                         child.scale.x = 0.3;
                                         child.scale.y = 0.3;
                                         child.scale.z = 0.3;
@@ -273,16 +273,22 @@
                 document.addEventListener('mousedown', onDocumentMouseDown, false);
                 document.addEventListener('mouseup', onDocumentMouseUp, false);
                 document.addEventListener('mousewheel', onDocumentMouseWheel, false);
-
+                
                 window.addEventListener('resize', onWindowResize, false);
 
 
                 renderer.shadowMapEnabled = true;
                 renderer.shadowMapSoft = true;
-
+                
+                stats = new Stats();
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.top = '0px';
+		container.appendChild( stats.domElement );
+                
                 makeBaseGeometry();
             }
- 
+            
+            
             function onDocumentMouseMove(event)
             {
                 var pos = camera.position;
@@ -349,7 +355,7 @@
             //
             var time = 0.0;
             function animate() {
-                time += 0.016*0.3;
+                time += 0.16;
                 sphereMesh1.rotation.y += 0.01;
                 sphereMesh.rotation.y += 0.01;
                 if(objNode)
@@ -359,6 +365,7 @@
                 //library.shaderSource.uniforms['Roughness'].value = 0.5; 
                 requestAnimationFrame(animate);
                 controls.update();
+                stats.update();
                 syncSimulation();
                 render();
             }

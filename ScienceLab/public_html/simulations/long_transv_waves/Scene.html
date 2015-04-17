@@ -59,7 +59,7 @@
                         var groundMaterial;
                         var sphereMaterial;
                         
-                        var numSpheres = 60;
+                        var numSpheres = 2;
                         var spheres = [];
                         var physicsBodies = [];
                         var boxMesh;
@@ -203,7 +203,7 @@
                             mesh = new THREE.Line( geometry, material, THREE.LinePieces );
                             mesh.castShadow = true;
                             mesh.receiveShadow = true;
-                            group.add( mesh );
+                            //group.add( mesh );
                          
                         }
                         
@@ -249,8 +249,8 @@
 //                                positions[ (l+3) * 3 + 2 ] = -cradleWidth/2; 
                                 l += 4;
                             };
-                            geometry.dynamic = true;
-                            geometry.attributes.position.needsUpdate = true;
+                            //geometry.dynamic = true;
+                            //geometry.attributes.position.needsUpdate = true;
                         };
                         
 			function init() {

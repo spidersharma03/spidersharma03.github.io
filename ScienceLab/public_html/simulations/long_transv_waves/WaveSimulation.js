@@ -6,7 +6,14 @@
 
 Spring = function(length, body1, body2) {
     this.length = length;
-    this.k = 30.0;
+    this.k = 10000.0;
+    // Quantities for Implicit term
+    // Force
+    this.force = new THREE.Vector3();
+    // Force Derivative, aka Hessian matrix
+    this.m00 = 0;
+    this.m01 = 0;
+    this.m11 = 0;
     this.body1 = body1;
     this.body2 = body2;
 };
@@ -30,7 +37,7 @@ WaveSimulation = function(N)
     this.tempVector = new THREE.Vector3();
 };
 
-var WaveSimulation = new WaveSimulation(60);
+var WaveSimulation = new WaveSimulation(2);
 
 WaveSimulation.init = function()
 {
@@ -150,10 +157,12 @@ WaveSimulation.integrate = function(dt)
         
         if( body.mass !== 0 )
             body.velocity.y += this.gravity * dt;
+        
+        
         //console.log(body.force.x);
-//        body.velocity.x += body.force.x * body.massInv * dt;
-//        body.velocity.y += body.force.y * body.massInv * dt;
-//        body.velocity.z += body.force.z * body.massInv * dt;
+        body.velocity.x += body.force.x * body.massInv * dt;
+        body.velocity.y += body.force.y * body.massInv * dt;
+        body.velocity.z += body.force.z * body.massInv * dt;
         
         body.position.x += body.velocity.x * dt;
         body.position.y += body.velocity.y * dt;
@@ -251,44 +260,66 @@ WaveSimulation.checkAndActivateContacts = function()
     return bResult;
 };
 
-WaveSimulation.updateSpringForces = function() {
+WaveSimulation.updateSpringForces = function(dt) {
     for(var j=0; j<this.numPendulumns; j++ ) {
      for( var i=0; i<this.springs.length; i++ ) {
-         var body1 = this.springs[i].body1;
-         var body2 = this.springs[i].body2;
+         var spring = this.springs[i];
+         var body1 = spring.body1;
+         var body2 = spring.body2;
          var p1 = body1.position;
          var p2 = body2.position;
          var dx = p2.x - p1.x; var dy = p2.y - p1.y; var dz = p2.z - p1.z;
-         var error = Math.sqrt(dx*dx + dy*dy + dz*dz) - this.springs[i].length;
-         /*var forceMagnitude = this.springs[i].k * (this.springs[i].length - d);
-         dx /= d; dy /= d; dz /= d;
-         body1.force.x += dx*forceMagnitude;
-         body1.force.y +=  dy*forceMagnitude;
-         body1.force.z +=  dz*forceMagnitude;
+         var l = Math.sqrt(dx*dx + dy*dy + dz*dz);
+         var l0 = this.springs[i].length;
+         var forceMagnitude = -this.springs[i].k * (1.0 - l0/l);
+         var gradUx = dx*forceMagnitude;
+         var gradUy = dy*forceMagnitude;
+         var gradUz = dz*forceMagnitude;
+         spring.force.x = gradUx;
+         spring.force.y = gradUy;
+         spring.force.z = gradUz;
+         // delF_delx Hessian Matrix
+         var c = (1.0 - l0/l);
+         dx /= l; dy /= l; dz /= l;
+         spring.m00 = c * (1.0 - dx*dx) + dx * dx; 
+         spring.m01 = -c * dx * dy + dx * dy; 
+         //var m02 = -c * dx * dz + dx * dz;
+         spring.m11 = c * ( 1.0 - dy * dy) + dy * dy;
+         //var m12 = -c * dy * dz + dy * dz;
+         //var m22 = c * (1.0 - dz * dz) + dz * dz;
+         spring.m00 *= -this.springs[i].k;
+         spring.m01 *= -this.springs[i].k;
+         //m02 *= -this.springs[i].k;
+         spring.m11 *= -this.springs[i].k;
+         //m12 *= -this.springs[i].k;
+         //m22 *= -this.springs[i].k;
+         body1.force.x -= gradUx;
+         body1.force.y -= gradUy;
+         body1.force.z -= gradUz;
          
-         body2.force.x -= dx*forceMagnitude;
-         body2.force.y -=  dy*forceMagnitude;
-         body2.force.z -=  dz*forceMagnitude;*/
+         body2.force.x += gradUx;
+         body2.force.y += gradUy;
+         body2.force.z += gradUz;
         
         // Direction of Constraint impulse
-        this.tempVector.x = dx; this.tempVector.y = dy; this.tempVector.z = dz;
-        
-        var v1 = body1.velocity;
-        var v2 = body2.velocity;
-        var vDotN = (v2.x - v1.x) * this.tempVector.x + (v2.y - v1.y) * this.tempVector.y + (v2.z - v1.z) * this.tempVector.z;
-        this.tempVector.normalize();
-        this.tempVector.multiplyScalar(vDotN + error);
-        this.tempVector.multiplyScalar(body1.massInv + body2.massInv);
-        
-        if(error > 0 ) {
-            body1.velocity.x += this.tempVector.x * body1.massInv;
-            body1.velocity.y += this.tempVector.y * body1.massInv;
-            body1.velocity.z += this.tempVector.z * body1.massInv;
-
-            body2.velocity.x -= this.tempVector.x * body2.massInv;
-            body2.velocity.y -= this.tempVector.y * body2.massInv;
-            body2.velocity.z -= this.tempVector.z * body2.massInv;
-        }
+ //       this.tempVector.x = dx; this.tempVector.y = dy; this.tempVector.z = dz;
+//        
+//        var v1 = body1.velocity;
+//        var v2 = body2.velocity;
+//        var vDotN = (v2.x - v1.x) * this.tempVector.x + (v2.y - v1.y) * this.tempVector.y + (v2.z - v1.z) * this.tempVector.z;
+//        this.tempVector.normalize();
+//        this.tempVector.multiplyScalar(vDotN + error);
+//        this.tempVector.multiplyScalar(body1.massInv + body2.massInv);
+//        
+//        if(error > 0 ) {
+//            body1.velocity.x += this.tempVector.x * body1.massInv;
+//            body1.velocity.y += this.tempVector.y * body1.massInv;
+//            body1.velocity.z += this.tempVector.z * body1.massInv;
+//
+//            body2.velocity.x -= this.tempVector.x * body2.massInv;
+//            body2.velocity.y -= this.tempVector.y * body2.massInv;
+//            body2.velocity.z -= this.tempVector.z * body2.massInv;
+//        }
      }
  }
 };
@@ -298,7 +329,7 @@ WaveSimulation.updateSimulation = function(dt)
     for( var i=0; i<this.bodies.length; i++ ) {
         this.bodies[i].force.set(0,0,0);
     }
-    this.bodies[1].velocity.x += -5*Math.sin(this.time*15);
+    //this.bodies[1].velocity.x += -5*Math.sin(this.time*1);
     this.time += dt;
     
     //this.checkAndActivateContacts();
@@ -307,7 +338,7 @@ WaveSimulation.updateSimulation = function(dt)
     
     //this.satisfyConstraints();
     
-    this.updateSpringForces();
+    this.updateSpringForces(dt);
     
     this.integrate(dt);
 };

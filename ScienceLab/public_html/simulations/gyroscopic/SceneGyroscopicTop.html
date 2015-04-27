@@ -85,10 +85,13 @@
                         var initialHeight = 5.0;
                         
                         var rigidBodyGroup;
-                        var rigidBodyMesh;
+                        var rotatingTopMesh, rotatingCylinderMesh, supportMesh;
                         var principleMoi = new THREE.Vector3();
-                        var width = 6, height = 0.5, depth = 4;
-
+                        var topDiskRadius = 2, topDiskHeight = 0.3, topHeight = 3;
+                        var topMass = 1;
+                        
+                        var rVector = new THREE.Vector3();
+                        var gVector = new THREE.Vector3(0,-9.8,0);
                         var omegaQuat = new THREE.Quaternion(0,0,0);
                         var quatInverse = new THREE.Quaternion(0,0,0,1);
                         var omegaBody = new THREE.Vector3();
@@ -108,18 +111,33 @@
                         init();
                         animate();
                         
-                        function createRigidBody() {
+                        function createTopGeometry() {
                             rigidBodyGroup = new THREE.Object3D();
-                            var rigidGeometry = new THREE.BoxGeometry(width, height, depth);
-                            principleMoi.x = (height*height + depth*depth)/12;
-                            principleMoi.y = (width*width + depth*depth)/12;
-                            principleMoi.z = (height*height + width*width)/12;
-                            rigidBodyMesh = new THREE.Mesh(rigidGeometry, sphereMaterial);
-                            rigidBodyMesh.castShadow = true;
-                            rigidBodyMesh.receiveShadow = true;
-                            rigidBodyMesh.omega = new THREE.Vector3(5,1,0);
-                            rigidBodyGroup.add(rigidBodyMesh);
+                            var geometry1 = new THREE.CylinderGeometry(topDiskRadius, topDiskRadius, topDiskHeight, 20, 10);
+                            var geometry2 = new THREE.CylinderGeometry(topDiskRadius/10,topDiskRadius/10,topHeight,10,10);
+                            var geometry3 = new THREE.BoxGeometry(topDiskRadius/2,topDiskRadius/2,topDiskRadius/2);
+                            principleMoi.x = topMass*topDiskRadius*topDiskRadius*0.25 + topMass*topHeight*topHeight;
+                            principleMoi.y = topMass*topDiskRadius*topDiskRadius*0.5;
+                            principleMoi.z = topMass*topDiskRadius*topDiskRadius*0.25 + topMass*topHeight*topHeight;
+                            supportMesh = new THREE.Mesh(geometry3, sphereMaterial);
+                            supportMesh.castShadow = true;
+                            supportMesh.receiveShadow = true;
+                            rotatingTopMesh = new THREE.Mesh(geometry1, sphereMaterial);
+                            rotatingTopMesh.castShadow = true;
+                            rotatingTopMesh.receiveShadow = true;
+                            rotatingCylinderMesh = new THREE.Mesh(geometry2, sphereMaterial);
+                            rotatingCylinderMesh.castShadow = true;
+                            rotatingCylinderMesh.receiveShadow = true;
+                            rotatingCylinderMesh.position.y = topHeight/2;
+                            rotatingTopMesh.position.y = topHeight;
+                            var wx = 0, wy = 13.0, wz = 15.0;
+                            rigidBodyGroup.omega = new THREE.Vector3(wx, wy, wz);
+                            rigidBodyGroup.angularMomentum = new THREE.Vector3(wx*principleMoi.x, wy*principleMoi.y, wz*principleMoi.z);
+                            rigidBodyGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/4);
+                            rigidBodyGroup.add(rotatingTopMesh);
+                            rigidBodyGroup.add(rotatingCylinderMesh);
                             scene.add(rigidBodyGroup);
+                            //scene.add(supportMesh);
                         }
                         
                         function Skew(vector) {
@@ -129,13 +147,11 @@
                         
                         // Based upon Erin Catto's implementation
                         function solveForGyroscopicEffect(quat, omega, dt) {
-                            
-                            
-                            for( var iter=0; iter<1; iter++) {
                             // Convert to body coordinates
                             quatInverse.set(quat.x, quat.y, quat.z, quat.w);
                             quatInverse.inverse();
                             
+                            for( var iter=0; iter<1; iter++) {
                             omegaBody.set(omega.x, omega.y, omega.z);
                             omegaBody.applyQuaternion(quatInverse);
                             
@@ -201,10 +217,38 @@
                           }
                         }
                         
+                        function solveForGravity(quat, omega, L, dt) {
+                            // Convert to body coordinates
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            tempVector.set(0,1,0);
+                            gVector.set(0,-9.8,0);
+
+                            //tempVector.applyQuaternion(quat);
+                            rVector.set(tempVector.x, tempVector.y, tempVector.z);
+                            gVector.applyQuaternion(quatInverse);
+                            omega.applyQuaternion(quatInverse);
+                            
+                            rVector.normalize();
+                            rVector.multiplyScalar(topHeight*topMass*dt);
+                            rVector.crossVectors(rVector, gVector);
+                            //rVector.x /= principleMoi.x;
+                            //rVector.y /= principleMoi.y;
+                            //rVector.z /= principleMoi.z;
+                            omega.x = omega.x + rVector.x;
+                            omega.y = omega.y + rVector.y;
+                            omega.z = omega.z + rVector.z;
+                            // Back to world 
+                            //omega.set(L.x/principleMoi.x, L.y/principleMoi.y, L.z/principleMoi.z);
+                            //omega.set(L.x, L.y, L.z);
+                            omega.applyQuaternion(quat);
+                            //L.applyQuaternion(quat);
+                        }
+                        
                         function initCradleGeometry()
                         {
-                            // Create Rigid Body
-                            createRigidBody();
+                            // Create the Top's Geometry
+                            createTopGeometry();
                             
                             // Make Root Group
                             var group = new THREE.Object3D();
@@ -224,20 +268,24 @@
                         {        
                             var dt = 0.016;
                             var g = -9.8;
-                            solveForGyroscopicEffect(rigidBodyMesh.quaternion, rigidBodyMesh.omega, dt);
+                            //return;
                             
-                            omegaQuat.x = rigidBodyMesh.omega.x;
-                            omegaQuat.y = rigidBodyMesh.omega.y;
-                            omegaQuat.z = rigidBodyMesh.omega.z;
-                            omegaQuat.w = 0;
-                            omegaQuat.multiply(rigidBodyMesh.quaternion);
+                            solveForGyroscopicEffect(rigidBodyGroup.quaternion, rigidBodyGroup.omega, dt);
 
-                            rigidBodyMesh.quaternion.x += 0.5 * omegaQuat.x * dt;
-                            rigidBodyMesh.quaternion.y += 0.5 * omegaQuat.y * dt;
-                            rigidBodyMesh.quaternion.z += 0.5 * omegaQuat.z * dt;
-                            rigidBodyMesh.quaternion.w += 0.5 * omegaQuat.w * dt;
+                            //solveForGravity(rigidBodyGroup.quaternion, rigidBodyGroup.omega, rigidBodyGroup.angularMomentum, dt);
+                            
+                            omegaQuat.x = rigidBodyGroup.omega.x;
+                            omegaQuat.y = rigidBodyGroup.omega.y;
+                            omegaQuat.z = rigidBodyGroup.omega.z;
+                            omegaQuat.w = 0;
+                            omegaQuat.multiply(rigidBodyGroup.quaternion);
+
+                            rigidBodyGroup.quaternion.x += 0.5 * omegaQuat.x * dt;
+                            rigidBodyGroup.quaternion.y += 0.5 * omegaQuat.y * dt;
+                            rigidBodyGroup.quaternion.z += 0.5 * omegaQuat.z * dt;
+                            rigidBodyGroup.quaternion.w += 0.5 * omegaQuat.w * dt;
                              // enforce normalization.
-                            rigidBodyMesh.quaternion.normalize();
+                            rigidBodyGroup.quaternion.normalize();
                         };
                         
 			function init() {

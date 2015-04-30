@@ -105,8 +105,13 @@
                             this.position = new THREE.Vector3();
                             this.mesh = null;
                         }
+                        var quatInverse = new THREE.Quaternion(0,0,0,1);
+                        var qDot = new THREE.Quaternion(0,0,0,1);
+                        var qAcc = new THREE.Quaternion(0,0,0,1);
+                        
                         init();
                         animate();
+                       
                         
                         function createRigidBody() {
                             rigidBodyGroup = new THREE.Object3D();
@@ -117,9 +122,16 @@
                             rigidBodyMesh = new THREE.Mesh(rigidGeometry, sphereMaterial);
                             rigidBodyMesh.castShadow = true;
                             rigidBodyMesh.receiveShadow = true;
-                            rigidBodyMesh.omega = new THREE.Vector3(5,1,0);
+                            rigidBodyMesh.omega = new THREE.Vector3(0,2,1);
                             rigidBodyGroup.add(rigidBodyMesh);
                             scene.add(rigidBodyGroup);
+                            var quat = rigidBodyMesh.quaternion;
+                            var omega = rigidBodyMesh.omega;
+                            // set initial quaternion rate
+                            qDot.w = 0.5*(-quat.x * omega.x - quat.y * omega.y - quat.z * omega.z);     // q0-dot
+                            qDot.x = 0.5*( quat.w * omega.x - quat.z * omega.y + quat.y * omega.z);     // q1-dot
+                            qDot.y = 0.5*( quat.z * omega.x + quat.w * omega.y - quat.x * omega.z);     // q2-dot
+                            qDot.z = 0.5*(-quat.y * omega.x + quat.x * omega.y + quat.w * omega.z);     // q3-dot
                         }
                         
                         function Skew(vector) {
@@ -127,9 +139,50 @@
                             return skewMatrix;
                         }
                         
-                        // Based upon Erin Catto's implementation
-                        function solveForGyroscopicEffect(quat, omega, dt) {
+                        // Explicit
+                        function solveForGyroscopicEffectQuaternionAlgebra(quat, omega, dt) {
+                            // Convert to body coordinates
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            tempVector.set(0,1,0);
                             
+                            // compute omega in body frame
+                            var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
+                            var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
+                            var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
+                            // compute omega rate of change in body frame
+                            var w1dot = ((principleMoi.y - principleMoi.z)*w3*w2)/principleMoi.x; // Euler's equations of motion
+                            var w2dot = ((principleMoi.z - principleMoi.x)*w1*w3)/principleMoi.y;
+                            var w3dot = ((principleMoi.x - principleMoi.y)*w2*w1)/principleMoi.z;
+                            // comptue quaternion acceleration
+                            var sum = 0;
+                            sum += qDot.x * qDot.x;
+                            sum += qDot.y * qDot.y;
+                            sum += qDot.z * qDot.z;
+                            sum += qDot.w * qDot.w;
+                            sum = -2.0*sum;
+                            
+                            qAcc.w = 0.5*(-quat.x * w1dot - quat.y * w2dot - quat.z * w3dot + quat.w * sum);
+                            qAcc.x = 0.5*( quat.w * w1dot - quat.z * w2dot + quat.y * w3dot + quat.x * sum);
+                            qAcc.y = 0.5*( quat.z * w1dot + quat.w * w2dot - quat.x * w3dot + quat.y * sum);
+                            qAcc.z = 0.5*(-quat.y * w1dot + quat.x * w2dot + quat.w * w3dot + quat.z * sum);
+                            
+                              // Integrate qDot
+                            qDot.x = qDot.x + qAcc.x * dt;
+                            qDot.y = qDot.y + qAcc.y * dt;
+                            qDot.z = qDot.z + qAcc.z * dt;
+                            qDot.w = qDot.w + qAcc.w * dt;
+                            
+                            // Integrate quaternion
+                            quat.x = quat.x + qDot.x * dt;// + 0.5 * qAcc.x * dt * dt;
+                            quat.y = quat.y + qDot.y * dt;// + 0.5 * qAcc.y * dt * dt;
+                            quat.z = quat.z + qDot.z * dt;// + 0.5 * qAcc.z * dt * dt;
+                            quat.w = quat.w + qDot.w * dt;// + 0.5 * qAcc.w * dt * dt;
+                            
+                            quat.normalize();
+                        }
+                        // Based upon Erin Catto's implementation
+                        function solveForGyroscopicEffectImplicitly(quat, omega, dt) {
                             
                             for( var iter=0; iter<1; iter++) {
                             // Convert to body coordinates
@@ -199,6 +252,18 @@
                             omegaBody.applyQuaternion(quat);
                             omega.set(omegaBody.x, omegaBody.y, omegaBody.z);
                           }
+                          omegaQuat.x = rigidBodyMesh.omega.x;
+                          omegaQuat.y = rigidBodyMesh.omega.y;
+                          omegaQuat.z = rigidBodyMesh.omega.z;
+                          omegaQuat.w = 0;
+                          omegaQuat.multiply(rigidBodyMesh.quaternion);
+
+                          rigidBodyMesh.quaternion.x += 0.5 * omegaQuat.x * dt;
+                          rigidBodyMesh.quaternion.y += 0.5 * omegaQuat.y * dt;
+                          rigidBodyMesh.quaternion.z += 0.5 * omegaQuat.z * dt;
+                          rigidBodyMesh.quaternion.w += 0.5 * omegaQuat.w * dt;
+                          // enforce normalization.
+                          rigidBodyMesh.quaternion.normalize();
                         }
                         
                         function initCradleGeometry()
@@ -223,21 +288,8 @@
                         function updatePhysicalBodies() 
                         {        
                             var dt = 0.016;
-                            var g = -9.8;
-                            solveForGyroscopicEffect(rigidBodyMesh.quaternion, rigidBodyMesh.omega, dt);
-                            
-                            omegaQuat.x = rigidBodyMesh.omega.x;
-                            omegaQuat.y = rigidBodyMesh.omega.y;
-                            omegaQuat.z = rigidBodyMesh.omega.z;
-                            omegaQuat.w = 0;
-                            omegaQuat.multiply(rigidBodyMesh.quaternion);
-
-                            rigidBodyMesh.quaternion.x += 0.5 * omegaQuat.x * dt;
-                            rigidBodyMesh.quaternion.y += 0.5 * omegaQuat.y * dt;
-                            rigidBodyMesh.quaternion.z += 0.5 * omegaQuat.z * dt;
-                            rigidBodyMesh.quaternion.w += 0.5 * omegaQuat.w * dt;
-                             // enforce normalization.
-                            rigidBodyMesh.quaternion.normalize();
+                            //solveForGyroscopicEffectImplicitly(rigidBodyMesh.quaternion, rigidBodyMesh.omega, dt);
+                            solveForGyroscopicEffectQuaternionAlgebra(rigidBodyMesh.quaternion, rigidBodyMesh.omega, dt);
                         };
                         
 			function init() {

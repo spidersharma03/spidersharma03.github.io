@@ -108,6 +108,22 @@
                         var quatInverse = new THREE.Quaternion(0,0,0,1);
                         var qDot = new THREE.Quaternion(0,0,0,1);
                         var qAcc = new THREE.Quaternion(0,0,0,1);
+                        var qAccTemp = new THREE.Quaternion(0,0,0,1);
+
+                        var q1 = new THREE.Quaternion(0,0,0,1);
+                        var q2 = new THREE.Quaternion(0,0,0,1);
+                        var q3 = new THREE.Quaternion(0,0,0,1);
+                        var q4 = new THREE.Quaternion(0,0,0,1);
+
+                        var q1_dot = new THREE.Quaternion(0,0,0,1);
+                        var q2_dot = new THREE.Quaternion(0,0,0,1);
+                        var q3_dot = new THREE.Quaternion(0,0,0,1);
+                        var q4_dot = new THREE.Quaternion(0,0,0,1);
+                        
+                        var q1_dotdot = new THREE.Quaternion(0,0,0,1);
+                        var q2_dotdot = new THREE.Quaternion(0,0,0,1);
+                        var q3_dotdot = new THREE.Quaternion(0,0,0,1);
+                        var q4_dotdot = new THREE.Quaternion(0,0,0,1);
                         
                         init();
                         animate();
@@ -122,7 +138,7 @@
                             rigidBodyMesh = new THREE.Mesh(rigidGeometry, sphereMaterial);
                             rigidBodyMesh.castShadow = true;
                             rigidBodyMesh.receiveShadow = true;
-                            rigidBodyMesh.omega = new THREE.Vector3(0,2,1);
+                            rigidBodyMesh.omega = new THREE.Vector3(0,1e-5,3);
                             rigidBodyGroup.add(rigidBodyMesh);
                             scene.add(rigidBodyGroup);
                             var quat = rigidBodyMesh.quaternion;
@@ -139,6 +155,30 @@
                             return skewMatrix;
                         }
                         
+                        function QuaternionAcceleration(quat, quat_dot, dt) {
+                            // compute omega in body frame
+                            var w1 = 2*(-quat.x * quat_dot.w + quat.w * quat_dot.x + quat.z * quat_dot.y - quat.y * quat_dot.z);
+                            var w2 = 2*(-quat.y * quat_dot.w - quat.z * quat_dot.x + quat.w * quat_dot.y + quat.x * quat_dot.z);
+                            var w3 = 2*(-quat.z * quat_dot.w + quat.y * quat_dot.x - quat.x * quat_dot.y + quat.w * quat_dot.z);
+                            // compute omega rate of change in body frame
+                            var w1dot = ((principleMoi.y - principleMoi.z)*w3*w2)/principleMoi.x; // Euler's equations of motion
+                            var w2dot = ((principleMoi.z - principleMoi.x)*w1*w3)/principleMoi.y;
+                            var w3dot = ((principleMoi.x - principleMoi.y)*w2*w1)/principleMoi.z;
+                            // comptue quaternion acceleration
+                            var sum = 0;
+                            sum += quat_dot.x * quat_dot.x;
+                            sum += quat_dot.y * quat_dot.y;
+                            sum += quat_dot.z * quat_dot.z;
+                            sum += quat_dot.w * quat_dot.w;
+                            sum = -2.0*sum;
+                            
+                            qAccTemp.w = 0.5*(-quat.x * w1dot - quat.y * w2dot - quat.z * w3dot + quat.w * sum);
+                            qAccTemp.x = 0.5*( quat.w * w1dot - quat.z * w2dot + quat.y * w3dot + quat.x * sum);
+                            qAccTemp.y = 0.5*( quat.z * w1dot + quat.w * w2dot - quat.x * w3dot + quat.y * sum);
+                            qAccTemp.z = 0.5*(-quat.y * w1dot + quat.x * w2dot + quat.w * w3dot + quat.z * sum);
+                            
+                            return qAccTemp;
+                        }
                         // Explicit
                         function solveForGyroscopicEffectQuaternionAlgebra(quat, omega, dt) {
                             // Convert to body coordinates
@@ -147,37 +187,68 @@
                             tempVector.set(0,1,0);
                             
                             // compute omega in body frame
-                            var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
-                            var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
-                            var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
-                            // compute omega rate of change in body frame
-                            var w1dot = ((principleMoi.y - principleMoi.z)*w3*w2)/principleMoi.x; // Euler's equations of motion
-                            var w2dot = ((principleMoi.z - principleMoi.x)*w1*w3)/principleMoi.y;
-                            var w3dot = ((principleMoi.x - principleMoi.y)*w2*w1)/principleMoi.z;
-                            // comptue quaternion acceleration
-                            var sum = 0;
-                            sum += qDot.x * qDot.x;
-                            sum += qDot.y * qDot.y;
-                            sum += qDot.z * qDot.z;
-                            sum += qDot.w * qDot.w;
-                            sum = -2.0*sum;
+//                            var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
+//                            var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
+//                            var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
+//                            // compute omega rate of change in body frame
+//                            var w1dot = ((principleMoi.y - principleMoi.z)*w3*w2)/principleMoi.x; // Euler's equations of motion
+//                            var w2dot = ((principleMoi.z - principleMoi.x)*w1*w3)/principleMoi.y;
+//                            var w3dot = ((principleMoi.x - principleMoi.y)*w2*w1)/principleMoi.z;
+//                            // comptue quaternion acceleration
+//                            var sum = 0;
+//                            sum += qDot.x * qDot.x;
+//                            sum += qDot.y * qDot.y;
+//                            sum += qDot.z * qDot.z;
+//                            sum += qDot.w * qDot.w;
+//                            sum = -2.0*sum;
+//                            
+//                            qAcc.w = 0.5*(-quat.x * w1dot - quat.y * w2dot - quat.z * w3dot + quat.w * sum);
+//                            qAcc.x = 0.5*( quat.w * w1dot - quat.z * w2dot + quat.y * w3dot + quat.x * sum);
+//                            qAcc.y = 0.5*( quat.z * w1dot + quat.w * w2dot - quat.x * w3dot + quat.y * sum);
+//                            qAcc.z = 0.5*(-quat.y * w1dot + quat.x * w2dot + quat.w * w3dot + quat.z * sum);
                             
-                            qAcc.w = 0.5*(-quat.x * w1dot - quat.y * w2dot - quat.z * w3dot + quat.w * sum);
-                            qAcc.x = 0.5*( quat.w * w1dot - quat.z * w2dot + quat.y * w3dot + quat.x * sum);
-                            qAcc.y = 0.5*( quat.z * w1dot + quat.w * w2dot - quat.x * w3dot + quat.y * sum);
-                            qAcc.z = 0.5*(-quat.y * w1dot + quat.x * w2dot + quat.w * w3dot + quat.z * sum);
+                            // RK4 Integration Scheme
+                            q1.set(quat.x, quat.y, quat.z, quat.w);
+                            q1_dot.set(qDot.x, qDot.y, qDot.z, qDot.w);
+                            var temp = QuaternionAcceleration(q1, q1_dot, dt);
+                            q1_dotdot.set(temp.x, temp.y, temp.z, temp.w);
                             
+                            var dt_half = dt*0.5;
+                            q2.set(quat.x + q1_dot.x * dt_half, quat.y + q1_dot.y * dt_half, quat.z + q1_dot.z * dt_half, quat.w + q1_dot.w * dt_half);
+                            q2_dot.set(qDot.x + q1_dotdot.x * dt_half, qDot.y + q1_dotdot.y * dt_half, qDot.z + q1_dotdot.z * dt_half, qDot.w + q1_dotdot.w * dt_half);
+                            temp = QuaternionAcceleration(q2, q2_dot, dt/2);
+                            q2_dotdot.set(temp.x, temp.y, temp.z, temp.w);
+                            
+                            q3.set(quat.x + q2_dot.x * dt_half, quat.y + q2_dot.y * dt_half, quat.z + q2_dot.z * dt_half, quat.w + q2_dot.w * dt_half);
+                            q3_dot.set(qDot.x + q2_dotdot.x * dt_half, qDot.y + q2_dotdot.y * dt_half, qDot.z + q2_dotdot.z * dt_half, qDot.w + q2_dotdot.w * dt_half);
+                            temp = QuaternionAcceleration(q3, q3_dot, dt/2);
+                            q3_dotdot.set(temp.x, temp.y, temp.z, temp.w);
+                            
+                            q4.set(quat.x + q3_dot.x * dt, quat.y + q3_dot.y * dt, quat.z + q3_dot.z * dt, quat.w + q3_dot.w * dt);
+                            q4_dot.set(qDot.x + q3_dotdot.x * dt, qDot.y + q3_dotdot.y * dt, qDot.z + q3_dotdot.z * dt, qDot.w + q3_dotdot.w * dt);
+                            temp = QuaternionAcceleration(q4, q4_dot, dt);
+                            q4_dotdot.set(temp.x, temp.y, temp.z, temp.w);
                               // Integrate qDot
-                            qDot.x = qDot.x + qAcc.x * dt;
-                            qDot.y = qDot.y + qAcc.y * dt;
-                            qDot.z = qDot.z + qAcc.z * dt;
-                            qDot.w = qDot.w + qAcc.w * dt;
+                            var dt_sixth = dt/6;  
+                            var ax_ = (q1_dotdot.x + 2*q2_dotdot.x + 2*q3_dotdot.x + q4_dotdot.x);  
+                            var ay_ = (q1_dotdot.y + 2*q2_dotdot.y + 2*q3_dotdot.y + q4_dotdot.y);  
+                            var az_ = (q1_dotdot.z + 2*q2_dotdot.z + 2*q3_dotdot.z + q4_dotdot.z);  
+                            var aw_ = (q1_dotdot.w + 2*q2_dotdot.w + 2*q3_dotdot.w + q4_dotdot.w);  
+                            
+                            qDot.x = qDot.x + ax_ * dt_sixth;
+                            qDot.y = qDot.y + ay_ * dt_sixth;
+                            qDot.z = qDot.z + az_ * dt_sixth;
+                            qDot.w = qDot.w + aw_ * dt_sixth;
                             
                             // Integrate quaternion
-                            quat.x = quat.x + qDot.x * dt;// + 0.5 * qAcc.x * dt * dt;
-                            quat.y = quat.y + qDot.y * dt;// + 0.5 * qAcc.y * dt * dt;
-                            quat.z = quat.z + qDot.z * dt;// + 0.5 * qAcc.z * dt * dt;
-                            quat.w = quat.w + qDot.w * dt;// + 0.5 * qAcc.w * dt * dt;
+                            var vx_ = (q1_dot.x + 2*q2_dot.x + 2*q3_dot.x + q4_dot.x);  
+                            var vy_ = (q1_dot.y + 2*q2_dot.y + 2*q3_dot.y + q4_dot.y);  
+                            var vz_ = (q1_dot.z + 2*q2_dot.z + 2*q3_dot.z + q4_dot.z);  
+                            var vw_ = (q1_dot.w + 2*q2_dot.w + 2*q3_dot.w + q4_dot.w);  
+                            quat.x = quat.x + vx_ * dt_sixth;
+                            quat.y = quat.y + vy_ * dt_sixth;
+                            quat.z = quat.z + vz_ * dt_sixth;
+                            quat.w = quat.w + vw_ * dt_sixth;
                             
                             quat.normalize();
                         }

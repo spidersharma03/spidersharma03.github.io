@@ -130,7 +130,7 @@
                             rotatingCylinderMesh.receiveShadow = true;
                             rotatingCylinderMesh.position.y = topHeight/2;
                             rotatingTopMesh.position.y = topHeight;
-                            var wx = 0, wy = 13.0, wz = 15.0;
+                            var wx = 0, wy = 10.0, wz = 10.0;
                             rigidBodyGroup.omega = new THREE.Vector3(wx, wy, wz);
                             rigidBodyGroup.angularMomentum = new THREE.Vector3(wx*principleMoi.x, wy*principleMoi.y, wz*principleMoi.z);
                             rigidBodyGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/4);
@@ -270,7 +270,7 @@
                             var g = -9.8;
                             //return;
                             
-                            solveForGyroscopicEffect(rigidBodyGroup.quaternion, rigidBodyGroup.omega, dt);
+                            //solveForGyroscopicEffect(rigidBodyGroup.quaternion, rigidBodyGroup.omega, dt);
 
                             solveForGravity(rigidBodyGroup.quaternion, rigidBodyGroup.omega, rigidBodyGroup.angularMomentum, dt);
                             

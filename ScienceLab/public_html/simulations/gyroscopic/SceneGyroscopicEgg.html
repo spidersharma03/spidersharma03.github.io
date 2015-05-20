@@ -70,7 +70,7 @@
                         var cradleLength = 5.0;
                         var groundWidth = 1.5*cradleLength;
                         var groundDepth = 1.5*cradleLength;
-                        var groundHeight = 0.1;
+                        var groundHeight = 0.02;
                         
                         var anchorPositions = [];
                         var indices_array = [];
@@ -84,11 +84,25 @@
                         
                         var initialHeight = 5.0;
                         
-                        var rigidBodyGroup;
-                        var rotatingTopMesh, rotatingCylinderMesh, supportMesh;
+                        var planePoint = new THREE.Vector3(0,-4,0);
+                        var planeNormal = new THREE.Vector3(0,1,0);
+                        var planePointLocal = new THREE.Vector3();
+                        var planeNormalLocal = new THREE.Vector3();
+                        var frictionDirection = new THREE.Vector3();
+                        
+                        var collisionPoint = new THREE.Vector3();
+                        var collisionVector = new THREE.Vector3();
+                        var collisionDepth = 0;
+                        
+                        var eggBody;
+                        var collisionPointMesh;
+                        var a = 1, b = 2, c = 1;
+                        var InverseXform = new THREE.Matrix4();
+                        var TransposeXform = new THREE.Matrix4();
+                        
                         var principleMoi = new THREE.Vector3();
                         var topDiskRadius = 2, topDiskHeight = 0.3, topHeight = 3;
-                        var topMass = 0.5;
+                        var topMass = 1;
                         
                         var rVector = new THREE.Vector3();
                         var gVector = new THREE.Vector3(0,-9.8,0);
@@ -97,10 +111,16 @@
                         var quatDot = new THREE.Quaternion(0,0,0,1);
                         var omegaDotQuat = new THREE.Quaternion(0,0,0,1);
                         var omegaDot =  new THREE.Vector3();
-
+                        var omega =  new THREE.Vector3();
+                        var collisionNormalImpulse =  new THREE.Vector3();
+                        var collisionNormalImpulseMoment =  new THREE.Vector3();
+                        var frictionalImpulse =  new THREE.Vector3();
+                        var frictionalImpulseMoment =  new THREE.Vector3();
+                        
                         var omegaBody = new THREE.Vector3();
                         var residual =  new THREE.Vector3();
                         var tempVector =  new THREE.Vector3();
+                        var tempVector1 =  new THREE.Vector3();
                         var moiTimesOmega = new THREE.Vector3();
                         var skewMatrix = new THREE.Matrix3();
                         var tempMatrix1 = new THREE.Matrix3();
@@ -148,57 +168,33 @@
                         animate();
                         
                         function createTopGeometry() {
-                            rigidBodyGroup = new THREE.Object3D();
-                            var geometry1 = new THREE.CylinderGeometry(topDiskRadius, topDiskRadius, topDiskHeight, 20, 10);
-                            var geometry2 = new THREE.CylinderGeometry(topDiskRadius/10,topDiskRadius/10,topHeight,10,10);
-                            var geometry3 = new THREE.BoxGeometry(topDiskRadius/2,topDiskRadius/2,topDiskRadius/2);
-                            principleMoi.x = topMass*topDiskRadius*topDiskRadius*0.25 + topMass*topHeight*topHeight;
-                            principleMoi.y = topMass*topDiskRadius*topDiskRadius*0.5;
-                            principleMoi.z = topMass*topDiskRadius*topDiskRadius*0.25 + topMass*topHeight*topHeight;
-                            supportMesh = new THREE.Mesh(geometry3, sphereMaterial);
-                            supportMesh.castShadow = true;
-                            supportMesh.receiveShadow = true;
-                            rotatingTopMesh = new THREE.Mesh(geometry1, sphereMaterial);
-                            rotatingTopMesh.castShadow = true;
-                            rotatingTopMesh.receiveShadow = true;
-                            rotatingCylinderMesh = new THREE.Mesh(geometry2, sphereMaterial);
-                            rotatingCylinderMesh.castShadow = true;
-                            rotatingCylinderMesh.receiveShadow = true;
-                            rotatingCylinderMesh.position.y = topHeight/2;
-                            rotatingTopMesh.position.y = topHeight;
-                            var wx = 0, wy = 30, wz = 0.0;
-                            rigidBodyGroup.omega = new THREE.Vector3(wx, wy, wz);
-                            var quat = rigidBodyGroup.quaternion;
-                            rigidBodyGroup.quaternion_previous = 
-                            new THREE.Quaternion(quat.x, quat.y, quat.z, quat.w);
-                            
-                            rigidBodyGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/4);
-                            rigidBodyGroup.add(rotatingTopMesh);
-                            rigidBodyGroup.add(rotatingCylinderMesh);
-                            scene.add(rigidBodyGroup);
-                            
+                            principleMoi.x = topMass*(b*b + c*c)*0.2;
+                            principleMoi.y = topMass*(a*a + c*c)*0.2;
+                            principleMoi.z = topMass*(a*a + b*b)*0.2;
+ 
+                            var geometry = new THREE.SphereGeometry(0.5,10,10);
+                            collisionPointMesh = new THREE.Mesh(geometry, sphereMaterial);
+                            sphereMaterial.wireframe = true;
+                            var sphereGeometry = new THREE.SphereGeometry(1,30,30);
+                            eggBody = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                            eggBody.position.y = -2;
+                            eggBody.omega = new THREE.Vector3(0,0,0);
+                            eggBody.scale.x = a;
+                            eggBody.scale.y = b;
+                            eggBody.scale.z = c;
+                            eggBody.castShadow = true;
+                            eggBody.receiveShadow = true;
+                            eggBody.velocity = new THREE.Vector3();
+                            eggBody.rotateZ(Math.PI/5.0);
+                            //eggBody.rotateX(Math.PI/6);
+                            scene.add(eggBody);
                             // set initial quaternion rate
-                            var quat = rigidBodyGroup.quaternion;
-                            var omega = rigidBodyGroup.omega;
+                            var quat = eggBody.quaternion;
+                            omega.x = 0, omega.y = 0; omega.z = 0;
                             qDot.w = 0.5*(-quat.x * omega.x - quat.y * omega.y - quat.z * omega.z);     // q0-dot
                             qDot.x = 0.5*( quat.w * omega.x - quat.z * omega.y + quat.y * omega.z);     // q1-dot
                             qDot.y = 0.5*( quat.z * omega.x + quat.w * omega.y - quat.x * omega.z);     // q2-dot
                             qDot.z = 0.5*(-quat.y * omega.x + quat.x * omega.y + quat.w * omega.z); 
-                            //scene.add(supportMesh);
-                            
-                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
-                            quatInverse.inverse();
-                            rVector.set(0,1,0);
-                            tempVector.set(0,-9.8,0);
-                            tempVector.applyQuaternion(quatInverse);
-                            tempVector.multiplyScalar(topHeight*topMass);
-                            tempVector.crossVectors(rVector, tempVector);    
-                            var acceleration = QuaternionAcceleration(quat, qDot, tempVector, dt);
-                            
-//                            rigidBodyGroup.quaternion.x += qDot.x * dt + 0.5*acceleration.x *dt*dt;
-//                            rigidBodyGroup.quaternion.y += qDot.y * dt + 0.5*acceleration.y *dt*dt;
-//                            rigidBodyGroup.quaternion.z += qDot.z * dt + 0.5*acceleration.z *dt*dt;
-//                            rigidBodyGroup.quaternion.w += qDot.w * dt + 0.5*acceleration.w *dt*dt;
                         }
                         
                         function Skew(vector) {
@@ -206,24 +202,15 @@
                             return skewMatrix;
                         }
                         
-                         function QuaternionAcceleration(quat, quat_dot, g_vector, dt) {
-                             // Convert to body coordinates
-                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
-                            quatInverse.inverse();
-                            rVector.set(0,1,0);
-                            tempVector.set(0,-9.8,0);
-                            tempVector.applyQuaternion(quatInverse);
-                            tempVector.multiplyScalar(topHeight*topMass);
-                            tempVector.crossVectors(rVector, tempVector);
-//                            tempVector.set(g_vector.x, g_vector.y, g_vector.z, g_vector.w);
+                        function QuaternionAcceleration(quat, quat_dot, g_vector, dt) {
                             // compute omega in body frame
                             var w1 = 2*(-quat.x * quat_dot.w + quat.w * quat_dot.x + quat.z * quat_dot.y - quat.y * quat_dot.z);
                             var w2 = 2*(-quat.y * quat_dot.w - quat.z * quat_dot.x + quat.w * quat_dot.y + quat.x * quat_dot.z);
                             var w3 = 2*(-quat.z * quat_dot.w + quat.y * quat_dot.x - quat.x * quat_dot.y + quat.w * quat_dot.z);
                             // compute omega rate of change in body frame
-                            var w1dot = (tempVector.x + ((principleMoi.y - principleMoi.z)*w3*w2))/principleMoi.x; // Euler's equations of motion
-                            var w2dot = (tempVector.y + ((principleMoi.z - principleMoi.x)*w1*w3))/principleMoi.y;
-                            var w3dot = (tempVector.z + ((principleMoi.x - principleMoi.y)*w2*w1))/principleMoi.z;
+                            var w1dot = ((principleMoi.y - principleMoi.z)*w3*w2)/principleMoi.x; // Euler's equations of motion
+                            var w2dot = ((principleMoi.z - principleMoi.x)*w1*w3)/principleMoi.y;
+                            var w3dot = ((principleMoi.x - principleMoi.y)*w2*w1)/principleMoi.z;
                             // comptue quaternion acceleration
                             var sum = 0;
                             sum += quat_dot.x * quat_dot.x;
@@ -245,6 +232,14 @@
                             qDot.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
                             qDot.multiplyQuaternions(qDot, omegaQuat);
                             return qDot;
+                        }
+                        
+                        function collidePlaneUnitSphere(planeNormal, pointOnPlane) {
+                            var dx = -pointOnPlane.x;
+                            var dy = -pointOnPlane.y;
+                            var dz = -pointOnPlane.z;
+                            var d = dx*planeNormal.x + dy*planeNormal.y + dz*planeNormal.z;
+                            return d - 1.0;
                         }
                         
                         function AngularAcceleration(quat, omega, dt) {
@@ -361,14 +356,6 @@
                         }
                         
                         function solveForGyroscopicEffectQuaternionAlgebra(quat, omega, dt) {
-                            // Convert to body coordinates
-                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
-                            quatInverse.inverse();
-                            rVector.set(0,1,0);
-                            tempVector.set(0,-9.8,0);
-                            tempVector.applyQuaternion(quatInverse);
-                            tempVector.multiplyScalar(topHeight*topMass);
-                            tempVector.crossVectors(rVector, tempVector);                         
                             // RK4 Integration Scheme
                             q1.set(quat.x, quat.y, quat.z, quat.w);
                             q1_dot.set(qDot.x, qDot.y, qDot.z, qDot.w);
@@ -413,6 +400,116 @@
                             quat.w = quat.w + vw_ * dt_sixth;
                             
                             quat.normalize();
+                        }
+                        
+                        function handleCollisionAndFriction() {
+                            // Collision detection
+                            collisionDetection();
+                            if(collisionDepth > 0)
+                                return;
+                            // Collision Impulse j = (CdotNormal + beta * C)/( m^-1 + n dot( I^-1 ( r x n ) x r ) ), CdotNormal = n dot(v_cm + w x r)
+                            // Convert to body coordinates
+                            var quat = eggBody.quaternion;
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            tempVector.set(0,1,0);
+                            tempVector.applyQuaternion(quatInverse);
+                            planeNormalLocal.set(tempVector.x, tempVector.y, tempVector.z);
+                            rVector.x = collisionPoint.x - eggBody.position.x;
+                            rVector.y = collisionPoint.y - eggBody.position.y;
+                            rVector.z = collisionPoint.z - eggBody.position.z;
+                            rVector.applyQuaternion(quatInverse);
+                            tempVector.crossVectors(rVector, planeNormalLocal);
+                            tempVector.x /= principleMoi.x;
+                            tempVector.y /= principleMoi.y;
+                            tempVector.z /= principleMoi.z;
+                            tempVector.crossVectors(tempVector, rVector);
+                            var d1 = planeNormalLocal.dot(tempVector);
+                            var denom = 1/topMass + d1;// m^-1 + n dot( I^-1 ( r x n ) x r )
+                            // compute omega in body frame
+                            var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
+                            var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
+                            var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
+                            omega.set(w1, w2, w3);
+                            tempVector.set(eggBody.velocity.x, eggBody.velocity.y, eggBody.velocity.z);
+                            tempVector.applyQuaternion(quatInverse);
+                            omega.crossVectors(omega, rVector);
+                            tempVector.add(omega); // v_cm + w x r
+                            var CdotNormal = -planeNormalLocal.dot(tempVector);
+                            var beta = 0.05/dt;
+                            var positionError = -beta * Math.min( 0.0, collisionDepth + 0.01);
+                            //eggBody.position.y += -collisionDepth;
+                            var collisionImpulse = (CdotNormal + positionError)/denom;
+                            collisionImpulse = collisionImpulse < 0 ? 0 : collisionImpulse;
+                            collisionNormalImpulse.x = collisionImpulse * planeNormalLocal.x;
+                            collisionNormalImpulse.y = collisionImpulse * planeNormalLocal.y;
+                            collisionNormalImpulse.z = collisionImpulse * planeNormalLocal.z;
+                            collisionNormalImpulseMoment.crossVectors(rVector, collisionNormalImpulse);
+                            // Contribution from Collision Impulse
+                            // Linear part
+                            collisionNormalImpulse.applyQuaternion(quat);
+                            eggBody.velocity.x += collisionNormalImpulse.x/topMass;
+                            eggBody.velocity.y += collisionNormalImpulse.y/topMass;
+                            eggBody.velocity.z += collisionNormalImpulse.z/topMass;
+                            // Angular part
+                            q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
+                            omegaQuat.set(collisionNormalImpulseMoment.x/principleMoi.x, collisionNormalImpulseMoment.y/principleMoi.y, collisionNormalImpulseMoment.z/principleMoi.z, 0);
+                            q1.multiply(omegaQuat);
+                            qDot.x += q1.x;
+                            qDot.y += q1.y;
+                            qDot.z += q1.z;
+                            qDot.w += q1.w;
+                            // Handle Friction
+                            
+                            // compute omega in body frame
+                            var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
+                            var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
+                            var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
+                            omega.set(w1, w2, w3);
+                            tempVector.set(eggBody.velocity.x, eggBody.velocity.y, eggBody.velocity.z);
+                            tempVector.applyQuaternion(quatInverse);
+                            omega.crossVectors(omega, rVector);
+                            tempVector.add(omega); // v_cm + w x r
+                            tempVector1.copy(tempVector);
+                            frictionDirection.copy(tempVector);
+                            if( frictionDirection.length() > 1e-6) {
+                                frictionDirection.normalize();
+                            }
+
+                            
+                            tempVector.crossVectors(rVector, frictionDirection);
+                            tempVector.x /= principleMoi.x;
+                            tempVector.y /= principleMoi.y;
+                            tempVector.z /= principleMoi.z;
+                            tempVector.crossVectors(tempVector, rVector);
+                            d1 = frictionDirection.dot(tempVector);
+                            denom = 1/topMass + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
+                            var CdotTangent = -frictionDirection.dot(tempVector1);
+                            var frictionalImpulseMag = CdotTangent/denom;
+                            var mu = 0.1;
+                            var maxFriction = collisionImpulse * mu;
+                            
+                            frictionalImpulseMag = Math.max( frictionalImpulseMag, -maxFriction);
+                            frictionalImpulseMag = Math.min( frictionalImpulseMag, maxFriction);
+                            
+                            frictionalImpulse.x = frictionalImpulseMag * frictionDirection.x;
+                            frictionalImpulse.y = frictionalImpulseMag * frictionDirection.y;
+                            frictionalImpulse.z = frictionalImpulseMag * frictionDirection.z;
+                            frictionalImpulseMoment.crossVectors(rVector, frictionalImpulse);
+                            // Contribution from Collision Impulse
+                            // Linear part
+                            frictionalImpulse.applyQuaternion(quat);
+                            eggBody.velocity.x += frictionalImpulse.x/topMass;
+                            eggBody.velocity.y += frictionalImpulse.y/topMass;
+                            eggBody.velocity.z += frictionalImpulse.z/topMass;
+                            // Angular part
+                            q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
+                            omegaQuat.set(frictionalImpulseMoment.x/principleMoi.x, frictionalImpulseMoment.y/principleMoi.y, frictionalImpulseMoment.z/principleMoi.z, 0);
+                            q1.multiply(omegaQuat);
+                            qDot.x += q1.x;
+                            qDot.y += q1.y;
+                            qDot.z += q1.z;
+                            qDot.w += q1.w;
                         }
                         // Based upon Erin Catto's implementation
                         function solveForGyroscopicEffect(quat, omega, dt) {
@@ -526,36 +623,68 @@
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(pathLength, groundHeight, pathLength);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
-                            boxMesh.position.y = -4;
+                            boxMesh.position.y = planePoint.y;
                             group.add( boxMesh );
                             
                             boxMesh.castShadow = true;
                             boxMesh.receiveShadow = true;
                         }
                         
-                        function updatePhysicalBodies() 
-                        {        
-                            //return;
+                        function collisionDetection() {
+                            // transform plane in the space of egg
+                            var xForm = eggBody.matrix;
+                            InverseXform.getInverse(xForm);
+                            TransposeXform.copy(xForm);
+                            //TransposeXform.makeRotationFromEuler(eggBody.rotation);
+                            TransposeXform.transpose();
+                            var elements = TransposeXform.elements;
+                           
+                            planeNormalLocal.set(planeNormal.x, planeNormal.y, planeNormal.z);
+                            var x = elements[ 0 ] * planeNormalLocal.x + elements[ 4 ] * planeNormalLocal.y + elements[ 8 ]  * planeNormalLocal.z;
+                            var y = elements[ 1 ] * planeNormalLocal.x + elements[ 5 ] * planeNormalLocal.y + elements[ 9 ]  * planeNormalLocal.z;
+                            var z = elements[ 2 ] * planeNormalLocal.x + elements[ 6 ] * planeNormalLocal.y + elements[ 10 ] * planeNormalLocal.z;
+                            planeNormalLocal.x = x;
+                            planeNormalLocal.y = y;
+                            planeNormalLocal.z = z;
+                            planeNormalLocal.normalize();
                             
-//                            solveForGyroscopicEffect(rigidBodyGroup.quaternion, rigidBodyGroup.omega, dt);
-//
-//                            solveForGravity(rigidBodyGroup.quaternion, rigidBodyGroup.omega, rigidBodyGroup.angularMomentum, dt);
-//                            
-//                            omegaQuat.x = rigidBodyGroup.omega.x;
-//                            omegaQuat.y = rigidBodyGroup.omega.y;
-//                            omegaQuat.z = rigidBodyGroup.omega.z;
-//                            omegaQuat.w = 0;
-//                            omegaQuat.multiply(rigidBodyGroup.quaternion);
-//
-//                            rigidBodyGroup.quaternion.x += 0.5 * omegaQuat.x * dt;
-//                            rigidBodyGroup.quaternion.y += 0.5 * omegaQuat.y * dt;
-//                            rigidBodyGroup.quaternion.z += 0.5 * omegaQuat.z * dt;
-//                            rigidBodyGroup.quaternion.w += 0.5 * omegaQuat.w * dt;
-//                             // enforce normalization.
-//                            rigidBodyGroup.quaternion.normalize();
-//                            solveForGyroscopicEffectVerlet(rigidBodyGroup.quaternion, rigidBodyGroup.quaternion_previous, rigidBodyGroup.omega, dt);
-                            solveForGyroscopicEffectQuaternionAlgebra(rigidBodyGroup.quaternion, rigidBodyGroup.omega, dt);
-//                            solveForGyroscopicEffectRK4(rigidBodyGroup.quaternion, rigidBodyGroup.omega, dt);
+                            planePointLocal.set(planePoint.x, planePoint.y, planePoint.z);
+                            planePointLocal.applyMatrix4(InverseXform);
+                            
+                            collisionDepth = collidePlaneUnitSphere(planeNormalLocal, planePointLocal);
+                            collisionPoint.x = -planeNormalLocal.x*(1+collisionDepth);
+                            collisionPoint.y = -planeNormalLocal.y*(1+collisionDepth);
+                            collisionPoint.z = -planeNormalLocal.z*(1+collisionDepth);
+                            tempVector.x = -planeNormalLocal.x;
+                            tempVector.y = -planeNormalLocal.y;
+                            tempVector.z = -planeNormalLocal.z;
+                            if(collisionDepth < 0) {
+                                scene.add(collisionPointMesh);
+                                //scene.remove(eggBody);
+                                collisionPoint.applyMatrix4(xForm);
+                                tempVector.applyMatrix4(xForm);
+                                tempVector.x -= collisionPoint.x;
+                                tempVector.y -= collisionPoint.y;
+                                tempVector.z -= collisionPoint.z;
+                                var l = tempVector.length();
+                                collisionDepth = -l;
+                                collisionPointMesh.position.x = collisionPoint.x;
+                                collisionPointMesh.position.y = collisionPoint.y;
+                                collisionPointMesh.position.z = collisionPoint.z;
+                            }
+                        }
+                        
+                        function updatePhysicalBodies() 
+                        {   
+                            // Move the egg under gravity
+                            eggBody.velocity.y += g * dt;
+                            eggBody.position.x += eggBody.velocity.x * dt;
+                            eggBody.position.y += eggBody.velocity.y * dt;
+                            eggBody.position.z += eggBody.velocity.z * dt;
+
+                            handleCollisionAndFriction();
+                            solveForGyroscopicEffectQuaternionAlgebra(eggBody.quaternion, eggBody.omega, dt);
+                            // Resolve Collision
                         };
                         
 			function init() {

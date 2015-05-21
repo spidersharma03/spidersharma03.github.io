@@ -88,8 +88,8 @@
                         var planeNormal = new THREE.Vector3(0,1,0);
                         var planePointLocal = new THREE.Vector3();
                         var planeNormalLocal = new THREE.Vector3();
-                        var frictionDirection1 = new THREE.Vector3();
-                        var frictionDirection2 = new THREE.Vector3();
+                        var frictionDirection1 = new THREE.Vector3(0,0,1);
+                        var frictionDirection2 = new THREE.Vector3(1,0,0);
                         
                         var collisionPoint = new THREE.Vector3();
                         var collisionVector = new THREE.Vector3();
@@ -191,7 +191,7 @@
                             scene.add(eggBody);
                             // set initial quaternion rate
                             var quat = eggBody.quaternion;
-                            omega.x = 0, omega.y = 1; omega.z = 0;
+                            omega.x = 30, omega.y = 0; omega.z = 0;
                             qDot.w = 0.5*(-quat.x * omega.x - quat.y * omega.y - quat.z * omega.z);     // q0-dot
                             qDot.x = 0.5*( quat.w * omega.x - quat.z * omega.y + quat.y * omega.z);     // q1-dot
                             qDot.y = 0.5*( quat.z * omega.x + quat.w * omega.y - quat.x * omega.z);     // q2-dot
@@ -212,6 +212,13 @@
                             var w1dot = ((principleMoi.y - principleMoi.z)*w3*w2)/principleMoi.x; // Euler's equations of motion
                             var w2dot = ((principleMoi.z - principleMoi.x)*w1*w3)/principleMoi.y;
                             var w3dot = ((principleMoi.x - principleMoi.y)*w2*w1)/principleMoi.z;
+                            if( collisionDepth < 0) {
+//                               var k = 0.1; 
+//                               var w = Math.sqrt(w1*w1 + w2*w2 + w3*w3);
+//                               w1dot += -k*w; 
+//                               w2dot += -k*w; 
+//                               w3dot += -k*w; 
+                            }
                             // comptue quaternion acceleration
                             var sum = 0;
                             sum += quat_dot.x * quat_dot.x;
@@ -404,7 +411,7 @@
                         }
                         
                         // Handle Friction
-                        function handleFriction(quat, collisionImpulse) {                            
+                        function handleFriction(quat, collisionImpulse, frictionDirection) {                            
                             // compute omega in body frame
                             var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
                             var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
@@ -413,41 +420,29 @@
                             tempVector.set(eggBody.velocity.x, eggBody.velocity.y, eggBody.velocity.z);
                             tempVector.applyQuaternion(quatInverse);
                             omega.crossVectors(omega, rVector);
-                            //residual.copy(rVector);
-                            //residual.applyQuaternion(quat);
                             tempVector.add(omega); // v_cm + w x r
                             tempVector1.copy(tempVector);
-                            frictionDirection1.copy(tempVector);
-                            frictionDirection1.x = 0;
-                            frictionDirection1.y = 0;
-                            frictionDirection1.z = 1;
-                            frictionDirection2.x = 1;
-                            frictionDirection2.y = 0;
-                            frictionDirection2.z = 0;
-                            if( frictionDirection1.length() > 1e-6) {
-                                frictionDirection1.normalize();
-                            }
-                            frictionDirection1.applyQuaternion(quatInverse);
-                            frictionDirection2.applyQuaternion(quatInverse);
+                            frictionDirection.normalize();
+                            frictionDirection.applyQuaternion(quatInverse);
                             
-                            tempVector.crossVectors(rVector, frictionDirection1);
+                            tempVector.crossVectors(rVector, frictionDirection);
                             tempVector.x /= principleMoi.x;
                             tempVector.y /= principleMoi.y;
                             tempVector.z /= principleMoi.z;
                             tempVector.crossVectors(tempVector, rVector);
-                            d1 = frictionDirection1.dot(tempVector);
+                            d1 = frictionDirection.dot(tempVector);
                             denom = 1/topMass + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
-                            var CdotTangent = -frictionDirection1.dot(tempVector1);
+                            var CdotTangent = -frictionDirection.dot(tempVector1);
                             var frictionalImpulseMag = CdotTangent/denom;
-                            var mu = 0.1;
+                            var mu = 0.8;
                             var maxFriction = collisionImpulse * mu;
                             
                             frictionalImpulseMag = Math.max( frictionalImpulseMag, -maxFriction);
                             frictionalImpulseMag = Math.min( frictionalImpulseMag, maxFriction);
                             
-                            frictionalImpulse.x = frictionalImpulseMag * frictionDirection1.x;
-                            frictionalImpulse.y = frictionalImpulseMag * frictionDirection1.y;
-                            frictionalImpulse.z = frictionalImpulseMag * frictionDirection1.z;
+                            frictionalImpulse.x = frictionalImpulseMag * frictionDirection.x;
+                            frictionalImpulse.y = frictionalImpulseMag * frictionDirection.y;
+                            frictionalImpulse.z = frictionalImpulseMag * frictionDirection.z;
                             frictionalImpulseMoment.crossVectors(rVector, frictionalImpulse);
                             // Contribution from Collision Impulse
                             // Linear part
@@ -499,7 +494,7 @@
                             omega.crossVectors(omega, rVector);
                             tempVector.add(omega); // v_cm + w x r
                             var CdotNormal = -planeNormalLocal.dot(tempVector);
-                            var beta = 0.05/dt;
+                            var beta = 0.7/dt;
                             var positionError = -beta * Math.min( 0.0, collisionDepth + 0.01);
                             //eggBody.position.y += -collisionDepth;
                             var collisionImpulse = (CdotNormal + positionError)/denom;
@@ -523,7 +518,23 @@
                             qDot.z += q1.z;
                             qDot.w += q1.w;
                             
-                            handleFriction(quat, collisionImpulse);
+                            handleFriction(quat, collisionImpulse, frictionDirection1);
+                            handleFriction(quat, collisionImpulse, frictionDirection2);
+                            
+                            // introduce artificial friction
+//                            var k = -0.01 * dt;
+//                            var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
+//                            var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
+//                            var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
+//                            
+//                            q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
+//                            omegaQuat.set(w1*k/principleMoi.x, w2*k/principleMoi.y, w3*k/principleMoi.z, 0);
+//                            q1.multiply(omegaQuat);
+//                            qDot.x += q1.x;
+//                            qDot.y += q1.y;
+//                            qDot.z += q1.z;
+//                            qDot.w += q1.w;
+                            
                         }
                         // Based upon Erin Catto's implementation
                         function solveForGyroscopicEffect(quat, omega, dt) {
@@ -673,7 +684,7 @@
                             tempVector.y = -planeNormalLocal.y;
                             tempVector.z = -planeNormalLocal.z;
                             if(collisionDepth < 0) {
-                                scene.add(collisionPointMesh);
+                                //scene.add(collisionPointMesh);
                                 //scene.remove(eggBody);
                                 collisionPoint.applyMatrix4(xForm);
                                 tempVector.applyMatrix4(xForm);

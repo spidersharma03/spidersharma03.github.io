@@ -175,23 +175,32 @@
  
                             var geometry = new THREE.SphereGeometry(0.5,10,10);
                             collisionPointMesh = new THREE.Mesh(geometry, sphereMaterial);
-                            sphereMaterial.wireframe = true;
-                            var sphereGeometry = new THREE.SphereGeometry(1,30,30);
-                            eggBody = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                            //sphereMaterial.wireframe = true;
+                            groundMaterial.side = THREE.DoubleSide;
+                            var sphereGeometry = new THREE.SphereGeometry(1,30,30, 0, 2*Math.PI,0,Math.PI/2);
+                            var mesh1 = new THREE.Mesh(sphereGeometry, groundMaterial);
+                            var mesh2 = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                            mesh2.rotateZ(Math.PI);
+                            //eggBody = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                            eggBody = new THREE.Object3D();
+                            eggBody.add(mesh1);
+                            eggBody.add(mesh2);
                             eggBody.position.y = -2.5;
                             eggBody.omega = new THREE.Vector3(0,0,0);
                             eggBody.scale.x = a;
                             eggBody.scale.y = b;
                             eggBody.scale.z = c;
-                            eggBody.castShadow = true;
-                            eggBody.receiveShadow = true;
+                            mesh1.castShadow = true;
+                            mesh1.receiveShadow = true;
+                            mesh2.castShadow = true;
+                            mesh2.receiveShadow = true;
                             eggBody.velocity = new THREE.Vector3();
-                            eggBody.rotateZ(Math.PI/2.1);
+                            eggBody.rotateZ( -Math.PI/2);
                             //eggBody.rotateX(Math.PI/6);
                             scene.add(eggBody);
                             // set initial quaternion rate
                             var quat = eggBody.quaternion;
-                            omega.x = 30, omega.y = 0; omega.z = 0;
+                            omega.x = 20, omega.y = 0; omega.z = 0;
                             qDot.w = 0.5*(-quat.x * omega.x - quat.y * omega.y - quat.z * omega.z);     // q0-dot
                             qDot.x = 0.5*( quat.w * omega.x - quat.z * omega.y + quat.y * omega.z);     // q1-dot
                             qDot.y = 0.5*( quat.z * omega.x + quat.w * omega.y - quat.x * omega.z);     // q2-dot
@@ -491,7 +500,6 @@
                         }
                         
                         function handleRollingFriction(quat, collisionImpulse, frictionDirection) {                            
-                            // compute omega in body frame
                             tempVector.set(eggBody.velocity.x, eggBody.velocity.y, eggBody.velocity.z);
                             tempVector.applyQuaternion(quatInverse);
                             tempVector1.copy(tempVector);
@@ -503,14 +511,14 @@
                             tempVector.z /= principleMoi.z;
                             tempVector.crossVectors(tempVector, rVector);
                             d1 = frictionDirection.dot(tempVector);
-                            denom = 1/topMass + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
+                            denom = 1/topMass;// + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
                             var CdotTangent = -frictionDirection.dot(tempVector1);
                             var frictionalImpulseMag = collisionImpulse*CdotTangent/denom;
-                            var mu = 0.01;
+                            var mu = 1;
                             var maxFriction = collisionImpulse * mu;
                             
-                            frictionalImpulseMag = Math.max( frictionalImpulseMag, -maxFriction);
-                            frictionalImpulseMag = Math.min( frictionalImpulseMag, maxFriction);
+                            //frictionalImpulseMag = Math.max( frictionalImpulseMag, -maxFriction);
+                            //frictionalImpulseMag = Math.min( frictionalImpulseMag, maxFriction);
                             
                             frictionalImpulse.x = frictionalImpulseMag * frictionDirection.x;
                             frictionalImpulse.y = frictionalImpulseMag * frictionDirection.y;
@@ -524,7 +532,7 @@
                             eggBody.velocity.z += frictionalImpulse.z/topMass;
                             // Angular part
                             q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
-                            omegaQuat.set(-frictionalImpulseMoment.x/principleMoi.x, -frictionalImpulseMoment.y/principleMoi.y, -frictionalImpulseMoment.z/principleMoi.z, 0);
+                            omegaQuat.set(frictionalImpulseMoment.x/principleMoi.x, frictionalImpulseMoment.y/principleMoi.y, frictionalImpulseMoment.z/principleMoi.z, 0);
                             q1.multiply(omegaQuat);
                             qDot.x += q1.x;
                             qDot.y += q1.y;
@@ -549,6 +557,7 @@
                             rVector.y = collisionPoint.y - eggBody.position.y;
                             rVector.z = collisionPoint.z - eggBody.position.z;
                             rVector.applyQuaternion(quatInverse);
+                            rVector.y -= 1;
                             tempVector.crossVectors(rVector, planeNormalLocal);
                             tempVector.x /= principleMoi.x;
                             tempVector.y /= principleMoi.y;
@@ -608,7 +617,7 @@
                             //handleRollingFriction(quat, collisionImpulse, frictionDirection2);
                             
                             // introduce artificial friction
-                            var k = -0.1 * dt;
+                            var k = -0.03 * dt;
                             var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
                             var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
                             var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
@@ -832,6 +841,7 @@
 
 				light.shadowCameraFar = 1000;
 				light.shadowDarkness = 0.5;
+                                light.shadowBias = -1e-5;
                                 scene.add( light );
                                 
                       		var light1 = new THREE.DirectionalLight( 0xffeedd );

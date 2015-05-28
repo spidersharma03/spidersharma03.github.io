@@ -95,6 +95,8 @@
                         var contactPoints = [];
                         var contactPoint1 = new ContactPoint();
                         var contactPoint2 = new ContactPoint();
+                        var contactPoint3 = new ContactPoint();
+                        var contactPoint4 = new ContactPoint();
                         
                         var planePoint = new THREE.Vector3(0,-4,0);
                         var planeNormal = new THREE.Vector3(0,1,0);
@@ -169,8 +171,8 @@
                         var omega4 = new THREE.Vector3(0,0,0);
                         
                         var omegaBody = new THREE.Vector3(0,0,0);
-                        var capsuleRadius = 0.5;
-                        var capsuleHeight = 2.0;
+                        var capsuleRadius = 4;
+                        var capsuleHeight = 1;
                             
                         var dt = 0.016;
                         var g = -9.8;
@@ -187,37 +189,39 @@
                         function createTopGeometry() {
                             // approximately using cylinder moi
                             principleMoi.x = capsuleMass*capsuleRadius*capsuleRadius/2;
-                            principleMoi.y = 3*capsuleMass*(capsuleRadius*capsuleRadius + capsuleHeight*capsuleHeight)/12;
-                            principleMoi.z = principleMoi.y;
-                            //sphereMaterial.wireframe = true;
+                            principleMoi.y = capsuleMass*(3*capsuleRadius*capsuleRadius + capsuleHeight*capsuleHeight)/12;
+                            principleMoi.z = principleMoi.x;
+                            sphereMaterial.wireframe = true;
 
                             var geometry = new THREE.SphereGeometry(0.5,10,10);
                             collisionPointMesh = new THREE.Mesh(geometry, sphereMaterial);
                             var sphereGeometry = new THREE.SphereGeometry(capsuleRadius*0.99,20,20);
                             var cylGeometry = new THREE.CylinderGeometry(capsuleRadius, capsuleRadius, capsuleHeight, 30, 10);
                             var mesh1 = new THREE.Mesh(cylGeometry, sphereMaterial);
-                            mesh1.rotateZ(Math.PI/2);
-                            var mesh2 = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                            mesh2.position.x = capsuleHeight/2;
-                            var mesh3 = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                            mesh3.position.x = -capsuleHeight/2;
+                            //mesh1.rotateZ(Math.PI/2);
                             capsuleBody = new THREE.Object3D();
-                            //capsuleBody.rotateZ(Math.PI/4);
+                            //capsuleBody.rotateZ(Math.PI/2);
+                            //capsuleBody.scale.x = 1.62;
+                            var m1 = new THREE.Matrix4();
+                            var m2 = new THREE.Matrix4();
+                            var scale = new THREE.Vector3(1,1,1);
+                            m1.scale(scale);
+                            m2.makeRotationX(Math.PI/110);
+                            m2.multiply(m1);
+                            capsuleBody.applyMatrix(m2);
+                            capsuleBody.matrixWorldNeedsUpdate = true;
                             capsuleBody.velocity = new THREE.Vector3();
                             capsuleBody.add(mesh1);
-                            capsuleBody.add(mesh2);
-                            capsuleBody.add(mesh3);
+                            capsuleBody.position.y = 0.5;
+                            //capsuleBody.add(mesh2);
+                            //capsuleBody.add(mesh3);
                             mesh1.castShadow = true;
                             mesh1.receiveShadow = true;
-                            mesh2.castShadow = true;
-                            mesh2.receiveShadow = true;
-                            mesh3.castShadow = true;
-                            mesh3.receiveShadow = true;
-                            //capsuleBody.rotateZ(Math.PI/2.5);
+                            //capsuleBody.rotateX(Math.PI/4);
                             scene.add(capsuleBody);
                             // set initial quaternion rate
                             var quat = capsuleBody.quaternion;
-                            omega.x = 10, omega.y = 0; omega.z = 0;
+                            omega.x = 0, omega.y = 115; omega.z = 0;
                             qDot.w = 0.5*(-quat.x * omega.x - quat.y * omega.y - quat.z * omega.z);     // q0-dot
                             qDot.x = 0.5*( quat.w * omega.x - quat.z * omega.y + quat.y * omega.z);     // q1-dot
                             qDot.y = 0.5*( quat.z * omega.x + quat.w * omega.y - quat.x * omega.z);     // q2-dot
@@ -256,38 +260,114 @@
                             var x1 = capsuleHeight/2;
                             var x2 = -capsuleHeight/2;
                             tempVector.set(-pointOnPlane.x, -pointOnPlane.y, -pointOnPlane.z);
-                            tempVector.x = tempVector.x - x1;
+                            tempVector.y = tempVector.y - x1;
                             var d1 = planeNormal.dot(tempVector) - capsuleRadius;
                             tempVector.set(-pointOnPlane.x, -pointOnPlane.y, -pointOnPlane.z);
-                            tempVector.x = tempVector.x - x2;
+                            tempVector.y = tempVector.y - x2;
                             var d2 = planeNormal.dot(tempVector) - capsuleRadius;
                             var min_d = Math.min(d1, d2);
+                            var temp = 0;
                             if( d1 < d2 ) {
-                               tempVector1.set(x2, 0, 0); 
+                               tempVector1.set(0, x2, 0);
+                               temp = x2;
                             } else {
-                               tempVector1.set(x1, 0, 0); 
+                               tempVector1.set(0, x1, 0);
+                               temp = x1;
                             }
                             if(min_d > 0) {
                                 numActiveContacts = 0;
                                 return;
                             }
-                            if(Math.abs(d1 - d2) > 1e-4 ) {
-                                numActiveContacts = 1;
-                                contactPoint1.depth = min_d;
+                            var epsilon = 1e-2;
+                            if(Math.abs(planeNormal.y) > (1 - epsilon) && (min_d + capsuleRadius) < epsilon ) { // plane is parallel to cylinder's caps
+                                numActiveContacts = 4;
+                                contactPoint1.depth = min_d + capsuleRadius;
+                                tempVector1.x = capsuleRadius; tempVector1.y = temp; tempVector1.z = 0;
                                 contactPoint1.point.copy(tempVector1); 
-                                contactPoints[0] = contactPoint1;
-                                //scene.add(collisionPointMesh);
-                            } else {
-                                numActiveContacts = 2;
-                                contactPoint1.depth = d1;
-                                contactPoint2.depth = d2;
-                                tempVector1.set(x1, 0, 0); 
-                                contactPoint1.point.copy(tempVector1);
-                                tempVector1.set(x2, 0, 0); 
-                                contactPoint1.point.copy(tempVector1);
+                                contactPoint1.point.applyMatrix4(capsuleBody.matrix);
+                                
+                                contactPoint2.depth = min_d + capsuleRadius;
+                                tempVector1.x = -capsuleRadius; tempVector1.y = temp; tempVector1.z = 0;
+                                contactPoint2.point.copy(tempVector1); 
+                                contactPoint2.point.applyMatrix4(capsuleBody.matrix);
+                                contactPoint3.depth = min_d + capsuleRadius;
+                                tempVector1.x = 0; tempVector1.y = temp; tempVector1.z = capsuleRadius;
+                                contactPoint3.point.copy(tempVector1); 
+                                contactPoint3.point.applyMatrix4(capsuleBody.matrix);
+                                contactPoint4.depth = min_d + capsuleRadius;
+                                tempVector1.x = 0; tempVector1.y = temp; tempVector1.z = -capsuleRadius;
+                                contactPoint4.point.copy(tempVector1); 
+                                contactPoint4.point.applyMatrix4(capsuleBody.matrix);
+                                
                                 contactPoints[0] = contactPoint1;
                                 contactPoints[1] = contactPoint2;
+                                contactPoints[2] = contactPoint3;
+                                contactPoints[3] = contactPoint4;
+                                
+                                scene.add(collisionPointMesh);
+                                
+                                collisionPointMesh.position.x = contactPoint1.point.x;
+                                collisionPointMesh.position.y = contactPoint1.point.y;
+                                collisionPointMesh.position.z = contactPoint1.point.z;
+                                return;
                             }
+                            if(Math.abs(d1 - d2) < epsilon && d1 < 0 && d2 < 0) { // cylinder axis parallel to plane
+                                numActiveContacts = 2;
+                                var maxd = Math.abs(d1) > Math.abs(d2) ? d1 : d2;
+                                contactPoint1.depth = maxd;
+                                contactPoint2.depth = maxd;
+                                residual.copy(planeNormal);
+                                residual.y = 0;
+                                residual.normalize();
+                                tempVector1.set(0, x1, 0); 
+                                tempVector1.x -= residual.x * capsuleRadius;
+                                tempVector1.z -= residual.z * capsuleRadius;
+                                contactPoint1.point.copy(tempVector1);
+                                tempVector1.set(0, x2, 0); 
+                                tempVector1.x -= residual.x * capsuleRadius;
+                                tempVector1.z -= residual.z * capsuleRadius;
+                                contactPoint2.point.copy(tempVector1);
+                                contactPoint1.point.applyMatrix4(capsuleBody.matrix);
+                                contactPoint2.point.applyMatrix4(capsuleBody.matrix);
+                                contactPoints[0] = contactPoint1;
+                                contactPoints[1] = contactPoint2;
+                                scene.add(collisionPointMesh);
+                                collisionPointMesh.position.x = contactPoint2.point.x;
+                                collisionPointMesh.position.y = contactPoint2.point.y;
+                                collisionPointMesh.position.z = contactPoint2.point.z;
+                                return;
+                            }
+                            var costheta = Math.sqrt(1 - planeNormal.y*planeNormal.y);
+                            if( costheta > epsilon && Math.abs(d1 - d2) > epsilon ) { // Single collision
+                                residual.copy(tempVector1);
+                                residual.x -= pointOnPlane.x;
+                                residual.y -= pointOnPlane.y;
+                                residual.z -= pointOnPlane.z;
+                                var sd = Math.abs(planeNormal.dot(residual));
+                                var d = sd/costheta;
+                                var temp = (d - capsuleRadius);
+                                if(temp > 0) {
+                                    numActiveContacts = 0;
+                                    return;
+                                }
+                                numActiveContacts = 1;
+                                contactPoint1.depth = temp;
+                                residual.copy(planeNormal);
+                                residual.y = 0;
+                                residual.normalize();
+                                tempVector1.x -= residual.x * capsuleRadius;
+                                tempVector1.z -= residual.z * capsuleRadius;
+                                //tempVector1.set(0, 0, 0);
+                                contactPoint1.point.copy(tempVector1); 
+                                contactPoint1.point.applyMatrix4(capsuleBody.matrix);
+                                contactPoints[0] = contactPoint1;
+                                scene.add(collisionPointMesh);
+                                collisionPointMesh.position.x = contactPoint1.point.x;
+                                collisionPointMesh.position.y = contactPoint1.point.y;
+                                collisionPointMesh.position.z = contactPoint1.point.z;
+                                return;
+                            }
+                            numActiveContacts = 0;
                         }
                          
                         function solveForGyroscopicEffectQuaternionAlgebra(quat, omega, dt) {
@@ -349,7 +429,6 @@
                             omega.crossVectors(omega, rVector);
                             tempVector.add(omega); // v_cm + w x r
                             tempVector1.copy(tempVector);
-                            frictionDirection.normalize();
                             frictionDirection.applyQuaternion(quatInverse);
                             
                             tempVector.crossVectors(rVector, frictionDirection);
@@ -364,7 +443,7 @@
 
                             var CdotTangent = -frictionDirection.dot(tempVector1);
                             var frictionalImpulseMag = CdotTangent/denom;
-                            var mu = 0.8;
+                            var mu = 0.4;
                             var maxFriction = collisionImpulse * mu;
                             
                             pointOfContact.frictionalImpulseMag[dir] = Math.max( oldImpulseMag + frictionalImpulseMag, -maxFriction);
@@ -449,7 +528,8 @@
                             collisionDetection();
                             if(numActiveContacts === 0)
                                 return;
-                            for( var iter =0; iter<5; iter++) {
+                            capsuleBody.position.y -= contactPoints[0].depth/20;
+                            for( var iter =0; iter<20; iter++) {
                                 for(var n=0; n<numActiveContacts; n++) {
                                     // Collision Impulse j = (CdotNormal + beta * C)/( m^-1 + n dot( I^-1 ( r x n ) x r ) ), CdotNormal = n dot(v_cm + w x r)
                                     // Convert to body coordinates
@@ -482,7 +562,7 @@
                                     tempVector.add(omega); // v_cm + w x r
                                     var oldImpulseMag = pointOfContact.normalImpulseMag;
                                     var CdotNormal = -planeNormalLocal.dot(tempVector);
-                                    var beta = 0.1/dt;
+                                    var beta = 0.03/dt;
                                     var positionError = -beta * Math.min( 0.0, pointOfContact.depth + 0.01);
                                     //capsuleBody.position.y += -collisionDepth;
                                     var collisionImpulse = (CdotNormal + positionError)/denom;
@@ -516,15 +596,6 @@
                                     frictionDirection2.y = 0;
                                     frictionDirection2.z = 1;
                                     handleFriction(quat, pointOfContact.normalImpulseMag, pointOfContact, frictionDirection2, 1);
-                                    
-                                    frictionDirection1.x = 1;
-                                    frictionDirection1.y = 0;
-                                    frictionDirection1.z = 0;
-                                    handleRollingFriction(quat, pointOfContact.normalImpulseMag, pointOfContact, frictionDirection1, 0);
-                                    frictionDirection2.x = 0;
-                                    frictionDirection2.y = 0;
-                                    frictionDirection2.z = 1;
-                                    handleRollingFriction(quat, pointOfContact.normalImpulseMag, pointOfContact, frictionDirection2, 1);
                                 }
                             }
                                    // introduce artificial friction
@@ -584,27 +655,27 @@
                             //collisionDepth = collidePlaneUnitSphere(planeNormalLocal, planePointLocal);
                             collidePlaneCapsule(planeNormalLocal, planePointLocal);
                             
-                            for( var n=0; n<numActiveContacts; n++) {
-                                var pointOfContact = contactPoints[n];
-                                tempVector.x = pointOfContact.point.x-planeNormalLocal.x*capsuleRadius;
-                                tempVector.y = pointOfContact.point.y-planeNormalLocal.y*capsuleRadius;
-                                tempVector.z = pointOfContact.point.z-planeNormalLocal.z*capsuleRadius;
-                                pointOfContact.point.x += -planeNormalLocal.x*(capsuleRadius + pointOfContact.depth);
-                                pointOfContact.point.y += -planeNormalLocal.y*(capsuleRadius + pointOfContact.depth);;
-                                pointOfContact.point.z += -planeNormalLocal.z*(capsuleRadius+ pointOfContact.depth);;
-                                if(pointOfContact.depth < 0) {
-                                    pointOfContact.point.applyMatrix4(xForm);
-                                    tempVector.applyMatrix4(xForm);
-                                    tempVector.x -= pointOfContact.point.x;
-                                    tempVector.y -= pointOfContact.point.y;
-                                    tempVector.z -= pointOfContact.point.z;
-                                    var l = tempVector.length();
-                                    pointOfContact.depth = -l;
+//                            for( var n=0; n<numActiveContacts; n++) {
+//                                var pointOfContact = contactPoints[n];
+//                                tempVector.x = pointOfContact.point.x-planeNormalLocal.x*capsuleRadius;
+//                                tempVector.y = pointOfContact.point.y-planeNormalLocal.y*capsuleRadius;
+//                                tempVector.z = pointOfContact.point.z-planeNormalLocal.z*capsuleRadius;
+//                                pointOfContact.point.x += -planeNormalLocal.x*(capsuleRadius + pointOfContact.depth);
+//                                pointOfContact.point.y += -planeNormalLocal.y*(capsuleRadius + pointOfContact.depth);;
+//                                pointOfContact.point.z += -planeNormalLocal.z*(capsuleRadius+ pointOfContact.depth);;
+//                                if(pointOfContact.depth < 0) {
+//                                    pointOfContact.point.applyMatrix4(xForm);
+//                                    tempVector.applyMatrix4(xForm);
+//                                    tempVector.x -= pointOfContact.point.x;
+//                                    tempVector.y -= pointOfContact.point.y;
+//                                    tempVector.z -= pointOfContact.point.z;
+//                                    var l = tempVector.length();
+//                                    pointOfContact.depth = -l;
 //                                    collisionPointMesh.position.x = pointOfContact.point.x;
 //                                    collisionPointMesh.position.y = pointOfContact.point.y;
 //                                    collisionPointMesh.position.z = pointOfContact.point.z;
-                                }
-                            }
+//                                }
+//                            }
                         }
                         
                         function updatePhysicalBodies() 

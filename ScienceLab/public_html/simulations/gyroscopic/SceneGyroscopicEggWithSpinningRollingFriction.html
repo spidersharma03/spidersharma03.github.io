@@ -37,15 +37,7 @@
 		<script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
                 
 		<script>
-                        function ContactPoint() {
-                            this.point = new THREE.Vector3();
-                            this.depth = 0;
-                            this.normalImpulseMag = 0;
-                            this.frictionalImpulseMag = [];
-                            this.frictionalImpulseMag[0] = 0;
-                            this.frictionalImpulseMag[1] = 0;
-                        }
-                        
+
 			var container, stats;
                         var pickConstraint = null;
 			var camera, scene, renderer, controls;
@@ -92,23 +84,18 @@
                         
                         var initialHeight = 5.0;
                         
-                        var contactPoints = [];
-                        var contactPoint1 = new ContactPoint();
-                        var contactPoint2 = new ContactPoint();
-                        
                         var planePoint = new THREE.Vector3(0,-4,0);
                         var planeNormal = new THREE.Vector3(0,1,0);
                         var planePointLocal = new THREE.Vector3();
                         var planeNormalLocal = new THREE.Vector3();
                         var frictionDirection1 = new THREE.Vector3(0,0,1);
                         var frictionDirection2 = new THREE.Vector3(1,0,0);
-                        var numActiveContacts = 0;
                         
                         var collisionPoint = new THREE.Vector3();
                         var collisionVector = new THREE.Vector3();
                         var collisionDepth = 0;
                         
-                        var capsuleBody;
+                        var eggBody;
                         var collisionPointMesh;
                         var a = 1, b = 2, c = 1;
                         var InverseXform = new THREE.Matrix4();
@@ -116,7 +103,7 @@
                         
                         var principleMoi = new THREE.Vector3();
                         var topDiskRadius = 2, topDiskHeight = 0.3, topHeight = 3;
-                        var capsuleMass = 1;
+                        var topMass = 1;
                         
                         var rVector = new THREE.Vector3();
                         var gVector = new THREE.Vector3(0,-9.8,0);
@@ -169,13 +156,12 @@
                         var omega4 = new THREE.Vector3(0,0,0);
                         
                         var omegaBody = new THREE.Vector3(0,0,0);
-                        var capsuleRadius = 0.5;
-                        var capsuleHeight = 2.0;
-                            
+                        
                         var dt = 0.016;
                         var g = -9.8;
-                        
-                        
+                        var spinningFriction = 0.1;
+                        var rollingFriction = 0.1;
+
                         function TrackPath() {
                             this.spline = null;
                             this.position = new THREE.Vector3();
@@ -185,47 +171,38 @@
                         animate();
                         
                         function createTopGeometry() {
-                            // approximately using cylinder moi
-                            principleMoi.x = capsuleMass*capsuleRadius*capsuleRadius/2;
-                            principleMoi.y = 3*capsuleMass*(capsuleRadius*capsuleRadius + capsuleHeight*capsuleHeight)/12;
-                            principleMoi.z = principleMoi.y;
-                            //sphereMaterial.wireframe = true;
-
+                            principleMoi.x = topMass*(b*b + c*c)*0.2;
+                            principleMoi.y = topMass*(a*a + c*c)*0.2;
+                            principleMoi.z = topMass*(a*a + b*b)*0.2;
+ 
                             var geometry = new THREE.SphereGeometry(0.5,10,10);
                             collisionPointMesh = new THREE.Mesh(geometry, sphereMaterial);
-                            var sphereGeometry = new THREE.SphereGeometry(capsuleRadius*0.99,20,20);
-                            var cylGeometry = new THREE.CylinderGeometry(capsuleRadius, capsuleRadius, capsuleHeight, 30, 10);
-                            var mesh1 = new THREE.Mesh(cylGeometry, sphereMaterial);
-                            mesh1.rotateZ(Math.PI/2);
-                            var mesh2 = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                            mesh2.position.x = capsuleHeight/2;
-                            var mesh3 = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                            mesh3.position.x = -capsuleHeight/2;
-                            capsuleBody = new THREE.Object3D();
-                            //capsuleBody.rotateZ(Math.PI/4);
-                            capsuleBody.velocity = new THREE.Vector3();
-                            capsuleBody.add(mesh1);
-                            capsuleBody.add(mesh2);
-                            capsuleBody.add(mesh3);
-                            mesh1.castShadow = true;
-                            mesh1.receiveShadow = true;
-                            mesh2.castShadow = true;
-                            mesh2.receiveShadow = true;
-                            mesh3.castShadow = true;
-                            mesh3.receiveShadow = true;
-                            //capsuleBody.rotateZ(Math.PI/2.5);
-                            scene.add(capsuleBody);
+                            sphereMaterial.wireframe = true;
+                            var sphereGeometry = new THREE.SphereGeometry(1,30,30);
+                            eggBody = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                            eggBody.position.y = -1.0;
+                            eggBody.omega = new THREE.Vector3(0,0,0);
+                            eggBody.scale.x = a;
+                            eggBody.scale.y = b;
+                            eggBody.scale.z = c;
+                            eggBody.castShadow = true;
+                            eggBody.receiveShadow = true;
+                            eggBody.velocity = new THREE.Vector3();
+                            eggBody.rotateZ(Math.PI/2.1);
+                            //eggBody.rotateX(Math.PI/6);
+                            scene.add(eggBody);
                             // set initial quaternion rate
-                            var quat = capsuleBody.quaternion;
-                            omega.x = 10, omega.y = 0; omega.z = 0;
+                            var quat = eggBody.quaternion;
+                            omega.x = 50, omega.y = 0; omega.z = 0;
                             qDot.w = 0.5*(-quat.x * omega.x - quat.y * omega.y - quat.z * omega.z);     // q0-dot
                             qDot.x = 0.5*( quat.w * omega.x - quat.z * omega.y + quat.y * omega.z);     // q1-dot
                             qDot.y = 0.5*( quat.z * omega.x + quat.w * omega.y - quat.x * omega.z);     // q2-dot
                             qDot.z = 0.5*(-quat.y * omega.x + quat.x * omega.y + quat.w * omega.z); 
-                            
-                            // Add 2 contact points
-                            contactPoints.push(new ContactPoint());
-                            contactPoints.push(new ContactPoint());
+                        }
+                        
+                        function Skew(vector) {
+                            skewMatrix.set(0, -vector.z, vector.y, vector.z, 0, -vector.x, -vector.y, vector.x, 0);
+                            return skewMatrix;
                         }
                         
                         function QuaternionAcceleration(quat, quat_dot, g_vector, dt) {
@@ -251,45 +228,136 @@
                             qAccTemp.z = 0.5*(-quat.y * w1dot + quat.x * w2dot + quat.w * w3dot + quat.z * sum);
                             return qAccTemp;
                         }
-                        
-                        function collidePlaneCapsule(planeNormal, pointOnPlane) {
-                            var x1 = capsuleHeight/2;
-                            var x2 = -capsuleHeight/2;
-                            tempVector.set(-pointOnPlane.x, -pointOnPlane.y, -pointOnPlane.z);
-                            tempVector.x = tempVector.x - x1;
-                            var d1 = planeNormal.dot(tempVector) - capsuleRadius;
-                            tempVector.set(-pointOnPlane.x, -pointOnPlane.y, -pointOnPlane.z);
-                            tempVector.x = tempVector.x - x2;
-                            var d2 = planeNormal.dot(tempVector) - capsuleRadius;
-                            var min_d = Math.min(d1, d2);
-                            if( d1 < d2 ) {
-                               tempVector1.set(x2, 0, 0); 
-                            } else {
-                               tempVector1.set(x1, 0, 0); 
-                            }
-                            if(min_d > 0) {
-                                numActiveContacts = 0;
-                                return;
-                            }
-                            if(Math.abs(d1 - d2) > 1e-4 ) {
-                                numActiveContacts = 1;
-                                contactPoint1.depth = min_d;
-                                contactPoint1.point.copy(tempVector1); 
-                                contactPoints[0] = contactPoint1;
-                                //scene.add(collisionPointMesh);
-                            } else {
-                                numActiveContacts = 2;
-                                contactPoint1.depth = d1;
-                                contactPoint2.depth = d2;
-                                tempVector1.set(x1, 0, 0); 
-                                contactPoint1.point.copy(tempVector1);
-                                tempVector1.set(x2, 0, 0); 
-                                contactPoint1.point.copy(tempVector1);
-                                contactPoints[0] = contactPoint1;
-                                contactPoints[1] = contactPoint2;
-                            }
+
+                        function Qdot(quat, omega, dt) {
+                            // compute omega in body frame
+                            omegaQuat.set(omega.x, omega.y, omega.z, 0);
+                            qDot.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
+                            qDot.multiplyQuaternions(qDot, omegaQuat);
+                            return qDot;
                         }
-                         
+                        
+                        function collidePlaneUnitSphere(planeNormal, pointOnPlane) {
+                            var dx = -pointOnPlane.x;
+                            var dy = -pointOnPlane.y;
+                            var dz = -pointOnPlane.z;
+                            var d = dx*planeNormal.x + dy*planeNormal.y + dz*planeNormal.z;
+                            return d - 1.0;
+                        }
+                                                
+                        function AngularAcceleration(quat, omega, dt) {
+                           // Convert to body coordinates
+                            omegaBody.set(omega.x, omega.y, omega.z);
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            rVector.set(0,1,0);
+                            tempVector.set(0,0,0);
+                            tempVector.applyQuaternion(quatInverse);
+                            tempVector.multiplyScalar(topHeight*topMass);
+                            tempVector.crossVectors(rVector, tempVector);
+                            omegaBody.applyQuaternion(quatInverse);
+
+                            // compute omega in body frame
+                            var w1 = omegaBody.x;//2*(-quat.x * quat_dot.w + quat.w * quat_dot.x + quat.z * quat_dot.y - quat.y * quat_dot.z);
+                            var w2 = omegaBody.y;//2*(-quat.y * quat_dot.w - quat.z * quat_dot.x + quat.w * quat_dot.y + quat.x * quat_dot.z);
+                            var w3 = omegaBody.z;//2*(-quat.z * quat_dot.w + quat.y * quat_dot.x - quat.x * quat_dot.y + quat.w * quat_dot.z);
+                            // compute omega rate of change in body frame
+                            omegaDot.x = (tempVector.x + ((principleMoi.y - principleMoi.z)*w3*w2))/principleMoi.x; // Euler's equations of motion
+                            omegaDot.y = (tempVector.y + ((principleMoi.z - principleMoi.x)*w1*w3))/principleMoi.y;
+                            omegaDot.z = (tempVector.z + ((principleMoi.x - principleMoi.y)*w2*w1))/principleMoi.z;
+                            omegaDot.applyQuaternion(quat);
+                            return omegaDot;
+                        }
+                        
+                        function solveForGyroscopicEffectRK4(quat, omega, dt) {
+                            // RK4 Integration Scheme
+                            q1.set(quat.x, quat.y, quat.z, quat.w);
+                            omega1.set(omega.x, omega.y, omega.z);
+                            var temp = AngularAcceleration(q1, omega1, dt);
+                            omegaDot1.set(temp.x, temp.y, temp.z);
+                            temp = Qdot(q1, omega1, dt);
+                            q1_dot.set(temp.x, temp.y, temp.z, temp.w);
+                            
+                            var dt_half = dt*0.5;
+                            q2.set(q1.x + q1_dot.x * dt_half, q1.y + q1_dot.y * dt_half, q1.z + q1_dot.z * dt_half, q1.w + q1_dot.w * dt_half);
+                            omega2.set(omega1.x + omegaDot1.x * dt_half, omega1.y + omegaDot1.y * dt_half, omega1.z + omegaDot1.z * dt_half);
+                            temp = AngularAcceleration(q2, omega2, dt);
+                            omegaDot2.set(temp.x, temp.y, temp.z);
+                            temp = Qdot(q2, omega2, dt);
+                            q2_dot.set(temp.x, temp.y, temp.z, temp.w);
+
+                            q3.set(q1.x + q2_dot.x * dt_half, q1.y + q2_dot.y * dt_half, q1.z + q2_dot.z * dt_half, q1.w + q2_dot.w * dt_half);
+                            omega3.set(omega1.x + omegaDot2.x * dt_half, omega1.y + omegaDot2.y * dt_half, omega1.z + omegaDot2.z * dt_half);
+                            temp = AngularAcceleration(q3, omega3, dt);
+                            omegaDot3.set(temp.x, temp.y, temp.z);
+                            temp = Qdot(q3, omega3, dt);
+                            q3_dot.set(temp.x, temp.y, temp.z, temp.w);
+                            
+                            q4.set(q1.x + q3_dot.x * dt, q1.y + q3_dot.y * dt, q1.z + q3_dot.z * dt, q1.w + q3_dot.w * dt);
+                            omega4.set(omega1.x + omegaDot3.x * dt, omega1.y + omegaDot3.y * dt, omega1.z + omegaDot3.z * dt);
+                            temp = AngularAcceleration(q4, omega4, dt);
+                            omegaDot4.set(temp.x, temp.y, temp.z);
+                            temp = Qdot(q4, omega4, dt);
+                            q4_dot.set(temp.x, temp.y, temp.z, temp.w);
+                            
+                            // Integrate omega
+                            var dt_sixth = dt/6;  
+                            var wx_ = (omegaDot1.x + 2*omegaDot2.x + 2*omegaDot3.x + omegaDot4.x);  
+                            var wy_ = (omegaDot1.y + 2*omegaDot2.y + 2*omegaDot3.y + omegaDot4.y);  
+                            var wz_ = (omegaDot1.z + 2*omegaDot2.z + 2*omegaDot3.z + omegaDot4.z);  
+                            
+                            omega.x = omega.x + wx_ * dt_sixth;
+                            omega.y = omega.y + wy_ * dt_sixth;
+                            omega.z = omega.z + wz_ * dt_sixth;
+                           // Integrate quaternion
+                            var vx_ = (q1_dot.x + 2*q2_dot.x + 2*q3_dot.x + q4_dot.x);  
+                            var vy_ = (q1_dot.y + 2*q2_dot.y + 2*q3_dot.y + q4_dot.y);  
+                            var vz_ = (q1_dot.z + 2*q2_dot.z + 2*q3_dot.z + q4_dot.z);  
+                            var vw_ = (q1_dot.w + 2*q2_dot.w + 2*q3_dot.w + q4_dot.w);  
+                            quat.x = quat.x + vx_ * dt_sixth;
+                            quat.y = quat.y + vy_ * dt_sixth;
+                            quat.z = quat.z + vz_ * dt_sixth;
+                            quat.w = quat.w + vw_ * dt_sixth;
+
+                            quat.normalize();
+                        }
+                        
+                        // Explicit
+                        function solveForGyroscopicEffectVerlet(quat, quat_prev, omega, dt) {
+                            // Convert to body coordinates
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            rVector.set(0,1,0);
+                            tempVector.set(0,-9.8,0);
+                            tempVector.applyQuaternion(quatInverse);
+                            //tempVector.multiplyScalar(0);
+                            tempVector.crossVectors(rVector, tempVector);    
+                            var acceleration = QuaternionAcceleration(quat, qDot, tempVector, dt);
+//                            qDot.set(qDot.x + acceleration.x * dt, qDot.y + acceleration.y * dt, qDot.z + acceleration.z * dt, qDot.w + acceleration.w * dt);
+                            qDot.x = ( quat.x - quat_prev.x)/dt;
+                            qDot.y = ( quat.y - quat_prev.y)/dt;
+                            qDot.z = ( quat.z - quat_prev.z)/dt;
+                            qDot.w = ( quat.w - quat_prev.w)/dt;
+                            
+                            var qx = quat.x;
+                            var qy = quat.y;
+                            var qz = quat.z;
+                            var qw = quat.w;
+                            
+                            quat.x = 2*quat.x - quat_prev.x + acceleration.x * dt*dt;
+                            quat.y = 2*quat.y - quat_prev.y + acceleration.y * dt*dt;
+                            quat.z = 2*quat.z - quat_prev.z + acceleration.z * dt*dt;
+                            quat.w = 2*quat.w - quat_prev.w + acceleration.w * dt*dt;
+                            
+                            quat_prev.x = qx;
+                            quat_prev.y = qy;
+                            quat_prev.z = qz;
+                            quat_prev.w = qw;
+                            
+                            quat.normalize();
+                            quat_prev.normalize();
+                        }
+                        
                         function solveForGyroscopicEffectQuaternionAlgebra(quat, omega, dt) {
                             // RK4 Integration Scheme
                             q1.set(quat.x, quat.y, quat.z, quat.w);
@@ -337,14 +405,82 @@
                             quat.normalize();
                         }
                         
-                        // Handle Friction
-                        function handleFriction(quat, collisionImpulse, pointOfContact, frictionDirection, dir) {                            
+                        // Spinning friction
+                        function handleSpinningFriction(quat, normalImpulse) {
                             // compute omega in body frame
                             var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
                             var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
                             var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
                             omega.set(w1, w2, w3);
-                            tempVector.set(capsuleBody.velocity.x, capsuleBody.velocity.y, capsuleBody.velocity.z);
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            tempVector.set(0,1,0);
+                            tempVector.applyQuaternion(quatInverse);
+                            planeNormalLocal.set(tempVector.x, tempVector.y, tempVector.z);
+                            var Cdot = planeNormalLocal.dot(omega);
+                            tempVector.x /= principleMoi.x;
+                            tempVector.y /= principleMoi.y;
+                            tempVector.z /= principleMoi.z;
+                            
+                            var effectiveMass = planeNormalLocal.dot(tempVector);
+                            var spinImpulse = -Cdot/effectiveMass;
+                            
+                            var scale = 1;
+                            var maxImpulse = spinningFriction * scale * normalImpulse;
+                            spinImpulse = Math.max( spinImpulse, -maxImpulse);
+                            spinImpulse = Math.min( spinImpulse, maxImpulse);
+                            
+                            // Angular part
+                            q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
+                            omegaQuat.set(spinImpulse*planeNormalLocal.x/principleMoi.x, spinImpulse*planeNormalLocal.y/principleMoi.y, spinImpulse*planeNormalLocal.z/principleMoi.z, 0);
+                            q1.multiply(omegaQuat);
+                            qDot.x += q1.x;
+                            qDot.y += q1.y;
+                            qDot.z += q1.z;
+                            qDot.w += q1.w;
+                        }
+                        
+                        // Rolling friction
+                        function handleRollingFriction(quat, normalImpulse, frictionDirection) {
+                            // compute omega in body frame
+                            var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
+                            var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
+                            var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
+                            omega.set(w1, w2, w3);
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            frictionDirection.applyQuaternion(quatInverse);
+                            tempVector.copy(frictionDirection);
+                            var Cdot = frictionDirection.dot(omega);
+                            tempVector.x /= principleMoi.x;
+                            tempVector.y /= principleMoi.y;
+                            tempVector.z /= principleMoi.z;
+                            
+                            var effectiveMass = frictionDirection.dot(tempVector);
+                            var rollingImpulse = -Cdot/effectiveMass;
+                            
+                            var scale = 1;
+                            var maxImpulse = rollingFriction * scale * normalImpulse;
+                            rollingImpulse = Math.max( rollingImpulse, -maxImpulse);
+                            rollingImpulse = Math.min( rollingImpulse, maxImpulse);
+                            
+                            // Angular part
+                            q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
+                            omegaQuat.set(rollingImpulse*frictionDirection.x/principleMoi.x, rollingImpulse*frictionDirection.y/principleMoi.y, rollingImpulse*frictionDirection.z/principleMoi.z, 0);
+                            q1.multiply(omegaQuat);
+                            qDot.x += q1.x;
+                            qDot.y += q1.y;
+                            qDot.z += q1.z;
+                            qDot.w += q1.w;
+                        }
+                        // Handle Friction
+                        function handleFriction(quat, collisionImpulse, frictionDirection) {                            
+                            // compute omega in body frame
+                            var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
+                            var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
+                            var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
+                            omega.set(w1, w2, w3);
+                            tempVector.set(eggBody.velocity.x, eggBody.velocity.y, eggBody.velocity.z);
                             tempVector.applyQuaternion(quatInverse);
                             omega.crossVectors(omega, rVector);
                             tempVector.add(omega); // v_cm + w x r
@@ -358,18 +494,14 @@
                             tempVector.z /= principleMoi.z;
                             tempVector.crossVectors(tempVector, rVector);
                             d1 = frictionDirection.dot(tempVector);
-                            denom = 1/capsuleMass + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
-                            
-                            var oldImpulseMag = pointOfContact.frictionalImpulseMag[dir];
-
+                            denom = 1/topMass + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
                             var CdotTangent = -frictionDirection.dot(tempVector1);
                             var frictionalImpulseMag = CdotTangent/denom;
                             var mu = 0.8;
                             var maxFriction = collisionImpulse * mu;
                             
-                            pointOfContact.frictionalImpulseMag[dir] = Math.max( oldImpulseMag + frictionalImpulseMag, -maxFriction);
-                            pointOfContact.frictionalImpulseMag[dir] = Math.min( pointOfContact.frictionalImpulseMag[dir], maxFriction);
-                            frictionalImpulseMag = pointOfContact.frictionalImpulseMag[dir] - oldImpulseMag;
+                            frictionalImpulseMag = Math.max( frictionalImpulseMag, -maxFriction);
+                            frictionalImpulseMag = Math.min( frictionalImpulseMag, maxFriction);
                             
                             frictionalImpulse.x = frictionalImpulseMag * frictionDirection.x;
                             frictionalImpulse.y = frictionalImpulseMag * frictionDirection.y;
@@ -378,9 +510,9 @@
                             // Contribution from Collision Impulse
                             // Linear part
                             frictionalImpulse.applyQuaternion(quat);
-                            capsuleBody.velocity.x += frictionalImpulse.x/capsuleMass;
-                            capsuleBody.velocity.y += frictionalImpulse.y/capsuleMass;
-                            capsuleBody.velocity.z += frictionalImpulse.z/capsuleMass;
+                            eggBody.velocity.x += frictionalImpulse.x/topMass;
+                            eggBody.velocity.y += frictionalImpulse.y/topMass;
+                            eggBody.velocity.z += frictionalImpulse.z/topMass;
                             // Angular part
                             q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
                             omegaQuat.set(frictionalImpulseMoment.x/principleMoi.x, frictionalImpulseMoment.y/principleMoi.y, frictionalImpulseMoment.z/principleMoi.z, 0);
@@ -391,157 +523,183 @@
                             qDot.w += q1.w;
                         }
                         
-                        function handleRollingFriction(quat, collisionImpulse, pointOfContact, frictionDirection, dir) {                            
+                        function handleCollisionAndFriction() {
+                            // Collision detection
+                            collisionDetection();
+                            if(collisionDepth > 0)
+                                return;
+                            // Collision Impulse j = (CdotNormal + beta * C)/( m^-1 + n dot( I^-1 ( r x n ) x r ) ), CdotNormal = n dot(v_cm + w x r)
+                            // Convert to body coordinates
+                            var quat = eggBody.quaternion;
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            tempVector.set(0,1,0);
+                            tempVector.applyQuaternion(quatInverse);
+                            planeNormalLocal.set(tempVector.x, tempVector.y, tempVector.z);
+                            rVector.x = collisionPoint.x - eggBody.position.x;
+                            rVector.y = collisionPoint.y - eggBody.position.y;
+                            rVector.z = collisionPoint.z - eggBody.position.z;
+                            rVector.applyQuaternion(quatInverse);
+                            tempVector.crossVectors(rVector, planeNormalLocal);
+                            tempVector.x /= principleMoi.x;
+                            tempVector.y /= principleMoi.y;
+                            tempVector.z /= principleMoi.z;
+                            tempVector.crossVectors(tempVector, rVector);
+                            var d1 = planeNormalLocal.dot(tempVector);
+                            var denom = 1/topMass + d1;// m^-1 + n dot( I^-1 ( r x n ) x r )
                             // compute omega in body frame
                             var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
                             var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
                             var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
                             omega.set(w1, w2, w3);
-                            tempVector.set(capsuleBody.velocity.x, capsuleBody.velocity.y, capsuleBody.velocity.z);
+                            tempVector.set(eggBody.velocity.x, eggBody.velocity.y, eggBody.velocity.z);
                             tempVector.applyQuaternion(quatInverse);
                             omega.crossVectors(omega, rVector);
                             tempVector.add(omega); // v_cm + w x r
-                            tempVector1.copy(tempVector);
-                            frictionDirection.normalize();
-                            frictionDirection.applyQuaternion(quatInverse);
-                            
-                            tempVector.crossVectors(rVector, frictionDirection);
-                            tempVector.x /= principleMoi.x;
-                            tempVector.y /= principleMoi.y;
-                            tempVector.z /= principleMoi.z;
-                            tempVector.crossVectors(tempVector, rVector);
-                            d1 = frictionDirection.dot(tempVector);
-                            denom = 1/capsuleMass + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
-                            
-                            var oldImpulseMag = pointOfContact.frictionalImpulseMag[dir];
-
-                            var CdotTangent = -frictionDirection.dot(tempVector1);
-                            var frictionalImpulseMag = CdotTangent/denom;
-                            var mu = 1;
-                            var maxFriction = collisionImpulse * mu;
-                            
-                            pointOfContact.frictionalImpulseMag[dir] = Math.max( oldImpulseMag + frictionalImpulseMag, -maxFriction);
-                            pointOfContact.frictionalImpulseMag[dir] = Math.min( pointOfContact.frictionalImpulseMag[dir], maxFriction);
-                            frictionalImpulseMag = pointOfContact.frictionalImpulseMag[dir] - oldImpulseMag;
-                            
-                            frictionalImpulse.x = frictionalImpulseMag * frictionDirection.x;
-                            frictionalImpulse.y = frictionalImpulseMag * frictionDirection.y;
-                            frictionalImpulse.z = frictionalImpulseMag * frictionDirection.z;
-                            frictionalImpulseMoment.crossVectors(rVector, frictionalImpulse);
+                            var CdotNormal = -planeNormalLocal.dot(tempVector);
+                            var beta = 0.0/dt;
+                            var positionError = -beta * Math.min( 0.0, collisionDepth + 0.01);
+                            eggBody.position.y += -collisionDepth;
+                            var collisionImpulse = (CdotNormal + positionError)/denom;
+                            collisionImpulse = collisionImpulse < 0 ? 0 : collisionImpulse;
+                            collisionNormalImpulse.x = collisionImpulse * planeNormalLocal.x;
+                            collisionNormalImpulse.y = collisionImpulse * planeNormalLocal.y;
+                            collisionNormalImpulse.z = collisionImpulse * planeNormalLocal.z;
+                            collisionNormalImpulseMoment.crossVectors(rVector, collisionNormalImpulse);
                             // Contribution from Collision Impulse
                             // Linear part
-                            frictionalImpulse.applyQuaternion(quat);
-                            capsuleBody.velocity.x += frictionalImpulse.x/capsuleMass;
-                            capsuleBody.velocity.y += frictionalImpulse.y/capsuleMass;
-                            capsuleBody.velocity.z += frictionalImpulse.z/capsuleMass;
+                            collisionNormalImpulse.applyQuaternion(quat);
+                            eggBody.velocity.x += collisionNormalImpulse.x/topMass;
+                            eggBody.velocity.y += collisionNormalImpulse.y/topMass;
+                            eggBody.velocity.z += collisionNormalImpulse.z/topMass;
                             // Angular part
                             q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
-                            omegaQuat.set(-frictionalImpulseMoment.x/principleMoi.x, -frictionalImpulseMoment.y/principleMoi.y, -frictionalImpulseMoment.z/principleMoi.z, 0);
+                            omegaQuat.set(collisionNormalImpulseMoment.x/principleMoi.x, collisionNormalImpulseMoment.y/principleMoi.y, collisionNormalImpulseMoment.z/principleMoi.z, 0);
                             q1.multiply(omegaQuat);
                             qDot.x += q1.x;
                             qDot.y += q1.y;
                             qDot.z += q1.z;
                             qDot.w += q1.w;
+                            
+                            frictionDirection1.x = 0;
+                            frictionDirection1.y = 0;
+                            frictionDirection1.z = 1;
+                            handleFriction(quat, collisionImpulse, frictionDirection1);
+                            frictionDirection2.x = 1;
+                            frictionDirection2.y = 0;
+                            frictionDirection2.z = 0;
+                            handleFriction(quat, collisionImpulse, frictionDirection2);
+                            handleSpinningFriction(quat, collisionImpulse);
+                            frictionDirection1.x = 0;
+                            frictionDirection1.y = 0;
+                            frictionDirection1.z = 1;
+                            handleRollingFriction(quat, collisionImpulse, frictionDirection1);
+                            frictionDirection2.x = 1;
+                            frictionDirection2.y = 0;
+                            frictionDirection2.z = 0;
+                            handleRollingFriction(quat, collisionImpulse, frictionDirection2);
                         }
                         
-                        function handleCollisionAndFriction() {
-                            // Collision detection
-                            collisionDetection();
-                            if(numActiveContacts === 0)
-                                return;
-                            for( var iter =0; iter<5; iter++) {
-                                for(var n=0; n<numActiveContacts; n++) {
-                                    // Collision Impulse j = (CdotNormal + beta * C)/( m^-1 + n dot( I^-1 ( r x n ) x r ) ), CdotNormal = n dot(v_cm + w x r)
-                                    // Convert to body coordinates
-                                    var quat = capsuleBody.quaternion;
-                                    quatInverse.set(quat.x, quat.y, quat.z, quat.w);
-                                    quatInverse.inverse();
-                                    tempVector.set(0,1,0);
-                                    tempVector.applyQuaternion(quatInverse);
-                                    planeNormalLocal.set(tempVector.x, tempVector.y, tempVector.z);
-                                    var pointOfContact = contactPoints[n];
-                                    rVector.x = pointOfContact.point.x - capsuleBody.position.x;
-                                    rVector.y = pointOfContact.point.y - capsuleBody.position.y;
-                                    rVector.z = pointOfContact.point.z - capsuleBody.position.z;
-                                    rVector.applyQuaternion(quatInverse);
-                                    tempVector.crossVectors(rVector, planeNormalLocal);
-                                    tempVector.x /= principleMoi.x;
-                                    tempVector.y /= principleMoi.y;
-                                    tempVector.z /= principleMoi.z;
-                                    tempVector.crossVectors(tempVector, rVector);
-                                    var d1 = planeNormalLocal.dot(tempVector);
-                                    var denom = 1/capsuleMass + d1;// m^-1 + n dot( I^-1 ( r x n ) x r )
-                                    // compute omega in body frame
-                                    var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
-                                    var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
-                                    var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
-                                    omega.set(w1, w2, w3);
-                                    tempVector.set(capsuleBody.velocity.x, capsuleBody.velocity.y, capsuleBody.velocity.z);
-                                    tempVector.applyQuaternion(quatInverse);
-                                    omega.crossVectors(omega, rVector);
-                                    tempVector.add(omega); // v_cm + w x r
-                                    var oldImpulseMag = pointOfContact.normalImpulseMag;
-                                    var CdotNormal = -planeNormalLocal.dot(tempVector);
-                                    var beta = 0.1/dt;
-                                    var positionError = -beta * Math.min( 0.0, pointOfContact.depth + 0.01);
-                                    //capsuleBody.position.y += -collisionDepth;
-                                    var collisionImpulse = (CdotNormal + positionError)/denom;
-                                    pointOfContact.normalImpulseMag = Math.max(oldImpulseMag + collisionImpulse, 0.0);
-                                    collisionImpulse = pointOfContact.normalImpulseMag - oldImpulseMag;
-                                    //collisionImpulse = collisionImpulse < 0 ? 0 : collisionImpulse;
-                                    collisionNormalImpulse.x = collisionImpulse * planeNormalLocal.x;
-                                    collisionNormalImpulse.y = collisionImpulse * planeNormalLocal.y;
-                                    collisionNormalImpulse.z = collisionImpulse * planeNormalLocal.z;
-                                    collisionNormalImpulseMoment.crossVectors(rVector, collisionNormalImpulse);
-                                    // Contribution from Collision Impulse
-                                    // Linear part
-                                    collisionNormalImpulse.applyQuaternion(quat);
-                                    capsuleBody.velocity.x += collisionNormalImpulse.x/capsuleMass;
-                                    capsuleBody.velocity.y += collisionNormalImpulse.y/capsuleMass;
-                                    capsuleBody.velocity.z += collisionNormalImpulse.z/capsuleMass;
-                                    // Angular part
-                                    q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
-                                    omegaQuat.set(collisionNormalImpulseMoment.x/principleMoi.x, collisionNormalImpulseMoment.y/principleMoi.y, collisionNormalImpulseMoment.z/principleMoi.z, 0);
-                                    q1.multiply(omegaQuat);
-                                    qDot.x += q1.x;
-                                    qDot.y += q1.y;
-                                    qDot.z += q1.z;
-                                    qDot.w += q1.w;
-
-                                    frictionDirection1.x = 1;
-                                    frictionDirection1.y = 0;
-                                    frictionDirection1.z = 0;
-                                    handleFriction(quat, pointOfContact.normalImpulseMag, pointOfContact, frictionDirection1, 0);
-                                    frictionDirection2.x = 0;
-                                    frictionDirection2.y = 0;
-                                    frictionDirection2.z = 1;
-                                    handleFriction(quat, pointOfContact.normalImpulseMag, pointOfContact, frictionDirection2, 1);
-                                    
-                                    frictionDirection1.x = 1;
-                                    frictionDirection1.y = 0;
-                                    frictionDirection1.z = 0;
-                                    handleRollingFriction(quat, pointOfContact.normalImpulseMag, pointOfContact, frictionDirection1, 0);
-                                    frictionDirection2.x = 0;
-                                    frictionDirection2.y = 0;
-                                    frictionDirection2.z = 1;
-                                    handleRollingFriction(quat, pointOfContact.normalImpulseMag, pointOfContact, frictionDirection2, 1);
-                                }
+                        // Based upon Erin Catto's implementation
+                        function solveForGyroscopicEffect(quat, omega, dt) {
+                            // Convert to body coordinates
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            
+                            for( var iter=0; iter<1; iter++) {
+                            omegaBody.set(omega.x, omega.y, omega.z);
+                            omegaBody.applyQuaternion(quatInverse);
+                            
+                            // Residual Vector
+                            moiTimesOmega.set(principleMoi.x * omegaBody.x, principleMoi.y * omegaBody.y, principleMoi.z * omegaBody.z);
+                            residual.crossVectors(omegaBody, moiTimesOmega);
+                            residual.multiplyScalar(dt);
+                            
+                            // Jacobian Matrix
+                            tempMatrix1.copy(Skew(omegaBody));
+                            var elements1 = tempMatrix1.elements;
+                            elements1[1] *= principleMoi.x;
+                            elements1[2] *= principleMoi.x;
+                            elements1[3] *= principleMoi.y;
+                            elements1[5] *= principleMoi.y;
+                            elements1[6] *= principleMoi.z;
+                            elements1[7] *= principleMoi.z;
+                            
+                            tempMatrix2.copy(Skew(moiTimesOmega));
+                            elements1 = tempMatrix1.elements;
+                            var elements2 = tempMatrix2.elements;
+                            for( var i=0; i<9; i++) {
+                                elements1[i] -= elements2[i];
+                                elements1[i] *= dt;
                             }
-                                   // introduce artificial friction
-                                    var k = -0.01 * dt;
-                                    var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
-                                    var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
-                                    var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
-                                    
-                                    q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
-                                    omegaQuat.set(w1*k/principleMoi.x, w2*k/principleMoi.y, w3*k/principleMoi.z, 0);
-                                    q1.multiply(omegaQuat);
-                                    qDot.x += q1.x;
-                                    qDot.y += q1.y;
-                                    qDot.z += q1.z;
-                                    qDot.w += q1.w;
+                            elements1[0] += principleMoi.x;
+                            elements1[4] += principleMoi.y;
+                            elements1[8] += principleMoi.z;
+                            
+                            var tempelements = Jacobian.elements;
+                            tempelements[0] = elements1[0];
+                            tempelements[1] = elements1[1];
+                            tempelements[2] = elements1[2];
+                            tempelements[3] = 0;
+                            
+                            tempelements[4] = elements1[3];
+                            tempelements[5] = elements1[4];
+                            tempelements[6] = elements1[5];
+                            tempelements[7] = 0;
+                            
+                            tempelements[8] = elements1[6];
+                            tempelements[9] = elements1[7];
+                            tempelements[10] = elements1[8];
+                            tempelements[11] = 0;
+                            
+                            tempelements[12] = 0;
+                            tempelements[13] = 0;
+                            tempelements[14] = 0;
+                            tempelements[15] = 1;
+                            // Newton Raphson Solve
+                            
+                            tempMatrix1.getInverse(Jacobian);
+                            residual.applyMatrix3(tempMatrix1);
+                            //console.log(Jacobian.elements[0]);
+                            //console.log(tempMatrix1.elements[0]);
+                            omegaBody.x = omegaBody.x - residual.x;
+                            omegaBody.y = omegaBody.y - residual.y;
+                            omegaBody.z = omegaBody.z - residual.z;
+                            
+                            // Back to world 
+                            omegaBody.applyQuaternion(quat);
+                            omega.set(omegaBody.x, omegaBody.y, omegaBody.z);
+                          }
                         }
-                         
+                        
+                        function solveForGravity(quat, omega, L, dt) {
+                            // Convert to body coordinates
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            tempVector.set(0,1,0);
+                            gVector.set(0,-9.8,0);
+
+                            //tempVector.applyQuaternion(quat);
+                            rVector.set(tempVector.x, tempVector.y, tempVector.z);
+                            gVector.applyQuaternion(quatInverse);
+                            omega.applyQuaternion(quatInverse);
+                            
+                            rVector.normalize();
+                            rVector.multiplyScalar(topHeight*topMass*dt);
+                            rVector.crossVectors(rVector, gVector);
+                            //rVector.x /= principleMoi.x;
+                            //rVector.y /= principleMoi.y;
+                            //rVector.z /= principleMoi.z;
+                            omega.x = omega.x + rVector.x;
+                            omega.y = omega.y + rVector.y;
+                            omega.z = omega.z + rVector.z;
+                            // Back to world 
+                            //omega.set(L.x/principleMoi.x, L.y/principleMoi.y, L.z/principleMoi.z);
+                            //omega.set(L.x, L.y, L.z);
+                            omega.applyQuaternion(quat);
+                            //L.applyQuaternion(quat);
+                        }
+                        
                         function initCradleGeometry()
                         {
                             // Create the Top's Geometry
@@ -563,9 +721,10 @@
                         
                         function collisionDetection() {
                             // transform plane in the space of egg
-                            var xForm = capsuleBody.matrix;
+                            var xForm = eggBody.matrix;
                             InverseXform.getInverse(xForm);
                             TransposeXform.copy(xForm);
+                            //TransposeXform.makeRotationFromEuler(eggBody.rotation);
                             TransposeXform.transpose();
                             var elements = TransposeXform.elements;
                            
@@ -581,43 +740,39 @@
                             planePointLocal.set(planePoint.x, planePoint.y, planePoint.z);
                             planePointLocal.applyMatrix4(InverseXform);
                             
-                            //collisionDepth = collidePlaneUnitSphere(planeNormalLocal, planePointLocal);
-                            collidePlaneCapsule(planeNormalLocal, planePointLocal);
-                            
-                            for( var n=0; n<numActiveContacts; n++) {
-                                var pointOfContact = contactPoints[n];
-                                tempVector.x = pointOfContact.point.x-planeNormalLocal.x*capsuleRadius;
-                                tempVector.y = pointOfContact.point.y-planeNormalLocal.y*capsuleRadius;
-                                tempVector.z = pointOfContact.point.z-planeNormalLocal.z*capsuleRadius;
-                                pointOfContact.point.x += -planeNormalLocal.x*(capsuleRadius + pointOfContact.depth);
-                                pointOfContact.point.y += -planeNormalLocal.y*(capsuleRadius + pointOfContact.depth);;
-                                pointOfContact.point.z += -planeNormalLocal.z*(capsuleRadius+ pointOfContact.depth);;
-                                if(pointOfContact.depth < 0) {
-                                    pointOfContact.point.applyMatrix4(xForm);
-                                    tempVector.applyMatrix4(xForm);
-                                    tempVector.x -= pointOfContact.point.x;
-                                    tempVector.y -= pointOfContact.point.y;
-                                    tempVector.z -= pointOfContact.point.z;
-                                    var l = tempVector.length();
-                                    pointOfContact.depth = -l;
-//                                    collisionPointMesh.position.x = pointOfContact.point.x;
-//                                    collisionPointMesh.position.y = pointOfContact.point.y;
-//                                    collisionPointMesh.position.z = pointOfContact.point.z;
-                                }
+                            collisionDepth = collidePlaneUnitSphere(planeNormalLocal, planePointLocal);
+                            collisionPoint.x = -planeNormalLocal.x*(1+collisionDepth);
+                            collisionPoint.y = -planeNormalLocal.y*(1+collisionDepth);
+                            collisionPoint.z = -planeNormalLocal.z*(1+collisionDepth);
+                            tempVector.x = -planeNormalLocal.x;
+                            tempVector.y = -planeNormalLocal.y;
+                            tempVector.z = -planeNormalLocal.z;
+                            if(collisionDepth < 0) {
+                                //scene.add(collisionPointMesh);
+                                //scene.remove(eggBody);
+                                collisionPoint.applyMatrix4(xForm);
+                                tempVector.applyMatrix4(xForm);
+                                tempVector.x -= collisionPoint.x;
+                                tempVector.y -= collisionPoint.y;
+                                tempVector.z -= collisionPoint.z;
+                                var l = tempVector.length();
+                                collisionDepth = -l;
+                                collisionPointMesh.position.x = collisionPoint.x;
+                                collisionPointMesh.position.y = collisionPoint.y;
+                                collisionPointMesh.position.z = collisionPoint.z;
                             }
                         }
                         
                         function updatePhysicalBodies() 
                         {   
                             handleCollisionAndFriction();
-//                            collisionDetection();
-
                             // Move the egg under gravity
-                            capsuleBody.velocity.y += g * dt;
-                            capsuleBody.position.x += capsuleBody.velocity.x * dt;
-                            capsuleBody.position.y += capsuleBody.velocity.y * dt;
-                            capsuleBody.position.z += capsuleBody.velocity.z * dt;
-                            solveForGyroscopicEffectQuaternionAlgebra(capsuleBody.quaternion, capsuleBody.omega, dt);
+                            eggBody.velocity.y += g * dt;
+                            eggBody.position.x += eggBody.velocity.x * dt;
+                            eggBody.position.y += eggBody.velocity.y * dt;
+                            eggBody.position.z += eggBody.velocity.z * dt;
+
+                            solveForGyroscopicEffectQuaternionAlgebra(eggBody.quaternion, eggBody.omega, dt);
                             // Resolve Collision
                         };
                         

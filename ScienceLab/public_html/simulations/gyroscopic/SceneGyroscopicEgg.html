@@ -601,14 +601,14 @@
                             frictionDirection1.x = 0;
                             frictionDirection1.y = 0;
                             frictionDirection1.z = 1;
-                            //handleRollingFriction(quat, collisionImpulse, frictionDirection1);
+                            handleRollingFriction(quat, collisionImpulse, frictionDirection1);
                             frictionDirection2.x = 1;
                             frictionDirection2.y = 0;
                             frictionDirection2.z = 0;
-                            //handleRollingFriction(quat, collisionImpulse, frictionDirection2);
+                            handleRollingFriction(quat, collisionImpulse, frictionDirection2);
                             
                             // introduce artificial friction
-                            var k = -0.1 * dt;
+                            var k = -0.05 * dt;
                             var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
                             var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
                             var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);

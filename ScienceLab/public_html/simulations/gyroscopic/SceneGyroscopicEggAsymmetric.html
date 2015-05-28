@@ -200,7 +200,7 @@
                             scene.add(eggBody);
                             // set initial quaternion rate
                             var quat = eggBody.quaternion;
-                            omega.x = 20, omega.y = 0; omega.z = 0;
+                            omega.x = 30, omega.y = 0; omega.z = 0;
                             qDot.w = 0.5*(-quat.x * omega.x - quat.y * omega.y - quat.z * omega.z);     // q0-dot
                             qDot.x = 0.5*( quat.w * omega.x - quat.z * omega.y + quat.y * omega.z);     // q1-dot
                             qDot.y = 0.5*( quat.z * omega.x + quat.w * omega.y - quat.x * omega.z);     // q2-dot
@@ -500,6 +500,7 @@
                         }
                         
                         function handleRollingFriction(quat, collisionImpulse, frictionDirection) {                            
+                            // compute omega in body frame
                             tempVector.set(eggBody.velocity.x, eggBody.velocity.y, eggBody.velocity.z);
                             tempVector.applyQuaternion(quatInverse);
                             tempVector1.copy(tempVector);
@@ -511,14 +512,14 @@
                             tempVector.z /= principleMoi.z;
                             tempVector.crossVectors(tempVector, rVector);
                             d1 = frictionDirection.dot(tempVector);
-                            denom = 1/topMass;// + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
+                            denom = 1/topMass + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
                             var CdotTangent = -frictionDirection.dot(tempVector1);
                             var frictionalImpulseMag = collisionImpulse*CdotTangent/denom;
-                            var mu = 1;
+                            var mu = 0.01;
                             var maxFriction = collisionImpulse * mu;
                             
-                            //frictionalImpulseMag = Math.max( frictionalImpulseMag, -maxFriction);
-                            //frictionalImpulseMag = Math.min( frictionalImpulseMag, maxFriction);
+                            frictionalImpulseMag = Math.max( frictionalImpulseMag, -maxFriction);
+                            frictionalImpulseMag = Math.min( frictionalImpulseMag, maxFriction);
                             
                             frictionalImpulse.x = frictionalImpulseMag * frictionDirection.x;
                             frictionalImpulse.y = frictionalImpulseMag * frictionDirection.y;
@@ -532,7 +533,7 @@
                             eggBody.velocity.z += frictionalImpulse.z/topMass;
                             // Angular part
                             q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
-                            omegaQuat.set(frictionalImpulseMoment.x/principleMoi.x, frictionalImpulseMoment.y/principleMoi.y, frictionalImpulseMoment.z/principleMoi.z, 0);
+                            omegaQuat.set(-frictionalImpulseMoment.x/principleMoi.x, -frictionalImpulseMoment.y/principleMoi.y, -frictionalImpulseMoment.z/principleMoi.z, 0);
                             q1.multiply(omegaQuat);
                             qDot.x += q1.x;
                             qDot.y += q1.y;
@@ -557,7 +558,7 @@
                             rVector.y = collisionPoint.y - eggBody.position.y;
                             rVector.z = collisionPoint.z - eggBody.position.z;
                             rVector.applyQuaternion(quatInverse);
-                            rVector.y -= 1;
+                            rVector.y -= 0.6;
                             tempVector.crossVectors(rVector, planeNormalLocal);
                             tempVector.x /= principleMoi.x;
                             tempVector.y /= principleMoi.y;
@@ -610,11 +611,11 @@
                             frictionDirection1.x = 0;
                             frictionDirection1.y = 0;
                             frictionDirection1.z = 1;
-                            //handleRollingFriction(quat, collisionImpulse, frictionDirection1);
+                            handleRollingFriction(quat, collisionImpulse, frictionDirection1);
                             frictionDirection2.x = 1;
                             frictionDirection2.y = 0;
                             frictionDirection2.z = 0;
-                            //handleRollingFriction(quat, collisionImpulse, frictionDirection2);
+                            handleRollingFriction(quat, collisionImpulse, frictionDirection2);
                             
                             // introduce artificial friction
                             var k = -0.03 * dt;

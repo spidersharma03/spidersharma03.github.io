@@ -169,8 +169,8 @@
                         var omega4 = new THREE.Vector3(0,0,0);
                         
                         var omegaBody = new THREE.Vector3(0,0,0);
-                        var capsuleRadius = 0.5;
-                        var capsuleHeight = 2.0;
+                        var capsuleRadius = 0.2;
+                        var capsuleHeight = 6.0;
                             
                         var dt = 0.016;
                         var g = -9.8;
@@ -186,9 +186,9 @@
                         
                         function createTopGeometry() {
                             // approximately using cylinder moi
-                            principleMoi.x = capsuleMass*capsuleRadius*capsuleRadius/2;
-                            principleMoi.y = 3*capsuleMass*(capsuleRadius*capsuleRadius + capsuleHeight*capsuleHeight)/12;
-                            principleMoi.z = principleMoi.y;
+                            principleMoi.y = capsuleMass*capsuleRadius*capsuleRadius/2;
+                            principleMoi.x = capsuleMass*(3*capsuleRadius*capsuleRadius + capsuleHeight*capsuleHeight)/12;
+                            principleMoi.z = principleMoi.x;
                             //sphereMaterial.wireframe = true;
 
                             var geometry = new THREE.SphereGeometry(0.5,10,10);
@@ -217,7 +217,7 @@
                             scene.add(capsuleBody);
                             // set initial quaternion rate
                             var quat = capsuleBody.quaternion;
-                            omega.x = 10, omega.y = 0; omega.z = 0;
+                            omega.x = 0, omega.y = 0; omega.z = 0;
                             qDot.w = 0.5*(-quat.x * omega.x - quat.y * omega.y - quat.z * omega.z);     // q0-dot
                             qDot.x = 0.5*( quat.w * omega.x - quat.z * omega.y + quat.y * omega.z);     // q1-dot
                             qDot.y = 0.5*( quat.z * omega.x + quat.w * omega.y - quat.x * omega.z);     // q2-dot
@@ -449,6 +449,7 @@
                             collisionDetection();
                             if(numActiveContacts === 0)
                                 return;
+                            capsuleBody.position.y -= contactPoints[0].depth/10;
                             for( var iter =0; iter<5; iter++) {
                                 for(var n=0; n<numActiveContacts; n++) {
                                     // Collision Impulse j = (CdotNormal + beta * C)/( m^-1 + n dot( I^-1 ( r x n ) x r ) ), CdotNormal = n dot(v_cm + w x r)
@@ -482,7 +483,7 @@
                                     tempVector.add(omega); // v_cm + w x r
                                     var oldImpulseMag = pointOfContact.normalImpulseMag;
                                     var CdotNormal = -planeNormalLocal.dot(tempVector);
-                                    var beta = 0.1/dt;
+                                    var beta = 0.01/dt;
                                     var positionError = -beta * Math.min( 0.0, pointOfContact.depth + 0.01);
                                     //capsuleBody.position.y += -collisionDepth;
                                     var collisionImpulse = (CdotNormal + positionError)/denom;

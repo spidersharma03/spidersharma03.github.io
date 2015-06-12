@@ -30,7 +30,6 @@
 
         <script src="../../js/lib/three.js/three.js"></script>
         <script src="../../js/lib/three.js/ammo.js"></script>
-        <script src="MomentumConservation.js"></script>
 
         <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
 
@@ -86,30 +85,44 @@
             var arcRadius = 7;
             var pathLength = 10.0;
             var trackSize = 2.0;
+            var dt = 0.016;
+            var pauseSimulation = false;
+            var com_visible = false;
+            var comMesh;
             init();
             animate();
-
-            function changeNumPendulumns(value)
-            {
-                // reset all the pendulumns
-                var x = -cradleLength / 2 + 0.5;
-                for (var i = 0; i < numSpheres; i++)
-                {
-                    var sphereBody = MomentumConservationSimulation.bodies[i];
-                    sphereBody.velocity.x = 0;
-                    sphereBody.position.x = x;
-                    sphereBody.position.y = 1.0;
-                    sphereBody.position.z = 0;
-                    x += sphereRadius * 2.0;
-                }
-                // give impulse
-                for (var i = 0; i < value; i++) {
-                    var body = MomentumConservationSimulation.bodies[i];
-                    body.velocity.x = -3;
+           
+            function reset() {
+                
+            }
+            
+            function setElasticity(value) {
+                for(var i = 0; i < simulation.bodies.length; i++) {
+                    var body = simulation.bodies[i];
+                    body.e = Number(value);
                 }
             }
+            
+            function start_pause() {
+                pauseSimulation = !pauseSimulation;
+            }
+            
+            function timeScale(value) {
+                dt = Number(value);
+            }
+            
+            function toggleCOM() {
+                com_visible = !com_visible;
+                if(com_visible) {
+                    scene.add(comMesh);
+                }
+                else {
+                    scene.remove(comMesh);
+                }
+            }
+            
             function makeBaseGeometry() {
-                var trackLength = 40.0;
+                var trackLength = 240.0;
 
                 var trackGeometryPath = [];
 
@@ -149,11 +162,29 @@
                 baseGroup.add(baseMesh2);
                 baseGroup.position.y -= trackSize - 0.7 * 0.5;
                 scene.add(baseGroup);
+                
+                var sphgeometry = new THREE.SphereGeometry(0.2,20,20);
+                comMesh = new THREE.Object3D();
+                var mesh1 = new THREE.Mesh(sphgeometry, cubeMaterial);
+                comMesh.position.y = 0.5;
+                comMesh.add(mesh1);
+                
+                var material = new THREE.LineBasicMaterial({color: 0x222222});
+                var geometry = new THREE.Geometry();
+                geometry.vertices.push(
+                        new THREE.Vector3( 0, -10, 0 ),
+                        new THREE.Vector3( 0, 10, 0 )
+                                );
+                var line = new THREE.Line( geometry, material );
+                comMesh.add(line);
+                //scene.add(comMesh);
             }
 
             function syncSimulation()
             {
-                simulation.simulate(0.016);
+                if(pauseSimulation)
+                    return;
+                simulation.simulate(dt);
                 for( var i=0; i<simulation.bodies.length; i++) {
                     var body = simulation.bodies[i];
                     var bodyModel = body.model;
@@ -180,7 +211,8 @@
                     springMesh.position.y = spring.body1.position.y + 0.9 * 0.7;
                     springMesh.scale.y = spring.compressionFraction;
                 }
-                //console.log(simulation.totalEnergy());
+                comMesh.position.x = simulation.com();
+                //console.log(simulation.v_com());
             }
 
             function init() {
@@ -250,12 +282,12 @@
                 texture.wrapS = THREE.RepeatWrapping;
                 texture.wrapT = THREE.RepeatWrapping;
                 texture.repeat.set(1, 1);
-                var sphereTexture = THREE.ImageUtils.loadTexture("../../img/number2.jpeg");
+                var sphereTexture = THREE.ImageUtils.loadTexture("../../img/billboard.jpeg");
 
                 cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine: THREE.MixOperation});
                 groundMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: texture, color: 0xffffff, specular: 0xffffff, combine: THREE.MixOperation, bumpScale: 0.010, bumpMap: texture, ambient: 0x555555, reflectivity: 0.5, metal: true, shininess: 1000});
                 sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: sphereTexture, color: 0xff0000, specular: 0xffffff, combine: THREE.MixOperation, ambient: 0x555555, reflectivity: 0.8, shininess: 10});
-
+                //sphereMaterial.emissive = new THREE.Color("rgb(0,255,0)");
                 renderer = new THREE.WebGLRenderer({antialias: true});
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 container.appendChild(renderer.domElement);
@@ -273,62 +305,21 @@
 
                 makeBaseGeometry();
 
-                createMassesWithSpringConstraints();
-            }
-
-            function createMassesWithoutSprings() {
-                // Create Physical System bodies
-                var body1 = new SpringMassSystems1D.Body(1.0, 1.0);
-                body1.velocity.x = 5.0;
-                body1.position.x = -7;
-                var body2 = new SpringMassSystems1D.Body(1.0, 1.0);
-                body2.position.x = 2;
-                simulation.addBody(body1);
-                simulation.addBody(body2);
-                scene.add(body1.model);
-                scene.add(body2.model);
+                createMassesWithSprings();
             }
 
             function createMassesWithSprings() {
                 // Create Physical System bodies
-                var body1 = new SpringMassSystems1D.Body(1.0, 1.0, 1.0, 1.0);
+                var body1 = new SpringMassSystems1D.Body(1.0, 1.0, -1.0, 1.0);
                 body1.position.x = -15;
                 var body2 = new SpringMassSystems1D.Body(1.0, 1.0, 1.0, 1.0);
                 body2.position.x = 2;
                 body1.velocity.x = 2.0;
                 simulation.addBody(body1);
                 simulation.addBody(body2);
-                scene.add(body1.model);
-                scene.add(body2.model);
-            }
-
-            function createMassesWithSpringConstraints() {
-                // Create Physical System bodies
-                var body1 = new SpringMassSystems1D.Body(1.0, 1.0);
-                body1.position.x = -2;
-                var body2 = new SpringMassSystems1D.Body(1.0, 1.0);
-                body2.position.x = 2;
-                var body3 = new SpringMassSystems1D.Body(1.0, 1.0);
-                body3.position.x = 6;
-                var spring1 = new SpringMassSystems1D.Spring(4,1,body1,body2);
-                var spring2 = new SpringMassSystems1D.Spring(4,1,body2,body3);
-                var body4 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
-                body4.position.x = -8;
-                body4.velocity.x = 2;
-
-                //body1.velocity.x = 2.0;
-                simulation.addBody(body1);
-                simulation.addBody(body2);
                 simulation.addBody(body3);
-                simulation.addBody(body4);
-                simulation.addSpring(spring1);
-                simulation.addSpring(spring2);
                 scene.add(body1.model);
                 scene.add(body2.model);
-                scene.add(body3.model);
-                scene.add(body4.model);
-                scene.add(spring1.model);
-                scene.add(spring2.model);
             }
             
             function onDocumentMouseMove(event)
@@ -399,7 +390,6 @@
             function animate() {
                 requestAnimationFrame(animate);
                 controls.update();
-                MomentumConservationSimulation.updateSimulation(0.016);
                 syncSimulation();
                 render();
             }

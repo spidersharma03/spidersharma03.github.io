@@ -122,11 +122,11 @@ SpringMassSystems1D.prototype = {
           var body = this.bodies[i];
           ravg += body.position.x * body.mass;
       }
-       return ravg/this.totalMass();
+       return ravg/this.mass();
     },
     
     v_com : function() {
-        return this.momentum()/this.totalMass();
+        return this.momentum()/this.mass();
     },
     
     mass : function() {
@@ -254,7 +254,8 @@ SpringMassSystems1D.prototype = {
                     // Hard Collisions
                     else {
                         var dv = cinfo.body2.velocity.x - cinfo.body1.velocity.x;
-                        var impulse = (1 + body1.e) * dv / (1.0 / cinfo.body1.mass + 1.0 / cinfo.body2.mass);
+                        var e = Math.min(cinfo.body1.e, cinfo.body2.e);
+                        var impulse = (1 + e) * dv / (1.0 / cinfo.body1.mass + 1.0 / cinfo.body2.mass);
                         cinfo.body1.velocity.x += impulse / cinfo.body1.mass;
                         cinfo.body2.velocity.x -= impulse / cinfo.body2.mass;
                         // Resolve penetration

@@ -1,0 +1,460 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>three.js webgl - loaders - OBJ loader</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            body {
+                font-family: Monospace;
+                background-color: #000;
+                color: #fff;
+                margin: 0px;
+                overflow: hidden;
+            }
+            #info {
+                color: #fff;
+                position: absolute;
+                top: 10px;
+                width: 100%;
+                text-align: center;
+                z-index: 100;
+                display:block;
+            }
+            #info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+        </style>
+    </head>
+
+    <body>
+
+        <script src="../../js/lib/three.js/three.js"></script>
+        <script src="../../js/lib/three.js/ammo.js"></script>
+
+        <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
+
+        <script src="../../js/lib/three.js/js/Detector.js"></script>
+        <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+        <script src="../../js/simulate/SpringMassSystems1D.js"></script>
+
+        <script>
+
+            var simulation = new SpringMassSystems1D();
+
+            var container, stats;
+            var pickConstraint = null;
+            var camera, scene, renderer, controls;
+
+            var fov = 70,
+                    isUserInteracting = false,
+                    onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+                    lon = 0, onMouseDownLon = 0,
+                    lat = 0, onMouseDownLat = 0,
+                    phi = 0, theta = 0;
+
+            var mouseX = 0, mouseY = 0;
+
+            var windowHalfX = window.innerWidth / 2;
+            var windowHalfY = window.innerHeight / 2;
+
+            var cubeMaterial;
+            var groundMaterial;
+            var sphereMaterial;
+
+            var numSpheres = 2;
+            var spheres = [];
+            var physicsBodies = [];
+            var boxMesh;
+            
+            var geometry;
+            var sphereRadius = 1.0;
+            var cradleWidth = 3.0;
+            var cradleHeight = 3.0;
+            var cradleLength = 5.0;
+            var groundWidth = 1.5 * cradleLength;
+            var groundDepth = 1.5 * cradleLength;
+            var groundHeight = 0.1;
+
+            var anchorPositions = [];
+            var indices_array = [];
+            var impulse = new Ammo.btVector3(-3, 0, 0);
+            var impulsePoint = new Ammo.btVector3(0, 0, 0);
+
+            var cameraPosition = new THREE.Vector3();
+
+            var arcRadius = 7;
+            var pathLength = 10.0;
+            var trackSize = 2.0;
+            var dt = 0.016;
+            var pauseSimulation = false;
+            var com_visible = false;
+            var comMesh;
+            init();
+            animate();
+           
+            function reset() {
+                
+            }
+            
+            function setElasticity(value) {
+                for(var i = 0; i < simulation.bodies.length; i++) {
+                    var body = simulation.bodies[i];
+                    body.e = Number(value);
+                }
+            }
+            
+            function start_pause() {
+                pauseSimulation = !pauseSimulation;
+            }
+            
+            function timeScale(value) {
+                dt = Number(value);
+            }
+            
+            function toggleCOM() {
+                com_visible = !com_visible;
+                if(com_visible) {
+                    scene.add(comMesh);
+                }
+                else {
+                    scene.remove(comMesh);
+                }
+            }
+            
+            function makeBaseGeometry() {
+                var trackLength = 240.0;
+
+                var trackGeometryPath = [];
+
+                trackGeometryPath.push(new THREE.Vector2(trackSize / 2, 0));
+                trackGeometryPath.push(new THREE.Vector2(0, trackSize / 2 * Math.sqrt(3.0)));
+                trackGeometryPath.push(new THREE.Vector2(-trackSize / 2, 0));
+
+                var extrudeSettings = {
+                    amount: trackLength,
+                    steps: 2,
+                    material: 1,
+                    extrudeMaterial: 0,
+                    bevelEnabled: false
+                };
+
+                var shape = new THREE.Shape(trackGeometryPath);
+                var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+                var mesh = new THREE.Mesh(geometry, groundMaterial);
+
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.rotation.y = Math.PI / 2;
+                mesh.position.x = -trackLength / 2;
+                mesh.position.y -= trackSize - 0.7 * 0.5;
+                scene.add(mesh);
+
+                var baseGroup = new THREE.Object3D();
+                var baseGeometry1 = new THREE.BoxGeometry(trackLength, trackSize, 0.1);
+                var baseMesh1 = new THREE.Mesh(baseGeometry1, groundMaterial);
+                baseMesh1.castShadow = false;
+                baseMesh1.receiveShadow = true;
+                var baseMesh2 = baseMesh1.clone();
+                baseMesh1.position.z = trackSize / 2;
+                baseMesh2.position.z = -trackSize / 2;
+                baseGroup.position.y = -trackSize / 2;
+                baseGroup.add(baseMesh1);
+                baseGroup.add(baseMesh2);
+                baseGroup.position.y -= trackSize - 0.7 * 0.5;
+                scene.add(baseGroup);
+                
+                var sphgeometry = new THREE.SphereGeometry(0.2,20,20);
+                comMesh = new THREE.Object3D();
+                var mesh1 = new THREE.Mesh(sphgeometry, cubeMaterial);
+                comMesh.position.y = 0.5;
+                comMesh.add(mesh1);
+                
+                var material = new THREE.LineBasicMaterial({color: 0x222222});
+                var geometry = new THREE.Geometry();
+                geometry.vertices.push(
+                        new THREE.Vector3( 0, -10, 0 ),
+                        new THREE.Vector3( 0, 10, 0 )
+                                );
+                var line = new THREE.Line( geometry, material );
+                comMesh.add(line);
+                //scene.add(comMesh);
+            }
+
+            function syncSimulation()
+            {
+                if(pauseSimulation)
+                    return;
+                simulation.simulate(dt);
+                for( var i=0; i<simulation.bodies.length; i++) {
+                    var body = simulation.bodies[i];
+                    var bodyModel = body.model;
+                    bodyModel.position.x = body.position.x;
+                    var spring1 = body.leftSpring;
+                    var spring2 = body.rightSpring;
+                    var springLeftMesh = bodyModel.springMeshLeft;
+                    var springRightMesh = bodyModel.springMeshRight;
+                    var springLeftColliderMesh = bodyModel.colliderMeshLeft;
+                    var springRightColliderMesh = bodyModel.colliderMeshRight;
+                    if(spring1) {
+                        springLeftMesh.scale.y = spring1.compressionFraction;
+                        springLeftColliderMesh.position.x = springLeftMesh.position.x - spring1.compressionFraction * spring1.length;
+                    }
+                    if(spring2) {
+                        springRightMesh.scale.y = spring2.compressionFraction;
+                        springRightColliderMesh.position.x = springRightMesh.position.x + spring2.compressionFraction * spring2.length;
+                    }
+                }
+                for( var i=0; i<simulation.springs.length; i++) {
+                    var spring = simulation.springs[i];
+                    var springMesh = spring.model;
+                    springMesh.position.x = 0.5*(spring.body1.position.x + spring.body2.position.x) + spring.compressionFraction*spring.length/2;
+                    springMesh.position.y = spring.body1.position.y + 0.9 * 0.7;
+                    springMesh.scale.y = spring.compressionFraction;
+                }
+                comMesh.position.x = simulation.com();
+                //console.log(simulation.v_com());
+            }
+
+            function init() {
+
+                container = document.createElement('div');
+                document.body.appendChild(container);
+
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100);
+                camera.position.z = 22;
+                camera.position.y = 4;
+                controls = new THREE.OrbitControls(camera);
+                controls.addEventListener('change', render);
+                // scene
+
+                scene = new THREE.Scene();
+
+                var ambient = new THREE.AmbientLight(0x101030);
+                scene.add(ambient);
+
+                var light = new THREE.DirectionalLight(0xffeedd);
+                light.position.set(50, 200, -100);
+                //var light1 = new THREE.SpotLight( 0xffffff );
+                //light1.position.set( 85, 85, 85 );
+                //light1.target.position.set(0, 0, 0 );
+                light.castShadow = true;
+                light.shadowMapWidth = 1024;
+                light.shadowMapHeight = 1024;
+
+                var d = 20;
+
+                light.shadowCameraLeft = -d;
+                light.shadowCameraRight = d;
+                light.shadowCameraTop = d;
+                light.shadowCameraBottom = -d;
+
+                light.shadowCameraFar = 1000;
+                light.shadowDarkness = 0.5;
+                scene.add(light);
+
+                var light1 = new THREE.DirectionalLight(0xffeedd);
+                light1.castShadow = false;
+                light1.position.set(50, 200, 300);
+                //scene.add( light1 );
+                var hemiLight = new THREE.HemisphereLight(0xaabbff, 0x111111, 4.0);
+                scene.add(hemiLight);
+
+                // texture
+
+                var manager = new THREE.LoadingManager();
+                manager.onProgress = function (item, loaded, total) {
+
+                    console.log(item, loaded, total);
+
+                };
+
+                var path = "../../img/pisa/";
+                var format = '.png';
+                var urls = [
+                    path + 'px' + format, path + 'nx' + format,
+                    path + 'py' + format, path + 'ny' + format,
+                    path + 'pz' + format, path + 'nz' + format
+                ];
+
+                var reflectionCube = THREE.ImageUtils.loadTextureCube(urls);
+                reflectionCube.format = THREE.RGBFormat;
+                var texture = THREE.ImageUtils.loadTexture("../../img/dark-metal-texture.jpg");
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(1, 1);
+                var sphereTexture = THREE.ImageUtils.loadTexture("../../img/billboard.jpeg");
+
+                cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+                groundMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: texture, color: 0xffffff, specular: 0xffffff, combine: THREE.MixOperation, bumpScale: 0.010, bumpMap: texture, ambient: 0x555555, reflectivity: 0.5, metal: true, shininess: 1000});
+                sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: sphereTexture, color: 0xff0000, specular: 0xffffff, combine: THREE.MixOperation, ambient: 0x555555, reflectivity: 0.8, shininess: 10});
+                //sphereMaterial.emissive = new THREE.Color("rgb(0,255,0)");
+                renderer = new THREE.WebGLRenderer({antialias: true});
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                container.appendChild(renderer.domElement);
+
+                document.addEventListener('mousemove', onDocumentMouseMove, false);
+                document.addEventListener('mousedown', onDocumentMouseDown, false);
+                document.addEventListener('mouseup', onDocumentMouseUp, false);
+                document.addEventListener('mousewheel', onDocumentMouseWheel, false);
+
+                window.addEventListener('resize', onWindowResize, false);
+
+
+                renderer.shadowMapEnabled = true;
+                renderer.shadowMapSoft = true;
+
+                makeBaseGeometry();
+
+                createMassesWithoutSprings();
+            }
+
+            function createMassesWithoutSprings() {
+                // Create Physical System bodies
+                var body1 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body1.velocity.x = 5.0;
+                body1.position.x = -7;
+                var body2 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body2.position.x = 2;
+                simulation.addBody(body1);
+                simulation.addBody(body2);
+                scene.add(body1.model);
+                scene.add(body2.model);
+            }
+
+            function createMassesWithSprings() {
+                // Create Physical System bodies
+                var body1 = new SpringMassSystems1D.Body(1.0, 1.0, 1.0, -1.0);
+                body1.position.x = -15;
+                var body2 = new SpringMassSystems1D.Body(1.0, 1.0, -1.0, 1.0);
+                body2.position.x = 2;
+                body1.velocity.x = 2.0;
+                var body3 = new SpringMassSystems1D.Body(1.0, 1.0, 1.0, 1.0);
+                body3.position.x = 6;
+                simulation.addBody(body1);
+                simulation.addBody(body2);
+                simulation.addBody(body3);
+                scene.add(body1.model);
+                scene.add(body2.model);
+                scene.add(body3.model);
+            }
+
+            function createMassesWithSpringConstraints() {
+                // Create Physical System bodies
+                var body1 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body1.position.x = -2;
+                var body2 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body2.position.x = 2;
+                var body3 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body3.position.x = 6;
+                var spring1 = new SpringMassSystems1D.Spring(4,1,body1,body2);
+                var spring2 = new SpringMassSystems1D.Spring(4,1,body2,body3);
+                var body4 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
+                body4.position.x = -8;
+                body4.velocity.x = 2;
+
+                //body1.velocity.x = 2.0;
+                simulation.addBody(body1);
+                simulation.addBody(body2);
+                simulation.addBody(body3);
+                simulation.addBody(body4);
+                simulation.addSpring(spring1);
+                simulation.addSpring(spring2);
+                scene.add(body1.model);
+                scene.add(body2.model);
+                scene.add(body3.model);
+                scene.add(body4.model);
+                scene.add(spring1.model);
+                scene.add(spring2.model);
+            }
+            
+            function onDocumentMouseMove(event)
+            {
+                var pos = camera.position;
+
+                if (pos.y < 2)
+                {
+                    //pos.y = 2;
+                }
+            }
+
+            function onDocumentMouseWheel(event)
+            {
+                var pos = camera.position;
+                var d = pos.length();
+                cameraPosition.x = pos.x;
+                cameraPosition.y = pos.y;
+                cameraPosition.z = pos.z;
+                var min = 5;
+                var max = 40;
+                if (d < min)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * min;
+                    pos.y = cameraPosition.y * min;
+                    pos.z = cameraPosition.z * min;
+                }
+                if (d > max)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * max;
+                    pos.y = cameraPosition.y * max;
+                    pos.z = cameraPosition.z * max;
+                }
+
+            }
+
+            function onDocumentMouseDown(e)
+            {
+            }
+
+            function onDocumentMouseUp(e)
+            {
+            }
+
+            function onWindowResize() {
+
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+            }
+
+//			function onDocumentMouseMove( event ) {
+//
+//				mouseX = ( event.clientX - windowHalfX ) / 2;
+//				mouseY = ( event.clientY - windowHalfY ) / 2;
+//
+//			}
+
+            //
+
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                syncSimulation();
+                render();
+            }
+
+            function render() {
+                renderer.setClearColor(0xffffff, 1);
+                //lat = Math.max( - 85, Math.min( 85, lat ) );
+//				phi = THREE.Math.degToRad( 90 - lat );
+//				theta = THREE.Math.degToRad( lon );
+
+//                                camera.position.z = 100 * Math.sin( phi ) * Math.cos( theta );
+//				camera.position.y = 100 * Math.cos( phi );
+//				camera.position.x = 100 * Math.sin( phi ) * Math.sin( theta );
+
+                //camera.lookAt( scene.position );
+                renderer.render(scene, camera);
+// 1479
+            }
+
+        </script>
+
+    </body>
+</html>

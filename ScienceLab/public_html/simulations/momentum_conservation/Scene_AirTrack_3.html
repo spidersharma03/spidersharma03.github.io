@@ -86,14 +86,21 @@
             var pathLength = 10.0;
             var trackSize = 2.0;
             var dt = 0.016;
-            var pauseSimulation = false;
+            var pauseSimulation = true;
             var com_visible = false;
             var comMesh;
+            var body1, body2;
             init();
             animate();
            
             function reset() {
-                
+               body1.velocity.x = 2.0;
+               body2.velocity.x = 0;
+               body1.position.x = -10;
+               body2.position.x = 2;
+               pauseSimulation = false;
+               syncSimulation();
+               pauseSimulation = true;
             }
             
             function setElasticity(value) {
@@ -306,18 +313,21 @@
                 makeBaseGeometry();
 
                 createMassesWithSprings();
+                
+                pauseSimulation = false;
+                syncSimulation();
+                pauseSimulation = true;
             }
 
             function createMassesWithSprings() {
                 // Create Physical System bodies
-                var body1 = new SpringMassSystems1D.Body(1.0, 1.0, -1.0, 1.0);
-                body1.position.x = -15;
-                var body2 = new SpringMassSystems1D.Body(1.0, 1.0, 1.0, 1.0);
+                body1 = new SpringMassSystems1D.Body(1.0, 1.0, -1.0, 1.0);
+                body1.position.x = -10;
+                body2 = new SpringMassSystems1D.Body(1.0, 1.0, 1.0, 1.0);
                 body2.position.x = 2;
                 body1.velocity.x = 2.0;
                 simulation.addBody(body1);
                 simulation.addBody(body2);
-                simulation.addBody(body3);
                 scene.add(body1.model);
                 scene.add(body2.model);
             }

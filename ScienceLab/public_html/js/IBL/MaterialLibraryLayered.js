@@ -60,11 +60,11 @@ var fragmentShaderIBL = "precision highp float;\n\
    }\n\
    \n\
    vec3 tonemap(vec3 RGB) {\n\
-      float LogAvgLum = 0.3;//0.08\n\
-      float key = 0.78;\n\
-      float Ywhite = 1e2;\n\
+      float LogAvgLum = 0.2;//0.08\n\
+      float key = 0.38;\n\
+      float Ywhite = 1e3;\n\
       Ywhite *= Ywhite;\n\
-      float sat = 1.0;\n\
+      float sat = 2.0;\n\
       float Ylum = dot(RGB ,vec3(0.2126, 0.7152, 0.0722));\n\
       float Y = key/LogAvgLum * Ylum ;\n\
       float Yd = Y * ( 1.0 + Y/Ywhite)/( 1.0 + Y) ;\n\
@@ -183,9 +183,9 @@ var fragmentShaderIBL = "precision highp float;\n\
       f0 *= f0;\n\
       float roughnessVal = (1.0 - texture2D(RoughnessMap, uvRepeat).r);\n\
       vec3 dn = fwidth(normalizedWorldNormal);\n\
-      float layerThickness = 1.6 * length(dn);\n\
+      float layerThickness = 0.990 * length(dn);\n\
       vec3 specularColorLayer1 = vec3(f0);\n\
-      const vec3 absorptionCoeff = 10.0*vec3(0.01,0.025,0.1);\n\
+      const vec3 absorptionCoeff = 10.0*vec3(0.01,0.1,0.1);\n\
       vec3 lSecond = -refract(-reflectionVector, normalizedWorldNormal, 1.0/n);// Light vector for second layer\n\
       vec3 vSecond = refract(-viewVector, normalizedWorldNormal, 1.0/n);// View vector for second layer\n\
       float ndotv1 = dot(-normalizedWorldNormal, vSecond);\n\
@@ -198,14 +198,14 @@ var fragmentShaderIBL = "precision highp float;\n\
       //vec3 fresnelLayer2 = SchlickApproxFresenel(specularColorLayer1, abs(ndotv2));\n\
       vec3 transmission = vec3(1.0) - fresnelLayer1 * 0.75;\n\
       vec3 specularColor = texture2D(SpecularMap, uvRepeat).xyz;//vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
-      vec4 specularContributionLayer1 = vec4(EnvBRDFApprox(specularColorLayer1, 0.0, ndotv1),1.0);\n\
+      vec4 specularContributionLayer1 = vec4(EnvBRDFApprox(specularColorLayer1, roughnessVal, ndotv1),1.0);\n\
       ndotv2 = ndotv2 < 0.0 ? 0.0 : ndotv2;\n\
       vec4 specularContributionLayer2 = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv2),1.0);\n\
       vec4 diffuseContributionLayer2 = SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal);\n\
-      float gVis = G_Vis(abs(ndotl2), abs(ndotv2), 0.0);\n\
+      float gVis = G_Vis(abs(ndotl2), abs(ndotv2), roughnessVal);\n\
       vec3 total_internal_refl = vec3( 1.0 - gVis) + transmission * gVis;\n\
       vec4 IblSpecularColorLayer2 = SampleSpecularContribution(specularContributionLayer2, reflectionVector,roughnessVal);\n\
-      vec4 IblSpecularColorLayer1 = SampleSpecularContribution(specularContributionLayer1, lSecond,0.0);\n\
+      vec4 IblSpecularColorLayer1 = SampleSpecularContribution(specularContributionLayer1, lSecond,roughnessVal);\n\
       vec3 attenuation =  absorbption * total_internal_refl * transmission;\n\
       vec4 finalColor =   IblSpecularColorLayer1 + ( diffuseContributionLayer2 + IblSpecularColorLayer2 ) * vec4(attenuation, 1.0);// + diffuseContributionLayer2;\n\
       #ifdef USE_HDR\n\

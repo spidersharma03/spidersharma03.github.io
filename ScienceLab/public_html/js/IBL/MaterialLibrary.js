@@ -11,7 +11,7 @@ var vertexShaderIBL = "varying vec2 vUv; \n\
    varying vec3 Normal;\n\
    varying mat3 tbn;\n\
    void main() {\n\
-   vUv = fract(uv * 2.0);\n\
+   vUv = uv;\n\
    vecPos = (modelMatrix * vec4(position, 1.0 )).xyz;\n\
    viewPos = (modelViewMatrix * vec4(position, 1.0 )).xyz;\n\
    worldNormal = (modelMatrix * vec4(normal,0.0)).xyz;\n\
@@ -64,7 +64,7 @@ var fragmentShaderIBL = "precision highp float;\n\
       float key = 0.78;\n\
       float Ywhite = 1e2;\n\
       Ywhite *= Ywhite;\n\
-      float sat = 1.0;\n\
+      float sat = 2.0;\n\
       float Ylum = dot(RGB ,vec3(0.2126, 0.7152, 0.0722));\n\
       float Y = key/LogAvgLum * Ylum ;\n\
       float Yd = Y * ( 1.0 + Y/Ywhite)/( 1.0 + Y) ;\n\
@@ -152,9 +152,10 @@ var fragmentShaderIBL = "precision highp float;\n\
    }\n\
    \n\
    void main() {\n\
+      vec2 uvRepeat = fract(vUv * 4.0);\n\
       vec3 viewVector = normalize(vecPos - cameraPosition);\n\
       vec3 normalizedWorldNormal = normalize(worldNormal);\n\
-      vec3 tangentNormal = texture2D( NormalMap, vUv ).xyz * 2.0 - 1.0;\n\
+      vec3 tangentNormal = texture2D( NormalMap, uvRepeat ).xyz * 2.0 - 1.0;\n\
       tangentNormal.xy = tangentNormal.xy * 1.0;\n\
       //mat3 tbnMatrix = getTBNMatrix(-viewPos, Normal);\n\
       mat3 normalizedTBN = mat3(normalize(tbn[0]), normalize(tbn[1]), normalize(tbn[2]));\n\
@@ -168,9 +169,9 @@ var fragmentShaderIBL = "precision highp float;\n\
       float ndotv = dot(-normalizedWorldNormal, viewVector);\n\
       ndotv = ndotv < 0.0 ? 0.0 : ndotv;\n\
       vec3 reflectionVector = reflect( viewVector, normalizedWorldNormal );\n\
-      vec3 specularColor = texture2D(SpecularMap, vUv).xyz;//vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
+      vec3 specularColor = texture2D(SpecularMap, uvRepeat).xyz;//vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
       vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv),1.0);\n\
-      float roughnessVal = (1.0 - texture2D(RoughnessMap, vUv).r);\n\
+      float roughnessVal = (1.0 - texture2D(RoughnessMap, uvRepeat).r);\n\
       vec4 IblSpecularColor = SampleSpecularContribution(specularContribution, reflectionVector,roughnessVal);\n\
       vec4 finalColor =  IblSpecularColor + SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal);\n\
       //vec3 dn = fwidth(normalizedWorldNormal);\n\

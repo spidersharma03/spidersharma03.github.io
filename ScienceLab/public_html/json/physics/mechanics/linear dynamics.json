@@ -113,38 +113,44 @@
                },
                {
                    "display_name": "Momentum Conservation 2 Bodies",
-                   "description":"",
-                   "image" : "test.png",
+                   "description":"Elastic and InElastic collisions between equal masses, illustrating momentum conservation principle.",
+                   "image" : "equal_masses.png",
                    "scene_name" : "Scene_AirTrack_1"
                },
                {
                    "display_name": "Momentum Conservation Unequal Masses",
-                   "description":"Momentum Conservation",
-                   "image" : "test.png",
+                   "description":"Elastic and InElastic collisions between unequal masses, illustrating momentum conservation principle. Masses are in 2:1 ratio.",
+                   "image" : "unequal_masses.png",
                    "scene_name" : "Scene_AirTrack_2"
                },
                {
-                   "display_name": "Momentum Conservation 3 Bodies",
-                   "description":"Momentum Conservation",
-                   "image" : "test.png",
+                   "display_name": "Momentum Conservation Series of Collisions",
+                   "description":"Elastic and InElastic collisions between series of equal masses, illustrating momentum conservation principle.",
+                   "image" : "unequal_masses.png",
+                   "scene_name" : "Scene_AirTrack_1_1"
+               },
+               {
+                   "display_name": "Momentum Conservation 2 Bodies with Springs",
+                   "description":"collisions between equal masses, illustrating momentum conservation principle. The collision happens through a spring which makes the momentum transfer between the objects slower, than the direct collision.",
+                   "image" : "equal_masses_springs.png",
                    "scene_name" : "Scene_AirTrack_3"
                },
                {
                    "display_name": "Momentum Conservation Spring Constraints",
-                   "description":"Momentum Conservation",
-                   "image" : "test.png",
+                   "description":"collisions with spring constraints, which makes the system dynamics more interesting. In all of these simulations Newton's third law can be directly seen in action",
+                   "image" : "spring_constraints.png",
                    "scene_name" : "Scene_AirTrack_4"
                },
                {
                    "display_name": "Momentum Conservation Spring Constraints Many Bodies",
-                   "description":"Momentum Conservation",
-                   "image" : "test.png",
+                   "description":"A fairly complicated system consisting of spring constraints and multiple bodies. The most interesting part of all these simulations is that the centre of mass moves with a uniform velocity before and after the collisions, which again emphasizes the fact that momentum is conserved.",
+                   "image" : "multibodies.png",
                    "scene_name" : "Scene_AirTrack_5"
                },
                {
                    "display_name": "Momentum Conservation 2D",
-                   "description":"Momentum Conservation",
-                   "image" : "test.png",
+                   "description":"collisions in 2 dimensions. Again it can be seen that the centre of mass moves in a staright line with a constant velocity.",
+                   "image" : "collisions_2d.png",
                    "scene_name" : "Scene_Collision_2D"
                }
             ],

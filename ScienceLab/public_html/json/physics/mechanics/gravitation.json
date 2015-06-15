@@ -1,0 +1,30 @@
+{
+   "Info":
+    {
+        "name" : "Gravitation Model",
+        "subject"    : "Physics",
+        "category" : "Mechanics",
+        "nextTopic" : "Rotational Dynamics",
+        "description": ""
+    }
+,
+"topics":
+[
+    {
+        "name": "Rigid Body Motion", 
+        "id": "Mechanics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "simulations":
+            [
+               {
+                   "display_name": "Gravitation Model",
+                   "description":"",
+                   "image" : "gravitation_model.png",
+                   "scene_name" : "SceneInverseSquareLawModel"
+               }
+            ],
+        "pageLink"  : "InverseSquareLawModel"
+    }
+]
+}

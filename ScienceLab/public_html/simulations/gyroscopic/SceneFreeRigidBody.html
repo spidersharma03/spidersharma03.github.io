@@ -350,7 +350,7 @@
                             var boxGeometry    = new THREE.BoxGeometry(pathLength, groundHeight, pathLength);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
                             boxMesh.position.y = -4;
-                            group.add( boxMesh );
+                            //group.add( boxMesh );
                             
                             boxMesh.castShadow = true;
                             boxMesh.receiveShadow = true;
@@ -434,7 +434,7 @@
                                 groundMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: texture, color: 0xffffff, specular: 0xffffff, combine: THREE.MixOperation, bumpScale: 0.010, bumpMap: texture, ambient: 0x555555, reflectivity: 0.5, metal: true, shininess: 1000});
                                 sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, map:sphereTexture, color: 0xffffff, specular: 0x111111, combine:THREE.MixOperation, ambient: 0x555555, reflectivity: 0.3, shininess:100 });
                                 
-				renderer = new THREE.WebGLRenderer({antialias:true});
+				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 
@@ -442,6 +442,7 @@
         			document.addEventListener( 'mousedown', onDocumentMouseDown, false );
         			document.addEventListener( 'mouseup', onDocumentMouseUp, false );
         			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
+        			window.addEventListener( 'dblclick', keydown, false );
 
 				window.addEventListener( 'resize', onWindowResize, false );
                                 
@@ -451,7 +452,15 @@
                                 
                                 initCradleGeometry();
 			}
-                        
+                        function keydown(e) {
+                            var newwindow = window.open("");
+                            var dataUrl = renderer.domElement.toDataURL("image/png");
+                            var img = new Image();
+                            img.src = dataUrl;
+                            img.width/=2;
+                            img.height/=2;
+                            newwindow.document.body.appendChild(img);
+                        }
                         function onDocumentMouseMove(event)
                         {
                             var pos = camera.position;

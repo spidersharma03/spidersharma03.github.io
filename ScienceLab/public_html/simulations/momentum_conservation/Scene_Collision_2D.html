@@ -70,7 +70,7 @@
                         var diskHeight = 0.1;
 			var cradleWidth = 3.0;
                         var cradleHeight = 3.0;
-                        var cradleLength = 5.0;
+                        var cradleLength = 120.0;
                         var groundWidth = 1.5*cradleLength;
                         var groundDepth = 1.5*cradleLength;
                         var groundHeight = 0.1;
@@ -80,7 +80,9 @@
                         var impulsePoint = new Ammo.btVector3(0,0,0);
                         var dt = 0.016;
                         var com_visible = false;
-                        var pauseSimulation = false;
+                        var pauseSimulation = true;
+                        var bodyList = [];
+                        var demoCount = 0;
                         
                         var cameraPosition = new THREE.Vector3();
                         init();
@@ -90,7 +92,53 @@
                         function start_pause() {
                             pauseSimulation = !pauseSimulation;
                         }
-
+                        
+                        function reset() {
+                            var x = -cradleLength/2+0.5;
+                            var z = 0;//-cradleLength;
+                            var n = 1;
+                            var sum = 0;
+                            while(sum < numDisks)
+                            {
+                                x = 0;//-cradleLength/2 - sum*diskRadius/3.5;
+                                for( var i=0; i<n; i++) 
+                                {
+                                    if(sum >= numDisks)
+                                        break;
+                                    // Create body
+                                    var sphereBody = bodyList[sum];
+                                    sphereBody.position.x = x;
+                                    sphereBody.position.y = z;
+                                    sphereBody.velocity.x = 0;
+                                    sphereBody.velocity.y = 0;
+                                    if( sum === 0 )
+                                    {
+                                        sphereBody.position.x = 5;
+                                        sphereBody.position.y = -3;
+                                        sphereBody.velocity.x = -4;
+                                        sphereBody.velocity.y = 4;
+                                    }
+                                    if( demoCount > 0 && sum === 1 )
+                                    {
+                                        sphereBody.position.x = -5;
+                                        sphereBody.position.y = 3;
+                                        sphereBody.velocity.x = 4;
+                                        sphereBody.velocity.y = -2;
+                                    }
+                                    x += diskRadius*2.1;
+                                    sum++;
+                                }
+                                n++;
+                                z += diskRadius*2.1; 
+                            }
+                            demoCount++;
+                            if(demoCount > 1)
+                                demoCount = 0;
+                            Collision2D_Simulation.updateSimulation(dt);
+                            updatePhysicalBodies();
+                            pauseSimulation = true;
+                        }
+                        
                         function timeScale(value) {
                             dt = Number(value);
                         }
@@ -113,25 +161,38 @@
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
-                            boxMesh.position.y = 0.35;
+                            boxMesh.position.y = 0.4;
                             group.add( boxMesh );
                             
                             boxMesh.castShadow = true;
                             boxMesh.receiveShadow = true;
                             // Create disks
                             var diskGeometry = new THREE.CylinderGeometry(diskRadius, diskRadius, diskHeight, 20, 10);//
+                            var cylGeometry = new THREE.CylinderGeometry(diskRadius/2, diskRadius/2, 4*diskHeight, 20, 10);//
+                            var sphGeometry = new THREE.SphereGeometry(diskRadius/2, 20, 20);//
                             var x = 0;
                             var y = 1.3;
                             
                             for( var i=0; i<numDisks; i++ )
                             {
-                                var mesh = new THREE.Mesh( diskGeometry, sphereMaterial );
-                                mesh.castShadow = true;
-                                mesh.receiveShadow = true;
+                                var diskObject = new THREE.Object3D();
+                                var mesh1 = new THREE.Mesh( diskGeometry, sphereMaterial );
+                                var mesh2 = new THREE.Mesh( cylGeometry, sphereMaterial );
+                                mesh2.position.y = 2*diskHeight;
+                                var mesh3 = new THREE.Mesh( sphGeometry, sphereMaterial );
+                                mesh3.position.y = 2*diskHeight + diskRadius;
+                                mesh1.castShadow = true;
+                                mesh1.receiveShadow = true;
+                                mesh2.castShadow = true;
+                                mesh2.receiveShadow = true;
+                                mesh3.castShadow = true;
+                                mesh3.receiveShadow = true;
+                                diskObject.add(mesh1);
+                                diskObject.add(mesh2);
+                                diskObject.add(mesh3);
+                                group.add( diskObject );
 
-                                group.add( mesh );
-
-                                disks.push( mesh );
+                                disks.push( diskObject );
                             }
                             // COM Mesh
                             var sphgeometry = new THREE.SphereGeometry(0.2,20,20);
@@ -162,22 +223,23 @@
                             var sum = 0;
                             while(sum < numDisks)
                             {
-                                x = -cradleLength/2 - sum*diskRadius/3.5;
+                                x = 0;//-cradleLength/2 - sum*diskRadius/3.5;
                                 for( var i=0; i<n; i++) 
                                 {
                                     if(sum >= numDisks)
                                         break;
                                     // Create body
                                     var sphereBody = new Collision2D_Simulation.PhysicalBody(diskRadius);
+                                    bodyList.push(sphereBody);
                                     sphereBody.position.x = x;
                                     sphereBody.position.y = z;
                                     
                                     if( sum === 0 )
                                     {
-                                        sphereBody.position.x = 3;
+                                        sphereBody.position.x = 5;
                                         sphereBody.position.y = -3;
-                                        sphereBody.velocity.x = -2.6;
-                                        sphereBody.velocity.y = 2.6;
+                                        sphereBody.velocity.x = -4;
+                                        sphereBody.velocity.y = 4;
                                     }
                                     
                                     Collision2D_Simulation.addBody(sphereBody);
@@ -198,7 +260,6 @@
                         
                         function updatePhysicalBodies() 
                         {
-                            var l=0;
                             for ( var i = 0; i < Collision2D_Simulation.bodies.length; i++ ) 
                             {
                                 var body = Collision2D_Simulation.bodies[i];
@@ -272,7 +333,9 @@
 
 				var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
 				reflectionCube.format = THREE.RGBFormat;    
-                                var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
+                                var texture = THREE.ImageUtils.loadTexture( "../../img/Hockey_Ice_Texture.jpg");
+                                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+                                texture.repeat.set( 15, 15 );
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
                                 cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } );
                                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
@@ -296,7 +359,9 @@
                                 initCradleGeometry();
                                 
                                 initPhysics();
-
+                                
+                                Collision2D_Simulation.updateSimulation(dt);
+                                updatePhysicalBodies();
 			}
                         
                         function onDocumentMouseMove(event)

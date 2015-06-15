@@ -86,14 +86,33 @@
             var pathLength = 10.0;
             var trackSize = 2.0;
             var dt = 0.016;
-            var pauseSimulation = false;
+            var pauseSimulation = true;
             var com_visible = false;
             var comMesh;
+            var body1, body2, body3, body4, body5, body6, body7, body8;
             init();
             animate();
            
             function reset() {
-                
+                body1.position.x = -2;
+                body2.position.x = 2;
+                body3.position.x = 6;
+                body4.position.x = 10;
+                body5.position.x = -12;
+                body6.position.x = -8;
+                body7.position.x = -16;
+                body8.position.x = -20;
+                body1.velocity.x = 0;
+                body2.velocity.x = 0;
+                body3.velocity.x = 0;
+                body4.velocity.x = 0;
+                body5.velocity.x = 0;
+                body6.velocity.x = 0;
+                body7.velocity.x = 2;
+                body8.velocity.x = 0;
+                pauseSimulation = false;
+                syncSimulation();
+                pauseSimulation = true;
             }
             
             function setElasticity(value) {
@@ -306,25 +325,41 @@
                 makeBaseGeometry();
 
                 createMassesWithSpringConstraints();
+                
+                pauseSimulation = false;
+                syncSimulation();
+                pauseSimulation = true;
             }
 
             function createMassesWithSpringConstraints() {
                 // Create Physical System bodies
-                var body1 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body1 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body1.position.x = -2;
-                var body2 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body2 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body2.position.x = 2;
-                var body3 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body3 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body3.position.x = 6;
-                var body4 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body4 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body4.position.x = 10;
                 var spring1 = new SpringMassSystems1D.Spring(4,1,body1,body2);
                 var spring2 = new SpringMassSystems1D.Spring(4,1,body2,body3);
                 var spring3 = new SpringMassSystems1D.Spring(4,1,body3,body4);
                 
-                var body5 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
-                body5.position.x = -8;
-                body5.velocity.x = 2;
+                body5 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
+                body5.position.x = -12;
+                body5.velocity.x = 0;
+                body6 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
+                body6.position.x = -8;
+                body6.velocity.x = 0;
+                var spring4 = new SpringMassSystems1D.Spring(4,1,body5,body6);
+
+                body7 = new SpringMassSystems1D.Body(2.0, 2.0,-1.0,-1.0);
+                body7.position.x = -16;
+                body7.velocity.x = 2;
+                body8 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
+                body8.position.x = -20;
+                body8.velocity.x = 0;
+                var spring5 = new SpringMassSystems1D.Spring(4,1,body8,body7);
 
                 //body1.velocity.x = 2.0;
                 simulation.addBody(body1);
@@ -332,17 +367,27 @@
                 simulation.addBody(body3);
                 simulation.addBody(body4);
                 simulation.addBody(body5);
+                simulation.addBody(body6);
+                simulation.addBody(body7);
+                simulation.addBody(body8);
                 simulation.addSpring(spring1);
                 simulation.addSpring(spring2);
                 simulation.addSpring(spring3);
+                simulation.addSpring(spring4);
+                simulation.addSpring(spring5);
                 scene.add(body1.model);
                 scene.add(body2.model);
                 scene.add(body3.model);
                 scene.add(body4.model);
                 scene.add(body5.model);
+                scene.add(body6.model);
+                scene.add(body7.model);
+                scene.add(body8.model);
                 scene.add(spring1.model);
                 scene.add(spring2.model);
                 scene.add(spring3.model);
+                scene.add(spring4.model);
+                scene.add(spring5.model);
             }
             
             function onDocumentMouseMove(event)

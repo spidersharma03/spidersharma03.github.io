@@ -86,14 +86,25 @@
             var pathLength = 10.0;
             var trackSize = 2.0;
             var dt = 0.016;
-            var pauseSimulation = false;
+            var pauseSimulation = true;
             var com_visible = false;
             var comMesh;
+            var body1, body2, body3, body4;
             init();
             animate();
            
             function reset() {
-                
+               body1.position.x = -2;
+               body2.position.x = 2;
+               body3.position.x = 6;
+               body4.position.x = -8;
+               body1.velocity.x = 0; 
+               body2.velocity.x = 0; 
+               body3.velocity.x = 0; 
+               body4.velocity.x = 2; 
+               pauseSimulation = false;
+               syncSimulation();
+               pauseSimulation = true;
             }
             
             function setElasticity(value) {
@@ -306,19 +317,23 @@
                 makeBaseGeometry();
 
                 createMassesWithSpringConstraints();
+                
+                pauseSimulation = false;
+                syncSimulation();
+                pauseSimulation = true;
             }
 
             function createMassesWithSpringConstraints() {
                 // Create Physical System bodies
-                var body1 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body1 = new SpringMassSystems1D.Body(1.0, 1.0, 1, -1);
                 body1.position.x = -2;
-                var body2 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body2 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body2.position.x = 2;
-                var body3 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body3 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body3.position.x = 6;
                 var spring1 = new SpringMassSystems1D.Spring(4,1,body1,body2);
                 var spring2 = new SpringMassSystems1D.Spring(4,1,body2,body3);
-                var body4 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
+                body4 = new SpringMassSystems1D.Body(1.0, 1.0,-1.0,-1.0);
                 body4.position.x = -8;
                 body4.velocity.x = 2;
 

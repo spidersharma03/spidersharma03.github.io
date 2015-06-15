@@ -1,53 +1,17 @@
 {
    "Info":
     {
-        "name" : "Computer Science",
+        "name" : "Computer_Science",
         "description" : "Computer science is the scientific and practical approach to computation and its applications. It is the systematic study of the feasibility, structure, expression, and mechanization of the methodical procedures (or algorithms) that underlie the acquisition, representation, processing, storage, communication of, and access to information, whether such information is encoded as bits in a computer memory or transcribed in genes and protein structures in a biological cell."
     }
 ,
 "categories":
 [
     {
-        "sub": "Computer Graphics", 
-        "id": "Mechanics.json", 
+        "sub": "Computer_Graphics", 
+        "id": "pbr.json", 
         "imageUrl": "", 
         "description": "Mechanics is the branch of science concerned with the behavior of physical bodies when subjected to forces or displacements, and the subsequent effects of the bodies on their environment"
-    },
-    {
-        "sub": "Algorithms", 
-        "id": "Optics.json", 
-        "imageUrl": "", 
-        "description": "Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves."
-    },
-    {
-        "sub": "Artificial Intelligence", 
-        "id": "Electricity.json", 
-        "imageUrl": "",
-        "description": "Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges."
-    },
-    {
-        "sub": "Mathematical optimization", 
-        "id": "Megnatism.json", 
-        "imageUrl": "",
-        "description": "Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets "
-    },
-    {
-        "sub": "Data Structures", 
-        "id": "ElectroMagnetics.json", 
-        "imageUrl": "", 
-        "description": "Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets."
-    },
-    {
-        "sub": "Computational Physics", 
-        "id": "Thermodynamics.json", 
-        "imageUrl": "", 
-        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
-    },
-    {
-        "sub": "Computational Mathematics", 
-        "id": "Thermodynamics.json", 
-        "imageUrl": "", 
-        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
     }
 ]
 }

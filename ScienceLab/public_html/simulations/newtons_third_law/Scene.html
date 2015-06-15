@@ -86,7 +86,7 @@
             
             var sphereRadius = 0.2;
             var cradleHeight = 3.0;
-            var cradleLength = 5.0;
+            var cradleLength = 150.0;
             var groundWidth = 2.0 * cradleLength;
             var groundDepth = 1.5 * cradleLength;
             var groundHeight = 0.2;
@@ -109,7 +109,7 @@
             var springConstant = 1;
             var springCompression = 0.0;
             var springMesh;
-                        
+            var dt = 0.016;            
             var count = 0;
 //            setInterval(function() {
 //                if(simulationPaused)
@@ -123,8 +123,13 @@
 //                count++;
 //              }, 100);
               
+            function timeScale(value) {
+                dt = Number(value);
+            }
+            
             function Restart() {
-                simulationPaused = false;
+                simulationPaused = !simulationPaused;
+                blockGroup2.velocity = 1;
             }   
             
             function Reset() {
@@ -195,7 +200,7 @@
                 springScale = (springLength + springCompression)/springLength;
                 springMesh.scale.y = springScale;
                 
-                pointerScale = (pointerLength - springCompression)/pointerLength;
+                pointerScale = 0.5*(pointerLength - springCompression)/pointerLength;
                 forcePointerGroup1.scale.y = pointerScale;
                 forcePointerGroup2.scale.y = -pointerScale;
                 forcePointerGroup3.scale.y = pointerScale;
@@ -286,10 +291,26 @@
                 forcePointerGroup1.rotateZ(Math.PI/2);
                 forcePointerGroup1.add(mesh1);
                 forcePointerGroup1.add(mesh2);
-                
+                lambertMaterial1.side = THREE.DoubleSide;
+                lambertMaterial2.side = THREE.DoubleSide;
                 forcePointerGroup2 = forcePointerGroup1.clone();// new THREE.Object3D();
+                forcePointerGroup2.scale.x = 0.99;
+                for(var i=0; i<forcePointerGroup2.children.length; i++){
+                    var _mesh = forcePointerGroup2.children[i];
+                    _mesh.material = lambertMaterial2;
+                }
                 forcePointerGroup3 = forcePointerGroup1.clone();
                 forcePointerGroup4 = forcePointerGroup1.clone();
+                for(var i=0; i<forcePointerGroup3.children.length; i++){
+                    var _mesh = forcePointerGroup3.children[i];
+                    _mesh.material = lambertMaterial1;
+                }
+                for(var i=0; i<forcePointerGroup4.children.length; i++){
+                    var _mesh = forcePointerGroup4.children[i];
+                    _mesh.material = lambertMaterial2;
+                }
+                forcePointerGroup4.scale.x = 0.99;
+
                 forcePointerGroup1.position.x = -blockSize/2;
                 forcePointerGroup2.position.x = -blockSize/2;
                 forcePointerGroup2.scale.y = -1;
@@ -345,7 +366,7 @@
 
             function updatePhysicalBodies()
             {
-                updateMassSystem(0.016);
+                updateMassSystem(dt);
             }
 
             function onDocumentMouseMove(event)
@@ -459,11 +480,13 @@
 
                 var reflectionCube = THREE.ImageUtils.loadTextureCube(urls);
                 reflectionCube.format = THREE.RGBFormat;
-                var texture = THREE.ImageUtils.loadTexture("../../js/lib/three.js/textures/wood.jpg");
+                var texture = THREE.ImageUtils.loadTexture( "../../img/Hockey_Ice_Texture.jpg");
+                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set( 15, 15 );
                 var marbleTexture = THREE.ImageUtils.loadTexture("../../img/marble.jpg");
                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
-                lambertMaterial1 = new THREE.MeshLambertMaterial({color:0x8888ff, ambient: 0xaaaaaa, combine: THREE.MixOperation});
-                lambertMaterial2 = new THREE.MeshLambertMaterial({color:0xff8888, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+                lambertMaterial1 = new THREE.MeshBasicMaterial({color:0x8888ff, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+                lambertMaterial2 = new THREE.MeshBasicMaterial({color:0xff8888, ambient: 0xaaaaaa, combine: THREE.MixOperation});
                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map: texture});
                 blockMaterial = new THREE.MeshPhongMaterial({map: marbleTexture, envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.4, shininess: 1000});
                 blockMaterial.transparent = true;

@@ -1,0 +1,42 @@
+{
+   "Info":
+    {
+        "name" : "Rotational Dynamics",
+        "subject"    : "Physics",
+        "category" : "Mechanics",
+        "nextTopic" : "Rotational Dynamics",
+        "description": ""
+    }
+,
+"topics":
+[
+    {
+        "name": "Rigid Body Motion", 
+        "id": "Mechanics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "simulations":
+            [
+               {
+                   "display_name": "Rotation of Free RigidBody",
+                   "description":"",
+                   "image" : "free_rigidbody.png",
+                   "scene_name" : "SceneFreeRigidBody"
+               },
+               {
+                   "display_name": "Gyroscopic Top",
+                   "description":"",
+                   "image" : "gyroscope.png",
+                   "scene_name" : "SceneGyroscopicTop1"
+               },
+               {
+                   "display_name": "Gyroscopic Football",
+                   "description":"",
+                   "image" : "rising_football.png",
+                   "scene_name" : "SceneGyroscopicEgg"
+               }
+            ],
+        "pageLink"  : "gyroscopic"
+    }
+]
+}

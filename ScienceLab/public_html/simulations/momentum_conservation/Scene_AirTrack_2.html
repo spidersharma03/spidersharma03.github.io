@@ -86,14 +86,38 @@
             var pathLength = 10.0;
             var trackSize = 2.0;
             var dt = 0.016;
-            var pauseSimulation = false;
+            var pauseSimulation = true;
+            var camera_comFrame = false;
             var com_visible = false;
             var comMesh;
+            var body1, body2;
+            var demoCount = 0;
             init();
             animate();
-           
+            
+            function toggleCOM_Frame() {
+                camera_comFrame = !camera_comFrame;
+                if(!camera_comFrame) {
+                    camera.position.x = 0;
+                    camera.position.y = 4;
+                    camera.position.z = 22;
+                    camera.lookAt(new THREE.Vector3(scene.position));
+                }
+            } 
+            
             function reset() {
-                
+               body1.velocity.x = 5.0;
+               body2.velocity.x = 0;
+               body1.position.x = -7;
+               body2.position.x = 2;
+               demoCount++;
+               if(demoCount > 1) {
+                   demoCount = 0;
+                   body2.velocity.x = -5;
+               }
+               pauseSimulation = false;
+               syncSimulation();
+               pauseSimulation = true; 
             }
             
             function setElasticity(value) {
@@ -306,14 +330,18 @@
                 makeBaseGeometry();
 
                 createMassesWithoutSprings();
+                
+                pauseSimulation = false;
+                syncSimulation();
+                pauseSimulation = true;
             }
 
             function createMassesWithoutSprings() {
                 // Create Physical System bodies
-                var body1 = new SpringMassSystems1D.Body(2.0, 2.0);
+                body1 = new SpringMassSystems1D.Body(2.0, 2.0);
                 body1.velocity.x = 5.0;
                 body1.position.x = -7;
-                var body2 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body2 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body2.position.x = 2;
                 simulation.addBody(body1);
                 simulation.addBody(body2);

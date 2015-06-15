@@ -44,10 +44,6 @@
                             this.frictionalImpulseMag = [];
                             this.frictionalImpulseMag[0] = 0;
                             this.frictionalImpulseMag[1] = 0;
-                            this.rollingFrictionalImpulseMag = [];
-                            this.rollingFrictionalImpulseMag[0] = 0;
-                            this.rollingFrictionalImpulseMag[1] = 0;
-                            this.spinFrictionImpulseMag = 0;
                             this.body1 = null;
                         }
                         
@@ -102,6 +98,11 @@
                         var contactPoint2 = new ContactPoint();
                         var contactPoint3 = new ContactPoint();
                         var contactPoint4 = new ContactPoint();
+                        var ContactArray = [];
+                        ContactArray[0] = contactPoint1;
+                        ContactArray[1] = contactPoint2;
+                        ContactArray[2] = contactPoint3;
+                        ContactArray[3] = contactPoint4;
                         
                         var planePoint = new THREE.Vector3(0,-4,0);
                         var planeNormal = new THREE.Vector3(0,1,0);
@@ -114,16 +115,16 @@
                         var collisionVector = new THREE.Vector3();
                         var collisionDepth = 0;
                         
-                        var gyroscopeBody = new THREE.Object3D();
                         var cylinderBody;
-                        var capsuleBody;
                         var collisionPointMesh;
                         var a = 1, b = 2, c = 1;
+                        var width = 0.5, height = 15, depth = 0.5;
                         var InverseXform = new THREE.Matrix4();
                         var TransposeXform = new THREE.Matrix4();
                         
                         var principleMoi = new THREE.Vector3();
                         var topDiskRadius = 2, topDiskHeight = 0.3, topHeight = 3;
+                        var capsuleMass = 1;
                         
                         var rVector = new THREE.Vector3();
                         var gVector = new THREE.Vector3(0,-9.8,0);
@@ -176,16 +177,22 @@
                         var omega4 = new THREE.Vector3(0,0,0);
                         
                         var omegaBody = new THREE.Vector3(0,0,0);
-                        var cylinderRadius = 3;
-                        var cylinderHeight = 0.1;
-                        var capsuleRadius = 0.2;
-                        var capsuleHeight = 10;
-                        var gyroscopeMass = 1.0;
-
+                        var capsuleRadius = 4;
+                        var capsuleHeight = 1;
+                            
                         var dt = 0.016;
                         var g = -9.8;
-                        var spinningFriction = 0.001;
+                        var spinningFriction = 0.004;
                         var rollingFriction = 0.001;
+                        var CubeVertices = [];
+                        CubeVertices[0] = new THREE.Vector3(width/2,-height/2,depth/2);
+                        CubeVertices[1] = new THREE.Vector3(-width/2,-height/2,depth/2);
+                        CubeVertices[2] = new THREE.Vector3(-width/2,-height/2,-depth/2);
+                        CubeVertices[3] = new THREE.Vector3(width/2,-height/2,-depth/2);
+                        CubeVertices[4] = new THREE.Vector3(width/2,height/2,depth/2);
+                        CubeVertices[5] = new THREE.Vector3(-width/2,height/2,depth/2);
+                        CubeVertices[6] = new THREE.Vector3(-width/2,height/2,-depth/2);
+                        CubeVertices[7] = new THREE.Vector3(width/2,height/2,-depth/2);
                         
                         function TrackPath() {
                             this.spline = null;
@@ -196,63 +203,53 @@
                         animate();
                         function createTopGeometry() {
                             // approximately using cylinder moi
-                            var capsuleMass = 1;
-                            var cy = capsuleMass*capsuleRadius*capsuleRadius/2;
-                            var cx = capsuleMass*(3*capsuleRadius*capsuleRadius + capsuleHeight*capsuleHeight)/12;
-                            principleMoi.y = gyroscopeMass*cylinderRadius*cylinderRadius/2 + cy;
-                            principleMoi.x = gyroscopeMass*(3*cylinderRadius*cylinderRadius + cylinderHeight*cylinderHeight)/12 + cx;
-                            principleMoi.z = principleMoi.x;
-                            //sphereMaterial.wireframe = true;
+                            principleMoi.x = capsuleMass*(height*height + depth*depth)/12;
+                            principleMoi.y = capsuleMass*(width*width + depth*depth)/12;
+                            principleMoi.z = capsuleMass*(height*height + width*width)/12;
                             
+                            sphereMaterial.wireframe = true;
+
                             var geometry = new THREE.SphereGeometry(0.5,10,10);
                             collisionPointMesh = new THREE.Mesh(geometry, sphereMaterial);
-                            var sphereGeometry = new THREE.SphereGeometry(capsuleRadius*0.99,20,20);
-                            var cylGeometry = new THREE.CylinderGeometry(capsuleRadius, capsuleRadius, capsuleHeight, 30, 10);
-                            var mesh1 = new THREE.Mesh(cylGeometry, sphereMaterial);
-                            var mesh2 = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                            mesh2.position.y = capsuleHeight/2;
-                            var mesh3 = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                            mesh3.position.y = -capsuleHeight/2;
-                            capsuleBody = new THREE.Object3D();
-                            //capsuleBody.rotateZ(Math.PI/4);
-                            capsuleBody.velocity = new THREE.Vector3();
-                            capsuleBody.add(mesh1);
-                            capsuleBody.add(mesh2);
-                            capsuleBody.add(mesh3);
-                            mesh1.castShadow = true;
-                            mesh1.receiveShadow = true;
-                            mesh2.castShadow = true;
-                            mesh2.receiveShadow = true;
-                            mesh3.castShadow = true;
-                            mesh3.receiveShadow = true;
-                            
-                            collisionPointMesh = new THREE.Mesh(geometry, sphereMaterial);
-                            var cylGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 30, 10);
-                            var mesh1 = new THREE.Mesh(cylGeometry, sphereMaterial);
+                            var boxGeometry = new THREE.BoxGeometry(width, height, depth, 10, 10, 10);
+                            var mesh1 = new THREE.Mesh(boxGeometry, sphereMaterial);
                             //mesh1.rotateZ(Math.PI/2);
                             cylinderBody = new THREE.Object3D();
+                            //capsuleBody.rotateZ(Math.PI/2);
+                            //capsuleBody.scale.x = 1.62;
+                            var m1 = new THREE.Matrix4();
+                            var m2 = new THREE.Matrix4();
+                            var scale = new THREE.Vector3(1,1,1);
+                            //m1.makeRotationZ(Math.PI/40);
+                            m1.scale(scale);
+                            m2.makeRotationZ(-Math.PI/100);
+                            m2.multiply(m1);
+                            cylinderBody.applyMatrix(m2);
+                            cylinderBody.matrixWorldNeedsUpdate = true;
+                            cylinderBody.velocity = new THREE.Vector3();
                             cylinderBody.add(mesh1);
-                            //cylinderBody.position.y = 0.5;
+                            cylinderBody.position.y = height/10;
+                            //cylinderBody.scale.x = 0.1;
+                            //cylinderBody.scale.y = 4;
+                            //cylinderBody.scale.z = 1;
                             //capsuleBody.add(mesh2);
                             //capsuleBody.add(mesh3);
                             mesh1.castShadow = true;
                             mesh1.receiveShadow = true;
                             
-                            gyroscopeBody.position.y = 3.0;
-                            gyroscopeBody.velocity = new THREE.Vector3();
-                            gyroscopeBody.omega = new THREE.Vector3();
-                            gyroscopeBody.rotateZ(Math.PI/40);
-                            //scene.add(cylinderBody);
-                            scene.add(gyroscopeBody);
-                            gyroscopeBody.add(capsuleBody);
-                            gyroscopeBody.add(cylinderBody);
+                            //capsuleBody.rotateX(Math.PI/4);
+                            scene.add(cylinderBody);
                             // set initial quaternion rate
-                            var quat = gyroscopeBody.quaternion;
-                            omega.x = 0, omega.y = 75; omega.z = 0;
+                            var quat = cylinderBody.quaternion;
+                            omega.x = 0, omega.y = 0; omega.z = 0;
                             qDot.w = 0.5*(-quat.x * omega.x - quat.y * omega.y - quat.z * omega.z);     // q0-dot
                             qDot.x = 0.5*( quat.w * omega.x - quat.z * omega.y + quat.y * omega.z);     // q1-dot
                             qDot.y = 0.5*( quat.z * omega.x + quat.w * omega.y - quat.x * omega.z);     // q2-dot
                             qDot.z = 0.5*(-quat.y * omega.x + quat.x * omega.y + quat.w * omega.z); 
+                            
+                            // Add 2 contact points
+                            contactPoints.push(new ContactPoint());
+                            contactPoints.push(new ContactPoint());
                         }
                         
                         // Rolling friction
@@ -347,171 +344,37 @@
                             return qAccTemp;
                         }
                         
-                        function collidePlaneCapsule(planeNormal, pointOnPlane) {
-                            var x1 = capsuleHeight/2;
-                            var x2 = -capsuleHeight/2;
-                            tempVector.set(-pointOnPlane.x, -pointOnPlane.y, -pointOnPlane.z);
-                            tempVector.y = tempVector.y - x1;
-                            var d1 = planeNormal.dot(tempVector) - capsuleRadius;
-                            tempVector.set(-pointOnPlane.x, -pointOnPlane.y, -pointOnPlane.z);
-                            tempVector.y = tempVector.y - x2;
-                            var d2 = planeNormal.dot(tempVector) - capsuleRadius;
-                            var min_d = Math.min(d1, d2);
-                            if( d1 < d2 ) {
-                               tempVector1.set(0, x2, 0); 
-                            } else {
-                               tempVector1.set(0, x1, 0); 
-                            }
-                            if(min_d > 0) {
-                                return;
-                            }
-                            if(Math.abs(d1 - d2) > 1e-4 ) {
-                                contactPoint1.depth = min_d;
-                                contactPoint1.point.copy(tempVector1); 
-                                //contactPoint1.point.applyMatrix4(gyroscopeBody.matrix);
-                                contactPoints.push(contactPoint1);
-                                //scene.add(collisionPointMesh);
-                            } else {
-                                contactPoint1.depth = d1;
-                                contactPoint2.depth = d2;
-                                tempVector1.set(0, x1, 0); 
-                                contactPoint1.point.copy(tempVector1);
-                                tempVector1.set(0, x2, 0); 
-                                contactPoint1.point.copy(tempVector1);
-                                //contactPoint1.point.applyMatrix4(gyroscopeBody.matrix);
-                                //contactPoint2.point.applyMatrix4(gyroscopeBody.matrix);
-                                contactPoints.push(contactPoint1);
-                                contactPoints.push(contactPoint2);
+                        function collidePlaneCube(planeNormal, pointOnPlane) {
+                            var min_d = 0;
+                            var index = 0;
+                            for( var s=0; s<8; s++) {
+                                tempVector.set(-pointOnPlane.x, -pointOnPlane.y, -pointOnPlane.z);
+                                tempVector.x -= CubeVertices[s].x;
+                                tempVector.y -= CubeVertices[s].y;
+                                tempVector.z -= CubeVertices[s].z;
+                                var d = planeNormal.dot(tempVector);
+                                if(d < 0) {
+                                    var contactPoint = ContactArray[index++];
+                                    contactPoint.depth = 0;
+                                    contactPoint.point.set(0,0,0);
+                                    contactPoint.normalImpulseMag = 0;
+                                    contactPoint.frictionalImpulseMag[0] = 0;
+                                    contactPoint.frictionalImpulseMag[1] = 0;
+                                    tempVector.x = -CubeVertices[s].x;
+                                    tempVector.y = -CubeVertices[s].y;
+                                    tempVector.z = -CubeVertices[s].z;
+                                    contactPoint.point.copy(tempVector);
+                                    contactPoints.push(contactPoint);
+                                    contactPoint.point.applyMatrix4(cylinderBody.matrix);
+                                    //scene.add(collisionPointMesh);
+                                    collisionPointMesh.position.x = contactPoint.point.x;
+                                    collisionPointMesh.position.y = contactPoint.point.y;
+                                    collisionPointMesh.position.z = contactPoint.point.z;
+                                }
+                                min_d =  d < min_d ? d : min_d;
                             }
                             for( var n=0; n<contactPoints.length; n++) {
-                                var pointOfContact = contactPoints[n];
-                                tempVector.x = pointOfContact.point.x-planeNormalLocal.x*capsuleRadius;
-                                tempVector.y = pointOfContact.point.y-planeNormalLocal.y*capsuleRadius;
-                                tempVector.z = pointOfContact.point.z-planeNormalLocal.z*capsuleRadius;
-                                pointOfContact.point.x += -planeNormalLocal.x*(capsuleRadius + pointOfContact.depth);
-                                pointOfContact.point.y += -planeNormalLocal.y*(capsuleRadius + pointOfContact.depth);;
-                                pointOfContact.point.z += -planeNormalLocal.z*(capsuleRadius + pointOfContact.depth);;
-                                //scene.add(collisionPointMesh);
-                                if(pointOfContact.depth < 0) {
-                                    pointOfContact.point.applyMatrix4(gyroscopeBody.matrix);
-                                    collisionPointMesh.position.x = pointOfContact.point.x;
-                                    collisionPointMesh.position.y = pointOfContact.point.y;
-                                    collisionPointMesh.position.z = pointOfContact.point.z;
-                                    tempVector.applyMatrix4(gyroscopeBody.matrix);
-                                    tempVector.x -= pointOfContact.point.x;
-                                    tempVector.y -= pointOfContact.point.y;
-                                    tempVector.z -= pointOfContact.point.z;
-                                    var l = tempVector.length();
-                                    pointOfContact.depth = -l;
-                                }
-                            }
-                        }
-                        
-                        function collidePlaneCylinder(planeNormal, pointOnPlane) {
-                            var x1 = cylinderHeight/2;
-                            var x2 = -cylinderHeight/2;
-                            tempVector.set(-pointOnPlane.x, -pointOnPlane.y, -pointOnPlane.z);
-                            tempVector.y = tempVector.y - x1;
-                            var d1 = planeNormal.dot(tempVector) - cylinderRadius;
-                            tempVector.set(-pointOnPlane.x, -pointOnPlane.y, -pointOnPlane.z);
-                            tempVector.y = tempVector.y - x2;
-                            var d2 = planeNormal.dot(tempVector) - cylinderRadius;
-                            var min_d = Math.min(d1, d2);
-                            var temp = 0;
-                            if( d1 < d2 ) {
-                               tempVector1.set(0, x2, 0);
-                               temp = x2;
-                            } else {
-                               tempVector1.set(0, x1, 0);
-                               temp = x1;
-                            }
-                            if(min_d > 0) {
-                                return;
-                            }
-                            var epsilon = 1e-2;
-                            if(Math.abs(planeNormal.y) > (1 - epsilon) && (min_d + cylinderRadius) < epsilon ) { // plane is parallel to cylinder's caps
-                                contactPoint1.depth = min_d + cylinderRadius;
-                                tempVector1.x = cylinderRadius; tempVector1.y = temp; tempVector1.z = 0;
-                                contactPoint1.point.copy(tempVector1); 
-                                contactPoint1.point.applyMatrix4(gyroscopeBody.matrix);
-                                
-                                contactPoint2.depth = min_d + cylinderRadius;
-                                tempVector1.x = -cylinderRadius; tempVector1.y = temp; tempVector1.z = 0;
-                                contactPoint2.point.copy(tempVector1); 
-                                contactPoint2.point.applyMatrix4(gyroscopeBody.matrix);
-                                contactPoint3.depth = min_d + gyroscopeBody;
-                                tempVector1.x = 0; tempVector1.y = temp; tempVector1.z = cylinderRadius;
-                                contactPoint3.point.copy(tempVector1); 
-                                contactPoint3.point.applyMatrix4(gyroscopeBody.matrix);
-                                contactPoint4.depth = min_d + cylinderRadius;
-                                tempVector1.x = 0; tempVector1.y = temp; tempVector1.z = -cylinderRadius;
-                                contactPoint4.point.copy(tempVector1); 
-                                contactPoint4.point.applyMatrix4(gyroscopeBody.matrix);
-                                
-                                contactPoints.push(contactPoint1);
-                                contactPoints.push(contactPoint2);
-                                contactPoints.push(contactPoint3);
-                                contactPoints.push(contactPoint4);
-                                
-                                //scene.add(collisionPointMesh);
-                                
-                                //collisionPointMesh.position.x = contactPoint1.point.x;
-                                //collisionPointMesh.position.y = contactPoint1.point.y;
-                                //collisionPointMesh.position.z = contactPoint1.point.z;
-                                return;
-                            }
-                            if(Math.abs(d1 - d2) < epsilon && d1 < 0 && d2 < 0) { // cylinder axis parallel to plane
-                                var maxd = Math.abs(d1) > Math.abs(d2) ? d1 : d2;
-                                contactPoint1.depth = maxd;
-                                contactPoint2.depth = maxd;
-                                residual.copy(planeNormal);
-                                residual.y = 0;
-                                residual.normalize();
-                                tempVector1.set(0, x1, 0); 
-                                tempVector1.x -= residual.x * cylinderRadius;
-                                tempVector1.z -= residual.z * cylinderRadius;
-                                contactPoint1.point.copy(tempVector1);
-                                tempVector1.set(0, x2, 0); 
-                                tempVector1.x -= residual.x * cylinderRadius;
-                                tempVector1.z -= residual.z * cylinderRadius;
-                                contactPoint2.point.copy(tempVector1);
-                                contactPoint1.point.applyMatrix4(gyroscopeBody.matrix);
-                                contactPoint2.point.applyMatrix4(gyroscopeBody.matrix);
-                                contactPoints.push(contactPoint1);
-                                contactPoints.push(contactPoint2);
-                                //scene.add(collisionPointMesh);
-                                //collisionPointMesh.position.x = contactPoint2.point.x;
-                                //collisionPointMesh.position.y = contactPoint2.point.y;
-                                //collisionPointMesh.position.z = contactPoint2.point.z;
-                                return;
-                            }
-                            var costheta = Math.sqrt(1 - planeNormal.y*planeNormal.y);
-                            if( costheta > epsilon && Math.abs(d1 - d2) > epsilon ) { // Single collision
-                                residual.copy(tempVector1);
-                                residual.x -= pointOnPlane.x;
-                                residual.y -= pointOnPlane.y;
-                                residual.z -= pointOnPlane.z;
-                                var sd = Math.abs(planeNormal.dot(residual));
-                                var d = sd/costheta;
-                                var temp = (d - cylinderRadius);
-                                if(temp > 0) {
-                                    return;
-                                }
-                                contactPoint2.depth = temp;
-                                residual.copy(planeNormal);
-                                residual.y = 0;
-                                residual.normalize();
-                                tempVector1.x -= residual.x * cylinderRadius;
-                                tempVector1.z -= residual.z * cylinderRadius;
-                                //tempVector1.set(0, 0, 0);
-                                contactPoint2.point.copy(tempVector1); 
-                                contactPoint2.point.applyMatrix4(gyroscopeBody.matrix);
-                                contactPoints.push(contactPoint2);
-                                //scene.add(collisionPointMesh);
-                                collisionPointMesh.position.x = contactPoint1.point.x;
-                                collisionPointMesh.position.y = contactPoint1.point.y;
-                                collisionPointMesh.position.z = contactPoint1.point.z;
-                                return;
+                                contactPoints[n].depth = min_d;
                             }
                         }
                          
@@ -563,13 +426,13 @@
                         }
                         
                         // Handle Friction
-                        function handleFriction(quat, collisionImpulse, pointOfContact, frictionDirection, dir) {                            
+                        function handleFriction(quat, pointOfContact, frictionDirection, dir) {                            
                             // compute omega in body frame
                             var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
                             var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
                             var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
                             omega.set(w1, w2, w3);
-                            tempVector.set(gyroscopeBody.velocity.x, gyroscopeBody.velocity.y, gyroscopeBody.velocity.z);
+                            tempVector.set(cylinderBody.velocity.x, cylinderBody.velocity.y, cylinderBody.velocity.z);
                             tempVector.applyQuaternion(quatInverse);
                             omega.crossVectors(omega, rVector);
                             tempVector.add(omega); // v_cm + w x r
@@ -582,14 +445,14 @@
                             tempVector.z /= principleMoi.z;
                             tempVector.crossVectors(tempVector, rVector);
                             d1 = frictionDirection.dot(tempVector);
-                            denom = 1/gyroscopeMass + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
+                            var denom = 1/capsuleMass + d1;// m^-1 + t dot( I^-1 ( r x t ) x r )
                             
                             var oldImpulseMag = pointOfContact.frictionalImpulseMag[dir];
 
                             var CdotTangent = -frictionDirection.dot(tempVector1);
                             var frictionalImpulseMag = CdotTangent/denom;
-                            var mu = 1;
-                            var maxFriction = collisionImpulse * mu;
+                            var mu = 0;
+                            var maxFriction = pointOfContact.normalImpulseMag * mu;
                             
                             pointOfContact.frictionalImpulseMag[dir] = Math.max( oldImpulseMag + frictionalImpulseMag, -maxFriction);
                             pointOfContact.frictionalImpulseMag[dir] = Math.min( pointOfContact.frictionalImpulseMag[dir], maxFriction);
@@ -602,9 +465,9 @@
                             // Contribution from Collision Impulse
                             // Linear part
                             frictionalImpulse.applyQuaternion(quat);
-                            gyroscopeBody.velocity.x += frictionalImpulse.x/gyroscopeMass;
-                            gyroscopeBody.velocity.y += frictionalImpulse.y/gyroscopeMass;
-                            gyroscopeBody.velocity.z += frictionalImpulse.z/gyroscopeMass;
+                            cylinderBody.velocity.x += frictionalImpulse.x/capsuleMass;
+                            cylinderBody.velocity.y += frictionalImpulse.y/capsuleMass;
+                            cylinderBody.velocity.z += frictionalImpulse.z/capsuleMass;
                             // Angular part
                             q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
                             omegaQuat.set(frictionalImpulseMoment.x/principleMoi.x, frictionalImpulseMoment.y/principleMoi.y, frictionalImpulseMoment.z/principleMoi.z, 0);
@@ -621,12 +484,57 @@
                             collisionDetection();
                             if(contactPoints.length === 0)
                                 return;
-                            gyroscopeBody.position.y -= contactPoints[0].depth/10;
+                            var quat = cylinderBody.quaternion;
+                            quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                            quatInverse.inverse();
+                            tempVector.set(0,1,0);
+                            tempVector.applyQuaternion(quatInverse);
+                            planeNormalLocal.set(tempVector.x, tempVector.y, tempVector.z);
+                            var pointOfContact = contactPoints[0];
+
+                            rVector.x = pointOfContact.point.x - cylinderBody.position.x;
+                            rVector.y = pointOfContact.point.y - cylinderBody.position.y;
+                            rVector.z = pointOfContact.point.z - cylinderBody.position.z;
+
+                            rVector.applyQuaternion(quatInverse);
+                            tempVector.crossVectors(rVector, planeNormalLocal);
+                            tempVector.x /= principleMoi.x;
+                            tempVector.y /= principleMoi.y;
+                            tempVector.z /= principleMoi.z;
+                            tempVector.crossVectors(tempVector, rVector);
+                            var d1 = planeNormalLocal.dot(tempVector);
+                            var denom = 1/capsuleMass + d1;
+                            cylinderBody.position.y -= contactPoints[0].depth/denom * 1;
                             for( var iter =0; iter<10; iter++) {
                                 for(var n=0; n<contactPoints.length; n++) {
                                     // Collision Impulse j = (CdotNormal + beta * C)/( m^-1 + n dot( I^-1 ( r x n ) x r ) ), CdotNormal = n dot(v_cm + w x r)
                                     // Convert to body coordinates
-                                    var quat = gyroscopeBody.quaternion;
+                                    var quat = cylinderBody.quaternion;
+                                    quatInverse.set(quat.x, quat.y, quat.z, quat.w);
+                                    quatInverse.inverse();
+                                    tempVector.set(0,1,0);
+                                    tempVector.applyQuaternion(quatInverse);
+                                    var pointOfContact = contactPoints[n];
+
+                                    rVector.x = pointOfContact.point.x - cylinderBody.position.x;
+                                    rVector.y = pointOfContact.point.y - cylinderBody.position.y;
+                                    rVector.z = pointOfContact.point.z - cylinderBody.position.z;
+                                    
+                                    rVector.applyQuaternion(quatInverse);
+                                    //capsuleBody.position.y += -collisionDepth;
+                                    frictionDirection1.x = 1;
+                                    frictionDirection1.y = 0;
+                                    frictionDirection1.z = 0;
+                                    handleFriction(quat, pointOfContact, frictionDirection1, 0);
+                                    frictionDirection2.x = 0;
+                                    frictionDirection2.y = 0;
+                                    frictionDirection2.z = 1;
+                                    handleFriction(quat, pointOfContact, frictionDirection2, 1);
+                                }
+                                for(var n=0; n<contactPoints.length; n++) {
+                                    // Collision Impulse j = (CdotNormal + beta * C)/( m^-1 + n dot( I^-1 ( r x n ) x r ) ), CdotNormal = n dot(v_cm + w x r)
+                                    // Convert to body coordinates
+                                    var quat = cylinderBody.quaternion;
                                     quatInverse.set(quat.x, quat.y, quat.z, quat.w);
                                     quatInverse.inverse();
                                     tempVector.set(0,1,0);
@@ -634,9 +542,9 @@
                                     planeNormalLocal.set(tempVector.x, tempVector.y, tempVector.z);
                                     var pointOfContact = contactPoints[n];
 
-                                    rVector.x = pointOfContact.point.x - gyroscopeBody.position.x;
-                                    rVector.y = pointOfContact.point.y - gyroscopeBody.position.y;
-                                    rVector.z = pointOfContact.point.z - gyroscopeBody.position.z;
+                                    rVector.x = pointOfContact.point.x - cylinderBody.position.x;
+                                    rVector.y = pointOfContact.point.y - cylinderBody.position.y;
+                                    rVector.z = pointOfContact.point.z - cylinderBody.position.z;
                                     
                                     rVector.applyQuaternion(quatInverse);
                                     tempVector.crossVectors(rVector, planeNormalLocal);
@@ -645,22 +553,22 @@
                                     tempVector.z /= principleMoi.z;
                                     tempVector.crossVectors(tempVector, rVector);
                                     var d1 = planeNormalLocal.dot(tempVector);
-                                    var denom = 1/gyroscopeMass + d1;// m^-1 + n dot( I^-1 ( r x n ) x r )
+                                    var denom1 = 1/capsuleMass + d1;// m^-1 + n dot( I^-1 ( r x n ) x r )
                                     // compute omega in body frame
                                     var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
                                     var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
                                     var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
                                     omega.set(w1, w2, w3);
-                                    tempVector.set(gyroscopeBody.velocity.x, gyroscopeBody.velocity.y, gyroscopeBody.velocity.z);
+                                    tempVector.set(cylinderBody.velocity.x, cylinderBody.velocity.y, cylinderBody.velocity.z);
                                     tempVector.applyQuaternion(quatInverse);
                                     omega.crossVectors(omega, rVector);
                                     tempVector.add(omega); // v_cm + w x r
                                     var oldImpulseMag = pointOfContact.normalImpulseMag;
                                     var CdotNormal = -planeNormalLocal.dot(tempVector);
-                                    var beta = 0.03/dt;
+                                    var beta = 0.0/dt;
                                     var positionError = -beta * Math.min( 0.0, pointOfContact.depth + 0.01);
                                     //capsuleBody.position.y += -collisionDepth;
-                                    var collisionImpulse = (CdotNormal + positionError)/denom;
+                                    var collisionImpulse = (CdotNormal + positionError)/denom1;
                                     pointOfContact.normalImpulseMag = Math.max(oldImpulseMag + collisionImpulse, 0.0);
                                     collisionImpulse = pointOfContact.normalImpulseMag - oldImpulseMag;
                                     //collisionImpulse = collisionImpulse < 0 ? 0 : collisionImpulse;
@@ -671,9 +579,9 @@
                                     // Contribution from Collision Impulse
                                     // Linear part
                                     collisionNormalImpulse.applyQuaternion(quat);
-                                    gyroscopeBody.velocity.x += collisionNormalImpulse.x/gyroscopeMass;
-                                    gyroscopeBody.velocity.y += collisionNormalImpulse.y/gyroscopeMass;
-                                    gyroscopeBody.velocity.z += collisionNormalImpulse.z/gyroscopeMass;
+                                    cylinderBody.velocity.x += collisionNormalImpulse.x/capsuleMass;
+                                    cylinderBody.velocity.y += collisionNormalImpulse.y/capsuleMass;
+                                    cylinderBody.velocity.z += collisionNormalImpulse.z/capsuleMass;
                                     // Angular part
                                     q1.set(quat.x*0.5, quat.y*0.5, quat.z*0.5, quat.w*0.5);
                                     omegaQuat.set(collisionNormalImpulseMoment.x/principleMoi.x, collisionNormalImpulseMoment.y/principleMoi.y, collisionNormalImpulseMoment.z/principleMoi.z, 0);
@@ -682,29 +590,8 @@
                                     qDot.y += q1.y;
                                     qDot.z += q1.z;
                                     qDot.w += q1.w;
-
-                                    frictionDirection1.x = 1;
-                                    frictionDirection1.y = 0;
-                                    frictionDirection1.z = 0;
-                                    handleFriction(quat, pointOfContact.normalImpulseMag, pointOfContact, frictionDirection1, 0);
-                                    frictionDirection2.x = 0;
-                                    frictionDirection2.y = 0;
-                                    frictionDirection2.z = 1;
-                                    handleFriction(quat, pointOfContact.normalImpulseMag, pointOfContact, frictionDirection2, 1);
                                 }
                             }
-                            for( var c=0; c < contactPoints.length; c++) {
-                                   var pointOfContact = contactPoints[c];
-                                   handleSpinningFriction(gyroscopeBody.quaternion, pointOfContact.normalImpulseMag);
-                                   frictionDirection1.x = 1;
-                                    frictionDirection1.y = 0;
-                                    frictionDirection1.z = 0;
-                                    handleRollingFriction(gyroscopeBody.quaternion, pointOfContact.normalImpulseMag, frictionDirection1);
-                                    frictionDirection2.x = 0;
-                                    frictionDirection2.y = 0;
-                                    frictionDirection2.z = 1;
-                                    handleRollingFriction(gyroscopeBody.quaternion, pointOfContact.normalImpulseMag, frictionDirection2);
-                               }
                         }
                          
                         function initCradleGeometry()
@@ -728,7 +615,7 @@
                         
                         function collisionDetection() {
                             // transform plane in the space of egg
-                            var xForm = gyroscopeBody.matrix;
+                            var xForm = cylinderBody.matrix;
                             InverseXform.getInverse(xForm);
                             TransposeXform.copy(xForm);
                             TransposeXform.transpose();
@@ -747,32 +634,22 @@
                             planePointLocal.applyMatrix4(InverseXform);
                             
                             contactPoints.length = 0;
-                            collidePlaneCapsule(planeNormalLocal, planePointLocal);
-                            collidePlaneCylinder(planeNormalLocal, planePointLocal);
+                            collidePlaneCube(planeNormalLocal, planePointLocal);
                         }
                         
                         function updatePhysicalBodies() 
                         {   
                             handleCollisionAndFriction();
+//                            collisionDetection();
 
                             // Move the egg under gravity
-                            gyroscopeBody.velocity.y += g * dt;
-                            gyroscopeBody.position.x += gyroscopeBody.velocity.x * dt;
-                            gyroscopeBody.position.y += gyroscopeBody.velocity.y * dt;
-                            gyroscopeBody.position.z += gyroscopeBody.velocity.z * dt;
-                            solveForGyroscopicEffectQuaternionAlgebra(gyroscopeBody.quaternion, gyroscopeBody.omega, dt);
-                             // compute omega in body frame
-                            var quat = gyroscopeBody.quaternion; 
-                            var w1 = 2*(-quat.x * qDot.w + quat.w * qDot.x + quat.z * qDot.y - quat.y * qDot.z);
-                            var w2 = 2*(-quat.y * qDot.w - quat.z * qDot.x + quat.w * qDot.y + quat.x * qDot.z);
-                            var w3 = 2*(-quat.z * qDot.w + quat.y * qDot.x - quat.x * qDot.y + quat.w * qDot.z);
-                            
-                            var Lx = principleMoi.x * w1;
-                            var Ly = principleMoi.y * w2;
-                            var Lz = principleMoi.z * w3;
-                            var L = Math.sqrt(Lx*Lx + Ly*Ly + Lz*Lz);
-                            var omega_p = gyroscopeMass * g * capsuleHeight/(2*L);
-                            //console.log(omega_p);
+                            cylinderBody.velocity.y += g * dt;
+                            cylinderBody.position.x += cylinderBody.velocity.x * dt;
+                            cylinderBody.position.y += cylinderBody.velocity.y * dt;
+                            cylinderBody.position.z += cylinderBody.velocity.z * dt;
+                            solveForGyroscopicEffectQuaternionAlgebra(cylinderBody.quaternion, cylinderBody.omega, dt);
+                            // Resolve Collision
+                            //console.log(cylinderBody.position.x);
                         };
                         
 			function init() {
@@ -846,7 +723,7 @@
                                 groundMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: texture, color: 0xffffff, specular: 0xffffff, combine: THREE.MixOperation, bumpScale: 0.010, bumpMap: texture, ambient: 0x555555, reflectivity: 0.5, metal: true, shininess: 1000});
                                 sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, map:sphereTexture, color: 0xffffff, specular: 0x111111, combine:THREE.MixOperation, ambient: 0x555555, reflectivity: 0.3, shininess:100 });
                                 
-				renderer = new THREE.WebGLRenderer({ antialias:true});
+				renderer = new THREE.WebGLRenderer({antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 

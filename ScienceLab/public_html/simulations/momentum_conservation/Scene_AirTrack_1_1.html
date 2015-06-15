@@ -90,9 +90,8 @@
             var camera_comFrame = false;
             var com_visible = false;
             var comMesh;
-            var body1, body2;
-            var demoCount = 0;
-            
+            var body1, body2, body3, body4, body5, body6;
+
             init();
             animate();
            
@@ -107,15 +106,18 @@
             } 
             
             function reset() {
-               body1.velocity.x = 5.0;
-               body2.velocity.x = 0;
-               body1.position.x = -7;
-               body2.position.x = 2;               
-               demoCount++;
-               if(demoCount > 1) {
-                   demoCount = 0;
-                   body2.velocity.x = -5;
-               }
+               body1.position.x = -5;
+               body2.position.x = 2;
+               body3.position.x = 5;
+               body4.position.x = 9;
+               body5.position.x = -9;
+               body6.position.x = 13;
+               body1.velocity.x = 0.0;
+               body2.velocity.x = 0.0;
+               body3.velocity.x = 0.0;
+               body4.velocity.x = 0.0;
+               body5.velocity.x = 5.0;
+               body6.velocity.x = -5.0;
                pauseSimulation = false;
                syncSimulation();
                pauseSimulation = true;
@@ -344,14 +346,31 @@
             function createMassesWithoutSprings() {
                 // Create Physical System bodies
                 body1 = new SpringMassSystems1D.Body(1.0, 1.0);
-                body1.velocity.x = 5.0;
-                body1.position.x = -7;
+                body1.position.x = -5;
                 body2 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body2.position.x = 2;
+                body3 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body3.position.x = 5;
+                body4 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body4.position.x = 9;
+                body5 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body5.position.x = -9;
+                body6 = new SpringMassSystems1D.Body(1.0, 1.0);
+                body6.position.x = 13;
+                body5.velocity.x = 5.0;
+                body6.velocity.x = -5.0;
                 simulation.addBody(body1);
                 simulation.addBody(body2);
+                simulation.addBody(body3);
+                simulation.addBody(body4);
+                simulation.addBody(body5);
+                simulation.addBody(body6);
                 scene.add(body1.model);
                 scene.add(body2.model);
+                scene.add(body3.model);
+                scene.add(body4.model);
+                scene.add(body5.model);
+                scene.add(body6.model);
             }
 
             function createMassesWithSprings() {

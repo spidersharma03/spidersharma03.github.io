@@ -35,12 +35,15 @@
 
 		<script src="../../js/lib/three.js/js/Detector.js"></script>
 		<script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+		<script src="../../js/simulate/PathDrawer.js"></script>
                 
 		<script>
 
 			var container, stats;
                         var pickConstraint = null;
 			var camera, scene, renderer, controls;
+                        var pathDrawer = new PathDrawer();
+                        var pathDrawer1 = new PathDrawer(new THREE.Vector3(0,1,0));
 
                         var fov = 70,
 			isUserInteracting = false,
@@ -130,15 +133,16 @@
                        
                         
                         function createRigidBody() {
+                            sphereMaterial.wireframe = true;
                             rigidBodyGroup = new THREE.Object3D();
-                            var rigidGeometry = new THREE.BoxGeometry(width, height, depth);
+                            var rigidGeometry = new THREE.BoxGeometry(width, height, depth, 10, 10, 10);
                             principleMoi.x = (height*height + depth*depth)/12;
                             principleMoi.y = (width*width + depth*depth)/12;
                             principleMoi.z = (height*height + width*width)/12;
                             rigidBodyMesh = new THREE.Mesh(rigidGeometry, sphereMaterial);
                             rigidBodyMesh.castShadow = true;
                             rigidBodyMesh.receiveShadow = true;
-                            rigidBodyMesh.omega = new THREE.Vector3(0,1e-5,3);
+                            rigidBodyMesh.omega = new THREE.Vector3(1e-10,0,5);
                             rigidBodyGroup.add(rigidBodyMesh);
                             scene.add(rigidBodyGroup);
                             var quat = rigidBodyMesh.quaternion;
@@ -451,7 +455,11 @@
                                 renderer.shadowMapSoft = true;
                                 
                                 initCradleGeometry();
+                                
+                                scene.add(pathDrawer.getRootNode());
+                                scene.add(pathDrawer1.getRootNode());
 			}
+                        
                         function keydown(e) {
                             var newwindow = window.open("");
                             var dataUrl = renderer.domElement.toDataURL("image/png");
@@ -521,6 +529,16 @@
 				requestAnimationFrame( animate );
                                 controls.update();
                                 updatePhysicalBodies();
+                                tempVector.x = rigidBodyMesh.position.x + width/2;
+                                tempVector.y = rigidBodyMesh.position.y;
+                                tempVector.z = rigidBodyMesh.position.z;
+                                tempVector.applyMatrix4(rigidBodyMesh.matrix);
+                                pathDrawer.pushPoint(tempVector);
+                                tempVector.x = rigidBodyMesh.position.x - width/2;
+                                tempVector.y = rigidBodyMesh.position.y;
+                                tempVector.z = rigidBodyMesh.position.z;
+                                tempVector.applyMatrix4(rigidBodyMesh.matrix);
+                                pathDrawer1.pushPoint(tempVector);
 				render();
 			}
 

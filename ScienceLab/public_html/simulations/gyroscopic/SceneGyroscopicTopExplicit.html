@@ -35,13 +35,15 @@
 
 		<script src="../../js/lib/three.js/js/Detector.js"></script>
 		<script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+		<script src="../../js/simulate/PathDrawer.js"></script>
                 
 		<script>
 
 			var container, stats;
                         var pickConstraint = null;
 			var camera, scene, renderer, controls;
-
+                        var pathDrawer = new PathDrawer();
+                        
                         var fov = 70,
 			isUserInteracting = false,
 			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
@@ -148,6 +150,7 @@
                         animate();
                         
                         function createTopGeometry() {
+                            sphereMaterial.wireframe = true;
                             rigidBodyGroup = new THREE.Object3D();
                             var geometry1 = new THREE.CylinderGeometry(topDiskRadius, topDiskRadius, topDiskHeight, 20, 10);
                             var geometry2 = new THREE.CylinderGeometry(topDiskRadius/10,topDiskRadius/10,topHeight,10,10);
@@ -645,7 +648,9 @@
                                 renderer.shadowMapSoft = true;
                                 
                                 initCradleGeometry();
-			}
+                                
+                                scene.add(pathDrawer.getRootNode());
+			};
                         
                         function onDocumentMouseMove(event)
                         {
@@ -707,6 +712,12 @@
 				requestAnimationFrame( animate );
                                 controls.update();
                                 updatePhysicalBodies();
+                                var object = rigidBodyGroup.children[0];
+                                tempVector.x = object.position.x;
+                                tempVector.y = object.position.y;
+                                tempVector.z = object.position.z;
+                                tempVector.applyMatrix4(rigidBodyGroup.matrix);
+                                pathDrawer.pushPoint(tempVector);
 				render();
 			}
 

@@ -33,8 +33,10 @@ function PathDrawer(color, maxPoints) {
     this.pathGeometry.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( this.colors_array ), 3 ) );
 
     this.pathGeometry.dynamic = true;
-    var lineMaterial = new THREE.LineBasicMaterial({ vertexColors: true, linewidth: 5 });
+    var lineMaterial = new THREE.LineBasicMaterial({ vertexColors: true, linewidth: 2 });
     this.pathMesh = new THREE.Line( this.pathGeometry, lineMaterial, THREE.LinePieces );
+    this.pathMesh.castShadow = true;
+    this.pathMesh.receiveShadow = true;
     this.pathMesh.geometry.computeBoundingSphere();
     this.pathMesh.geometry.dynamic = true;
     this.pathMesh.geometry.attributes.position.needsUpdate = true;

@@ -12,42 +12,6 @@
         "id": "Mechanics.json", 
         "imageUrl": "", 
         "description": "Mechanics is the branch of science concerned with the behavior of physical bodies when subjected to forces or displacements, and the subsequent effects of the bodies on their environment"
-    },
-    {
-        "sub": "Optics", 
-        "id": "Optics.json", 
-        "imageUrl": "", 
-        "description": "Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves. Light can behave both as particles and waves."
-    },
-    {
-        "sub": "Electricity", 
-        "id": "Electricity.json", 
-        "imageUrl": "",
-        "description": "Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges. Study of Forces produced by stationary charges."
-    },
-    {
-        "sub": "Magnetism", 
-        "id": "Megnatism.json", 
-        "imageUrl": "",
-        "description": "Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets "
-    },
-    {
-        "sub": "ElectroMagnetics", 
-        "id": "ElectroMagnetics.json", 
-        "imageUrl": "", 
-        "description": "Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets."
-    },
-    {
-        "sub": "Thermodynamics", 
-        "id": "Thermodynamics.json", 
-        "imageUrl": "", 
-        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
-    },
-    {
-        "sub": "Modern Physics", 
-        "id": "Modern Physics.json", 
-        "imageUrl": "", 
-        "description": "If you understand Quantum mechanics, Relativity theory easily, then you probably don't understand them."
     }
 ]
 }

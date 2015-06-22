@@ -75,5 +75,5 @@ controllers.controller('SubTopicsDataLoadController', function ($scope, $routePa
 // Loads the simulation data. this includes, the simulation name, gui html etc.
 controllers.controller('SimulationDataLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
     $scope.LinkName =  "simulations/" + $routeParams.simulationPageName + '/' + $routeParams.simulationName;
-    $scope.guiName = "partials/" + $routeParams.simulationPageName + ".html";
+    $scope.guiName = "partials/" + $routeParams.simulationPageName + "/" + $routeParams.simulationName;
 });

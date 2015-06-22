@@ -46,6 +46,22 @@ function PathDrawer(color, maxPoints) {
 PathDrawer.prototype = {
     constructor: PathDrawer,
     
+    clearPath: function() {
+       this.currentDrawingCount = -1; 
+       var positions = this.pathMesh.geometry.getAttribute( 'position' ).array;
+       for( var i=0; i<3*(this.maxDrawingPoints); i+=3 )
+        {
+            positions[i] = 0;
+            positions[i+1] = 0;
+            positions[i+2] = 0;
+        }
+        this.pathMesh.geometry.needsUpdate = true;
+
+        this.pathMesh.geometry.computeBoundingSphere();
+        this.pathMesh.geometry.dynamic = true;
+        this.pathMesh.geometry.attributes.position.needsUpdate = true;
+    },
+    
     pushPoint: function(point) {
         this.currentDrawingCount++;
         this.updatePathGeometry(point);

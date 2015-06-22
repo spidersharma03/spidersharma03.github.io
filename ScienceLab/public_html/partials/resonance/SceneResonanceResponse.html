@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->    
+<div class ="row-fluid">
+        Force Period<input style = "width:200px" type="range" min="1" max="4" step ="0.1" onchange="(function(){document.getElementById('IFrame').contentWindow.changeForceFrequency(value)})(value)">
+        Damping<input style = "width:200px" type="range" min="0.001" max="0.005" step ="0.0005" value = "0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeSystemDamping(value)})(value)">
+</div>

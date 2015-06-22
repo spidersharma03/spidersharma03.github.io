@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<div class ="row-fluid">
+    <input type="button" onclick="(function(){document.getElementById('IFrame').contentWindow.SwitchObject();})(value)" value="Toggle Object"><br>
+    <input type="radio" name="camera" onclick="(function(){document.getElementById('IFrame').contentWindow.FixedCameraView(1);})(value)" value="1" />Fixed Camera<br />
+    <input type="radio" name="camera" onclick="(function(){document.getElementById('IFrame').contentWindow.FixedCameraView(0);})(value)" value="Free Camera" />Free Camera<br />
+    <!--<input type="checkbox" onclick="(function(){document.getElementById('IFrame').contentWindow.FixedCameraView(value);})(value)" value="Fixed Camera">-->
+</div>

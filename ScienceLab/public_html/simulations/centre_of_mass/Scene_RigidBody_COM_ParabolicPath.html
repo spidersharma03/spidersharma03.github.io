@@ -74,7 +74,7 @@
                         var diskHeight = 0.1;
 			var cradleWidth = 3.0;
                         var cradleHeight = 3.0;
-                        var cradleLength = 120.0;
+                        var cradleLength = 20.0;
                         var groundWidth = 1.5*cradleLength;
                         var groundDepth = 1.5*cradleLength;
                         var groundHeight = 0.1;
@@ -82,19 +82,22 @@
                         var indices_array = [];
                         var impulse = new Ammo.btVector3(-3,0,0);
                         var impulsePoint = new Ammo.btVector3(0,0,0);
-                        var dt = 0.0016;
+                        var dt = 0.016;
                         var com_visible = false;
-                        var pauseSimulation = false;
+                        var pauseSimulation = true;
                         var demoCount = 0;
                         
                         var diskRadius1 = 0.7;
                         var diskRadius2 = 0.7;
                         var diskHeight = 0.2;
                         var rigidBodyGroup, com_offsetGroup;
+                        var asymmetricCOM = false;
+                        var showPath = false;
+                        var toggleNonCOM_Path = false;
                         var diskMesh1, diskMesh2, rodMesh;
-                        var angularVelocity = 5;
+                        var angularVelocity = 15;
                         var theta = 0;
-                        var velocity = new THREE.Vector3(-10,10,0);
+                        var velocity = new THREE.Vector3(-10,20,0);
                         var tempVector = new THREE.Vector3(1,0,1);
 
                         var cameraPosition = new THREE.Vector3();
@@ -104,25 +107,43 @@
                         //updatePhysicalBodies();
                         function start_pause() {
                             pauseSimulation = !pauseSimulation;
+                            if(!pauseSimulation) {
+                                angularVelocity = 5;
+                                velocity.x = -10;
+                                velocity.y = 20;
+                                velocity.z = 0; 
+                            }
                         }
                         
                         function reset() {
                             angularVelocity = 0;
                             velocity.x = velocity.y = velocity.z = 0;
-                        }
-                        
-                        function randomPointOnDisk() {
-                            
-                        }
-                        
-                        function offsetCom() {
-                            
+                            rigidBodyGroup.matrix.identity();
+                            rigidBodyGroup.position.x = rigidBodyGroup.position.z = 0;
+                            rigidBodyGroup.position.y = 1.0;
+                            rigidBodyGroup.updateMatrix();
+                            pauseSimulation = false;
+                            updatePhysicalBodies();
+                            pauseSimulation = true;
+                            pathDrawer.clearPath();
                         }
                         
                         function timeScale(value) {
                             dt = Number(value);
                         }
-
+                        
+                        function toggleAsymmetry() {
+                            asymmetricCOM = !asymmetricCOM;
+                            if(asymmetricCOM) {
+                                com_offsetGroup.position.x = diskRadius1;
+                                diskMesh2.scale.x = diskMesh2.scale.z = 2;
+                            } else {
+                                diskMesh2.scale.x = diskMesh2.scale.z = 1;
+                                com_offsetGroup.position.x = 0;
+                            }
+                            reset();
+                        }
+                        
                         function toggleCOM() {
                             com_visible = !com_visible;
                             if(com_visible) {
@@ -133,15 +154,26 @@
                             }
                         }
                         
+                        function togglePathVisibility() {
+                            showPath = !showPath;
+                            pathDrawer.clearPath();
+                        }
+                        
+                        function showPathOfNonCOMPoint() {
+                            pathDrawer.clearPath();
+                            toggleNonCOM_Path = !toggleNonCOM_Path;
+                        }
+                        
                         function initCradleGeometry()
                         {
                             // Make Root Group
                             var group = new THREE.Object3D();
                             scene.add(group);
+                            
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
-                            boxMesh.position.y = 0.85;
+                            boxMesh.position.y = 0;
                             group.add( boxMesh );
                             
                             boxMesh.castShadow = true;
@@ -152,7 +184,6 @@
                             var geometry = new THREE.CylinderGeometry(diskRadius1, diskRadius1, diskHeight, 20, 10);
                             rigidBodyGroup = new THREE.Object3D();
                             com_offsetGroup = new THREE.Object3D();
-                            com_offsetGroup.position.x = diskRadius1/2;
                             rigidBodyGroup.position.y = 1.0;
                             var geometry1 = new THREE.CylinderGeometry(diskHeight/2, diskHeight/2, distance, 10, 10);
                             
@@ -188,13 +219,13 @@
                             var material = new THREE.LineBasicMaterial({color: 0x222222});
                             var geometry = new THREE.Geometry();
                             geometry.vertices.push(
-                                    new THREE.Vector3( 0, -10, 0 ),
-                                    new THREE.Vector3( 0, 10, 0 )
+                                    new THREE.Vector3( 0, 0, -5 ),
+                                    new THREE.Vector3( 0, 0, 5 )
                                             );
                             var line = new THREE.Line( geometry, material );
                             comMesh.add(line);
                             
-                            scene.add( comMesh );
+                            //scene.add( comMesh );
                         }
                         
                        
@@ -207,13 +238,21 @@
                            rigidBodyGroup.position.z += velocity.z * dt;
                            rigidBodyGroup.rotation.z = theta;
                            
-                           tempVector.copy(rodMesh.position);
-                           tempVector.applyMatrix4(rigidBodyGroup.matrix);
-                           pathDrawer.pushPoint(tempVector);
-                           
+                           if(showPath) {
+                                if(toggleNonCOM_Path) {
+                                     tempVector.copy(rodMesh.position);
+                                     tempVector.applyMatrix4(rigidBodyGroup.matrix);
+                                     pathDrawer.pushPoint(tempVector);
+                                } else {
+                                     tempVector.copy(diskMesh2.position);
+                                     tempVector.applyMatrix4(rigidBodyGroup.matrix);
+                                     pathDrawer.pushPoint(tempVector);
+                                }
+                            }
                            tempVector.copy(rodMesh.position);
                            tempVector.applyMatrix4(rigidBodyGroup.matrix);
                            comMesh.position.copy(tempVector);
+                           comMesh.updateMatrix();
                         };
                         
 			function init() {
@@ -222,8 +261,9 @@
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
-				camera.position.z = -8;
-				camera.position.y = 4;
+				camera.position.z = -38;
+				camera.position.y = 24;
+				camera.position.x = -10;
                                 controls = new THREE.OrbitControls( camera );
                                 controls.addEventListener( 'change', render );
 				// scene
@@ -242,7 +282,7 @@
                                 light.shadowMapWidth = 1024;
 				light.shadowMapHeight = 1024;
                                 
-                                var d = 15;
+                                var d = 50;
 
 				light.shadowCameraLeft = -d;
 				light.shadowCameraRight = d;

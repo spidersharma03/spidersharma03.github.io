@@ -84,9 +84,9 @@
                         var groundDepth = 1.5*cradleLength;
                         var groundHeight = 0.1;
                                                 
-                        var dt = 0.0016;
+                        var dt = 0.016;
                         var com_visible = false;
-                        var pauseSimulation = false;
+                        var pauseSimulation = true;
                         var demoCount = 0;
                         
                         var rigidBodyGroup, com_offsetGroup;
@@ -95,7 +95,7 @@
                         var exploded = false;
                         var explosionImpulse = 10;
                         var g = -9.8;
-                        
+                        var showPath = false, toggleNonCOM_Path = false;
                         var velocity = new THREE.Vector3(-10,20,0);
                         var tempVector = new THREE.Vector3(1,0,1);
                         var sphereMesh_px, sphereMesh_py, sphereMesh_pz, sphereMesh_nx,
@@ -114,29 +114,58 @@
                         }
                         
                         function reset() {
+                            exploded = false;
                             angularVelocity = 0;
-                            rigidBodyGroup.position.set(0,0,0);
+                            velocity.set(-10,20,0);
+                            rigidBodyGroup.position.set(0,1,0);
                             com_offsetGroup.add(sphereMesh_px);
                             com_offsetGroup.add(sphereMesh_nx);
                             com_offsetGroup.add(sphereMesh_py);
                             com_offsetGroup.add(sphereMesh_ny);
                             com_offsetGroup.add(sphereMesh_pz);
                             com_offsetGroup.add(sphereMesh_nz);
-                            velocity.x = velocity.y = velocity.z = 0;
                             sphereMesh_px.position.set(distance/2,0,0);
                             sphereMesh_nx.position.set(-distance/2,0,0);
                             sphereMesh_py.position.set(0,distance/2,0);
                             sphereMesh_ny.position.set(0,-distance/2,0);
                             sphereMesh_pz.position.set(0,0,distance/2);
                             sphereMesh_nz.position.set(0,0,-distance/2);
+                            rigidBodyGroup.updateMatrix();
+                            for( var i=0; i<sphereList.length; i++) {
+                                sphereList[i].updateMatrix();
+                            }
+                            pauseSimulation = false;
+                            updatePhysicalBodies();
+                            pauseSimulation = true;
+                            pathDrawer.clearPath();
+                            pathDrawer1.clearPath();
+                            pathDrawer2.clearPath();
+                            pathDrawer3.clearPath();
+                            pathDrawer4.clearPath();
+                            pathDrawer5.clearPath();
+                            pathDrawer6.clearPath();
                         }
                         
-                        function randomPointOnDisk() {
-                            
+                        function togglePathVisibility() {
+                            showPath = !showPath;
+                            pathDrawer.clearPath();
+                            pathDrawer1.clearPath();
+                            pathDrawer2.clearPath();
+                            pathDrawer3.clearPath();
+                            pathDrawer4.clearPath();
+                            pathDrawer5.clearPath();
+                            pathDrawer6.clearPath();
                         }
                         
-                        function offsetCom() {
-                            
+                        function showPathOfNonCOMPoint() {
+                            toggleNonCOM_Path = !toggleNonCOM_Path;
+                            pathDrawer.clearPath();
+                            pathDrawer1.clearPath();
+                            pathDrawer2.clearPath();
+                            pathDrawer3.clearPath();
+                            pathDrawer4.clearPath();
+                            pathDrawer5.clearPath();
+                            pathDrawer6.clearPath();
                         }
                         
                         function timeScale(value) {
@@ -152,7 +181,6 @@
                                 calculateBodyVelocity(sphereBody);
                                 calculateBodyPosition(sphereBody);
                             }
-                            
                             //applyExplosionImpulse();
                         }
                         
@@ -230,7 +258,7 @@
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
-                            boxMesh.position.y = 0.85;
+                            boxMesh.position.y = 0;
                             group.add( boxMesh );
                             
                             boxMesh.castShadow = true;
@@ -350,9 +378,15 @@
                                 comMesh.position.copy(tempVector);
                                 if(comMesh.position.y > 15.0)
                                     explode();
-                                
-                                tempVector.copy(comMesh.position);
-                                pathDrawer.pushPoint(comMesh.position);
+                                if(showPath){
+                                    if(toggleNonCOM_Path) {
+                                        pathDrawer.pushPoint(comMesh.position);
+                                    } else {
+                                        tempVector.copy(sphereMesh_px.position);
+                                        tempVector.applyMatrix4(rigidBodyGroup.matrix);
+                                        pathDrawer.pushPoint(tempVector);
+                                    }
+                                }
                             }
                             else {
                                 tempVector.set(0,0,0);
@@ -372,14 +406,17 @@
                                 comMesh.position.copy(tempVector);
                                 
                                 tempVector.copy(comMesh.position);
-                                pathDrawer.pushPoint(tempVector);
                                 
-                                pathDrawer1.pushPoint(sphereMesh_px.position);
-                                pathDrawer2.pushPoint(sphereMesh_py.position);
-                                pathDrawer3.pushPoint(sphereMesh_pz.position);
-                                pathDrawer4.pushPoint(sphereMesh_nx.position);
-                                pathDrawer5.pushPoint(sphereMesh_ny.position);
-                                pathDrawer6.pushPoint(sphereMesh_nz.position);
+                                if(showPath){
+                                    pathDrawer.pushPoint(tempVector);
+
+                                    pathDrawer1.pushPoint(sphereMesh_px.position);
+                                    pathDrawer2.pushPoint(sphereMesh_py.position);
+                                    pathDrawer3.pushPoint(sphereMesh_pz.position);
+                                    pathDrawer4.pushPoint(sphereMesh_nx.position);
+                                    pathDrawer5.pushPoint(sphereMesh_ny.position);
+                                    pathDrawer6.pushPoint(sphereMesh_nz.position);
+                                }
                             }
                         };
                         
@@ -389,8 +426,9 @@
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.position.z = -48;
+				camera.position.z = -38;
 				camera.position.y = 20;
+				camera.position.x = -10;
                                 controls = new THREE.OrbitControls( camera );
                                 controls.addEventListener( 'change', render );
 				// scene

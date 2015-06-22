@@ -152,6 +152,12 @@
                    "description":"collisions in 2 dimensions. Again it can be seen that the centre of mass moves in a staright line with a constant velocity.",
                    "image" : "collisions_2d.png",
                    "scene_name" : "Scene_Collision_2D"
+               },
+               {
+                   "display_name": "Momentum Conservation Rotating Rigid Body",
+                   "description":"This simulation shows the motion of a rotating rigid body in a horizontal pfrictionless plane. Though other points on the body move in complicated paths due to inner constraints of rigid body, COM of the body moves in a straight line emphasizing the linear momentum conservation",
+                   "image" : "collisions_2d.png",
+                   "scene_name" : "Scene_RigidBody_COM"
                }
             ],
         "pageLink"  : "momentum_conservation"
@@ -164,21 +170,33 @@
         "simulations":
             [
                {
+                   "display_name": "Motion of Centre of Mass in gravitational field",
+                   "description":"This simulation shows the motion of a rotating rigid body under gravitational field. Again it can be observed that the centre of mass moves as if the entire body was there",
+                   "image" : "collisions_2d.png",
+                   "scene_name" : "Scene_RigidBody_COM_ParabolicPath"
+               },
+               {
+                   "display_name": "Mid Air Explosion",
+                   "description":"This simulation shows an explosion inside a rigid body in mid air changes the paths of individual parts, but the centre of mass still moves along the same trajectory if there was no explosion",
+                   "image" : "collisions_2d.png",
+                   "scene_name" : "Scene_RigidBody_MidAirExplosion"
+               },
+               {
+                   "display_name": "Earth Moon System",
+                   "description":"Motion of Earth and Moon around their common centre of mass.",
+                   "image" : "collisions_2d.png",
+                   "scene_name" : "Scene_COM_EarthMoon"
+               },
+               {
+                   "display_name": "Falling Rod",
+                   "description":"Motion of Earth and Moon around their common centre of mass.",
+                   "image" : "collisions_2d.png",
+                   "scene_name" : "SceneFallingRod"
+               },
+               {
                    "display_name": "Centre of Mass goes Uphill!!",
                    "description":"Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!! Centre of Mass goes Uphill!!",
                    "image" : "com_1.png",
-                   "scene_name" : "Scene"
-               },
-               {
-                   "display_name": "Motion of Centre of Mass",
-                   "description":"Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass Motion of Centre of Mass",
-                   "image" : "test.png",
-                   "scene_name" : "Scene"
-               },
-               {
-                   "display_name": "Experimental Determination of Centre of Mass",
-                   "description":"Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass Experimental Determination of Centre of Mass",
-                   "image" : "test.png",
                    "scene_name" : "Scene"
                }
             ],

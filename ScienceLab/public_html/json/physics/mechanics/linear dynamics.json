@@ -173,7 +173,7 @@
                    "display_name": "Motion of Centre of Mass in gravitational field",
                    "description":"This simulation shows the motion of a rotating rigid body under gravitational field. Again it can be observed that the centre of mass moves as if the entire body was there",
                    "image" : "com_parabolic.png",
-                   "scene_name" : "com_parabolic.png"
+                   "scene_name" : "Scene_RigidBody_COM_ParabolicPath"
                },
                {
                    "display_name": "Mid Air Explosion",

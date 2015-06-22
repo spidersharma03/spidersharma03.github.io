@@ -7,8 +7,5 @@ and open the template in the editor.
 <div class ="row-fluid">
     <input type="button" onclick="(function(){document.getElementById('IFrame').contentWindow.reset();})(value)" value="Reset"><br>
     <input type="button" onclick="(function(){document.getElementById('IFrame').contentWindow.start_pause();})(value)" value="Start/Pause"><br>
-    <input type="checkbox" name="Toggle Path" onclick="(function(){document.getElementById('IFrame').contentWindow.togglePathVisibility();})(value)" value="1" />Toggle Path<br />
-    <input type="checkbox" name="Show Non COM Path" onclick="(function(){document.getElementById('IFrame').contentWindow.showPathOfNonCOMPoint();})(value)" value="1" />Toggle Non COM Path<br />
-    <input type="radio" name="camera" onclick="(function(){document.getElementById('IFrame').contentWindow.FixedCameraView(0);})(value)" value="Free Camera" />Free Camera<br />
     Time Scale<input style = "width:200px" type="range" min="0.0016" max="0.016" step ="0.0016" value = "0.016" onchange="(function(){document.getElementById('IFrame').contentWindow.timeScale(value);})(value)">
 </div>

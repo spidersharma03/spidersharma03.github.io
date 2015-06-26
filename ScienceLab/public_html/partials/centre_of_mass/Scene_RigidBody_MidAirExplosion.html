@@ -10,7 +10,6 @@ and open the template in the editor.
     <input type="checkbox" name="Toggle COM" onclick="(function(){document.getElementById('IFrame').contentWindow.toggleCOM();})(value)" value="1" />Toggle COM<br />
     <input type="checkbox" name="Toggle Path" onclick="(function(){document.getElementById('IFrame').contentWindow.togglePathVisibility();})(value)" value="1" />Toggle Path<br />
     <input type="checkbox" name="Show Non COM Path" onclick="(function(){document.getElementById('IFrame').contentWindow.showPathOfNonCOMPoint();})(value)" value="1" />Toggle Non COM Path<br />
-    Elasticity<input style = "width:200px" type="range" min="0.0" max="1.0" step ="0.1" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.setElasticity(value);})(value)">
     Time Scale<input style = "width:200px" type="range" min="0.0016" max="0.016" step ="0.0016" value = "0.016" onchange="(function(){document.getElementById('IFrame').contentWindow.timeScale(value);})(value)">
     <!--<input type="checkbox" onclick="(function(){document.getElementById('IFrame').contentWindow.FixedCameraView(value);})(value)" value="Fixed Camera">-->
 </div>

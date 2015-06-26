@@ -117,12 +117,14 @@
                         
                         function reset() {
                             angularVelocity = 0;
+                            theta = 0;
                             velocity.x = velocity.y = velocity.z = 0;
                             rigidBodyGroup.matrix.identity();
                             rigidBodyGroup.position.x = rigidBodyGroup.position.z = 0;
                             rigidBodyGroup.position.y = 1.0;
                             rigidBodyGroup.updateMatrix();
                             pauseSimulation = false;
+                            
                             updatePhysicalBodies();
                             pauseSimulation = true;
                             pathDrawer.clearPath();
@@ -173,7 +175,7 @@
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
-                            boxMesh.position.y = 0;
+                            boxMesh.position.y = -0.5;
                             group.add( boxMesh );
                             
                             boxMesh.castShadow = true;
@@ -231,6 +233,8 @@
                        
                         function updatePhysicalBodies() 
                         {
+                           if(pauseSimulation)
+                               return;
                            theta += angularVelocity * dt;
                            velocity.y += -9.8*dt;
                            rigidBodyGroup.position.x += velocity.x * dt;

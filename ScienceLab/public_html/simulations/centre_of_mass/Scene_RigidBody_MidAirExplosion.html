@@ -101,8 +101,8 @@
                         var sphereMesh_px, sphereMesh_py, sphereMesh_pz, sphereMesh_nx,
                                 sphereMesh_ny, sphereMesh_nz;
                         var sphereList = [];
-                        var sphereRadius = 0.3;
-                        var distance = sphereRadius*6;
+                        var sphereRadius = 0.5;
+                        var distance = sphereRadius*3;
 
                         var cameraPosition = new THREE.Vector3();
                         init();
@@ -258,7 +258,7 @@
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
-                            boxMesh.position.y = 0;
+                            boxMesh.position.y = -0.2;
                             group.add( boxMesh );
                             
                             boxMesh.castShadow = true;
@@ -326,7 +326,7 @@
                             // COM Mesh
                             var sphgeometry = new THREE.SphereGeometry(0.2,20,20);
                             comMesh = new THREE.Object3D();
-                            var mesh1 = new THREE.Mesh(sphgeometry, cubeMaterial);
+                            var mesh1 = new THREE.Mesh(sphgeometry, groundMaterial);
                             comMesh.position.y = 0.5;
                             comMesh.add(mesh1);
 
@@ -349,11 +349,17 @@
                             var line1 = new THREE.Line( geometry1, material );
                             var line2 = new THREE.Line( geometry2, material );
                             var line3 = new THREE.Line( geometry3, material );
+                            line1.castShadow = true;
+                            line1.receiveShadow = true;
+                            line2.castShadow = true;
+                            line2.receiveShadow = true;
+                            line3.castShadow = true;
+                            line3.receiveShadow = true;
                             comMesh.add(line1);
                             comMesh.add(line2);
                             comMesh.add(line3);
                             
-                            scene.add( comMesh );
+                            //scene.add( comMesh );
                         }
                         
                        
@@ -426,7 +432,7 @@
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.position.z = -38;
+				camera.position.z = -28;
 				camera.position.y = 20;
 				camera.position.x = -10;
                                 controls = new THREE.OrbitControls( camera );

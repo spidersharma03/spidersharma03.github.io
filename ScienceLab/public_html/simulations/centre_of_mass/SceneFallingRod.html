@@ -186,6 +186,8 @@
                         var g = -9.8;
                         var spinningFriction = 0.004;
                         var rollingFriction = 0.001;
+                        var frictionCoeffficient = 0;
+                        var frictionOn = false;
                         var CubeVertices = [];
                         CubeVertices[0] = new THREE.Vector3(width/2,-height/2,depth/2);
                         CubeVertices[1] = new THREE.Vector3(-width/2,-height/2,depth/2);
@@ -196,7 +198,7 @@
                         CubeVertices[6] = new THREE.Vector3(-width/2,height/2,-depth/2);
                         CubeVertices[7] = new THREE.Vector3(width/2,height/2,-depth/2);
                         
-                        var pauseSimulation = false;
+                        var pauseSimulation = true;
                         var showPath = false, toggleNonCOM_Path = false;
                         function TrackPath() {
                             this.spline = null;
@@ -209,7 +211,7 @@
                             cylinderBody.position.y = height/10;
                             cylinderBody.quaternion.set(0,0,0,1);
                             cylinderBody.matrix.identity();
-                            cylinderBody.rotateZ(-Math.PI/100);
+                            cylinderBody.rotateZ(-Math.PI/30);
                             cylinderBody.updateMatrix();
                             pathDrawer.clearPath();
                             var quat = cylinderBody.quaternion;
@@ -232,6 +234,14 @@
                         function showPathOfNonCOMPoint() {
                             pathDrawer.clearPath();
                             toggleNonCOM_Path = !toggleNonCOM_Path;
+                        }
+                        
+                        function toggleFriction() {
+                            frictionOn = !frictionOn;
+                            if(frictionOn)
+                                frictionCoeffficient = 1;
+                            else
+                                frictionCoeffficient = 0;
                         }
                         
                         function timeScale(value) {
@@ -263,7 +273,7 @@
                             cylinderBody.velocity = new THREE.Vector3();
                             cylinderBody.add(mesh1);
                             cylinderBody.position.y = height/10;
-                            cylinderBody.rotateZ(-Math.PI/100);
+                            cylinderBody.rotateZ(-Math.PI/30);
                             //cylinderBody.scale.x = 0.1;
                             //cylinderBody.scale.y = 4;
                             //cylinderBody.scale.z = 1;
@@ -487,7 +497,7 @@
                             var CdotTangent = -frictionDirection.dot(tempVector1);
                             var frictionalImpulseMag = CdotTangent/denom;
                             var mu = 0;
-                            var maxFriction = pointOfContact.normalImpulseMag * mu;
+                            var maxFriction = pointOfContact.normalImpulseMag * frictionCoeffficient;
                             
                             pointOfContact.frictionalImpulseMag[dir] = Math.max( oldImpulseMag + frictionalImpulseMag, -maxFriction);
                             pointOfContact.frictionalImpulseMag[dir] = Math.min( pointOfContact.frictionalImpulseMag[dir], maxFriction);

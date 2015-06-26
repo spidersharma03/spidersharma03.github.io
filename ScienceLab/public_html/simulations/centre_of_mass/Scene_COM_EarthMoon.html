@@ -264,7 +264,7 @@
                                 earthMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, combine: THREE.MixOperation, reflectivity: 0.2, map:textureEarth});
                                 moonMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, combine: THREE.MixOperation, reflectivity: 0.2, map:textureMoon});
                                 
-				renderer = new THREE.WebGLRenderer({antialias:true});
+				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 
@@ -274,7 +274,8 @@
         			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
 
 				window.addEventListener( 'resize', onWindowResize, false );
-                                
+                                        			window.addEventListener( 'dblclick', keydown, false );
+
                                 
                                 renderer.shadowMapEnabled = true;
                                 renderer.shadowMapSoft = true;
@@ -283,7 +284,15 @@
                                 
                                 scene.add(pathDrawer.getRootNode());
 			}
-                        
+                        function keydown(e) {
+                            var newwindow = window.open("");
+                            var dataUrl = renderer.domElement.toDataURL("image/png");
+                            var img = new Image();
+                            img.src = dataUrl;
+                            img.width/=2;
+                            img.height/=2;
+                            newwindow.document.body.appendChild(img);
+                        }
                         function onDocumentMouseMove(event)
                         {
                             var pos = camera.position;

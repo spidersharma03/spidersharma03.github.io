@@ -490,7 +490,7 @@
                                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
                                 sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
                                 
-				renderer = new THREE.WebGLRenderer({antialias:true});
+				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 
@@ -498,6 +498,7 @@
         			document.addEventListener( 'mousedown', onDocumentMouseDown, false );
         			document.addEventListener( 'mouseup', onDocumentMouseUp, false );
         			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
+        			window.addEventListener( 'dblclick', keydown, false );
 
 				window.addEventListener( 'resize', onWindowResize, false );
                                 
@@ -515,7 +516,15 @@
                                 scene.add(pathDrawer5.getRootNode());
                                 scene.add(pathDrawer6.getRootNode());
 			}
-                        
+                        function keydown(e) {
+                            var newwindow = window.open("");
+                            var dataUrl = renderer.domElement.toDataURL("image/png");
+                            var img = new Image();
+                            img.src = dataUrl;
+                            img.width/=2;
+                            img.height/=2;
+                            newwindow.document.body.appendChild(img);
+                        }
                         function onDocumentMouseMove(event)
                         {
                             var pos = camera.position;

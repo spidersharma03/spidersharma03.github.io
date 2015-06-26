@@ -111,6 +111,7 @@ SpringMassSystems1D = function () {
     this.bodies = [];
     this.springs = [];
     this.collisionInfo = new collisionInfo();
+    this.damping = 0.0;
 };
 
 SpringMassSystems1D.prototype = {
@@ -300,6 +301,7 @@ SpringMassSystems1D.prototype = {
         for (var b = 0; b < this.bodies.length; b++) {
             var body = this.bodies[b];
             body.velocity.x += body.internalforce.x / body.mass * dt;
+            body.velocity.x += -this.damping * body.velocity.x;
             body.position.x += body.velocity.x * dt;
         }
     }

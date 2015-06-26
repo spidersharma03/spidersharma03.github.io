@@ -33,7 +33,7 @@
                    "display_name": "Inertia Blocks Force!",
                    "description":"Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force!",
                    "image" : "test.png",
-                   "scene_name" : "Scene"
+                   "scene_name" : "Scene_InertiaBlockingForce"
                }
             ],
         "pageLink"  : "newtons_first_law"

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<div class = "" style="">
+   <input type="button" onclick="(function(){document.getElementById('IFrame').contentWindow.reset();})(value)" value="Reset">
+   <input type="button" onclick="(function(){document.getElementById('IFrame').contentWindow.Start_Pause_Simulation();})(value)" value="Apply Impulse">
+   <p>
+   Friction<input style = "width:200px" type="range" min="0" max="1" value = "0.5" step ="0.2" onchange="(function(){document.getElementById('IFrame').contentWindow.changeFriction(value)})(value)">
+   </p>
+</div>

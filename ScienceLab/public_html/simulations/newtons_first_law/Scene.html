@@ -84,7 +84,7 @@
                 var container = document.createElement( 'div' );
                 document.body.appendChild( container );
                 
-                renderer = new THREE.WebGLRenderer({antialias: true});
+				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 container.appendChild( renderer.domElement );
                 renderer.shadowMapEnabled = true;
@@ -123,6 +123,8 @@
                 scene.add(camera);
                 controls = new THREE.OrbitControls( camera );
                 controls.addEventListener( 'change', render );
+                        			window.addEventListener( 'dblclick', keydown, false );
+
                 // Light
                 light = new THREE.DirectionalLight(0xFFFFFF);
                 light.position.set(-40, 20, -15);
@@ -166,7 +168,7 @@
                 ground_material.map.repeat.set(1, 1);
 
                 box_material = Physijs.createMaterial(
-                        new THREE.MeshLambertMaterial({map: THREE.ImageUtils.loadTexture('../../js/lib/three.js/textures/wood.jpg')}),
+                        new THREE.MeshLambertMaterial({map: THREE.ImageUtils.loadTexture('../../img/marble.jpg')}),
                         .3, // medium friction
                         .2 // low restitution
                         );
@@ -187,7 +189,15 @@
                 requestAnimationFrame(render);
                 scene.simulate();
             };
-            
+            function keydown(e) {
+                            var newwindow = window.open("");
+                            var dataUrl = renderer.domElement.toDataURL("image/png");
+                            var img = new Image();
+                            img.src = dataUrl;
+                            img.width/=2;
+                            img.height/=2;
+                            newwindow.document.body.appendChild(img);
+                        }
             function SetupPhysicsGeometry() {
                 var y = 2;
                 var boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxLength);

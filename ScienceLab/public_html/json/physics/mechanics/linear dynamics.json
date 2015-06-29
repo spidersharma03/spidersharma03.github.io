@@ -18,21 +18,33 @@
         "simulations":
             [
                {
+                   "display_name": "Galileo's Thought Experiment 1",
+                   "description":"Galileo Imagined a situation where one could eliminate the friction between the block and a surface, and proposed that in the absense of friction the block would move forever, once set in motion",
+                   "image" : "galileo_thought_1.png",
+                   "scene_name" : "Scene_GalileoThoughtExperiment1"
+               },
+               {
+                   "display_name": "Galileo's Thought Experiment 2",
+                   "description":"In this thought experiment try to think like Galileo and propose the idea of inertia if the  losses due to rolling friction could be made really small",
+                   "image" : "galileo_thought2.png",
+                   "scene_name" : "Scene_GalileoThoughtExperiment2"
+               },
+               {
+                   "display_name": "Idea of Inertia",
+                   "description":"When the lower block is stopped, the upper block still continues and pops over. Same thing happens when you apply brake on the car!",
+                   "image" : "inertia_idea.png",
+                   "scene_name" : "Scene_Inertia"
+               },
+               {
                    "display_name": "Stack of Boxes",
-                   "description":"Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes Stack of Boxes",
+                   "description":"Illustrates idea of inertia in a dramatic way",
                    "image" : "newton_first_law_1.png",
                    "scene_name" : "Scene"
                },
                {
-                   "display_name": "Galileo's Experiment",
-                   "description":"Galileo's Experiment Galileo's Experiment Galileo's Experiment Galileo's Experiment Galileo's Experiment Galileo's Experiment Galileo's Experiment Galileo's Experiment Galileo's Experiment",
-                   "image" : "test.png",
-                   "scene_name" : "Scene"
-               },
-               {
                    "display_name": "Inertia Blocks Force!",
-                   "description":"Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force! Inertia Blocks Force!",
-                   "image" : "test.png",
+                   "description":"This situation is similar to a train, where the engine applies force on the entire train. How the forces are distributed here? Look closely after a few seconds at the length of the springs, once the train is set in motion",
+                   "image" : "inertia_blocks_force.png",
                    "scene_name" : "Scene_InertiaBlockingForce"
                }
             ],

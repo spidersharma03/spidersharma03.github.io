@@ -95,34 +95,27 @@
            
             function reset() {
                 body1.position.x = -2;
-                body2.position.x = 2;
-                body3.position.x = 6;
-                body4.position.x = 10;
-                body5.position.x = -12;
-                body6.position.x = -8;
-                body7.position.x = -16;
-                body8.position.x = -20;
+                body2.position.x = 0;
+                body3.position.x = 2;
+                body4.position.x = 4;
+                body5.position.x = 6;
+                body6.position.x = 8;
+                body7.position.x = 10;
                 body1.velocity.x = 0;
                 body2.velocity.x = 0;
                 body3.velocity.x = 0;
                 body4.velocity.x = 0;
                 body5.velocity.x = 0;
                 body6.velocity.x = 0;
-                body7.velocity.x = 2;
-                body8.velocity.x = 0;
+                body7.velocity.x = 0;
                 pauseSimulation = false;
                 syncSimulation();
                 pauseSimulation = true;
             }
             
-            function setElasticity(value) {
-                for(var i = 0; i < simulation.bodies.length; i++) {
-                    var body = simulation.bodies[i];
-                    body.e = Number(value);
-                }
-            }
             
-            function start_pause() {
+            
+            function Start_Pause_Simulation() {
                 pauseSimulation = !pauseSimulation;
             }
             
@@ -232,7 +225,6 @@
                     springMesh.scale.y = spring.compressionFraction;
                 }
                 comMesh.position.x = simulation.com();
-                //console.log(simulation.v_com());
             }
 
             function init() {
@@ -261,7 +253,7 @@
                 light.shadowMapWidth = 1024;
                 light.shadowMapHeight = 1024;
 
-                var d = 20;
+                var d = 40;
 
                 light.shadowCameraLeft = -d;
                 light.shadowCameraRight = d;
@@ -308,7 +300,7 @@
                 groundMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: texture, color: 0xffffff, specular: 0xffffff, combine: THREE.MixOperation, bumpScale: 0.010, bumpMap: texture, ambient: 0x555555, reflectivity: 0.5, metal: true, shininess: 1000});
                 sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: sphereTexture, color: 0xff0000, specular: 0xffffff, combine: THREE.MixOperation, ambient: 0x555555, reflectivity: 0.8, shininess: 10});
                 //sphereMaterial.emissive = new THREE.Color("rgb(0,255,0)");
-                renderer = new THREE.WebGLRenderer({antialias: true});
+				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 container.appendChild(renderer.domElement);
 
@@ -316,6 +308,7 @@
                 document.addEventListener('mousedown', onDocumentMouseDown, false);
                 document.addEventListener('mouseup', onDocumentMouseUp, false);
                 document.addEventListener('mousewheel', onDocumentMouseWheel, false);
+        			window.addEventListener( 'dblclick', keydown, false );
 
                 window.addEventListener('resize', onWindowResize, false);
 
@@ -329,9 +322,17 @@
                 
                 pauseSimulation = false;
                 syncSimulation();
-                //pauseSimulation = true;
+                pauseSimulation = true;
             }
-
+function keydown(e) {
+                            var newwindow = window.open("");
+                            var dataUrl = renderer.domElement.toDataURL("image/png");
+                            var img = new Image();
+                            img.src = dataUrl;
+                            img.width/=2;
+                            img.height/=2;
+                            newwindow.document.body.appendChild(img);
+                        }
             function createMassesWithSpringConstraints() {
                 // Create Physical System bodies
                 var x = -2; var dx = 2; var k = 2;
@@ -349,15 +350,15 @@
                 body6.position.x = x; x += dx;
                 body7 = new SpringMassSystems1D.Body(1.0, 1.0);
                 body7.position.x = x; x += dx;
-                body8 = new SpringMassSystems1D.Body(1.0, 1.0);
-                body8.position.x = x; x += dx;
+                //body8 = new SpringMassSystems1D.Body(1.0, 1.0);
+                //body8.position.x = x; x += dx;
                 var spring1 = new SpringMassSystems1D.Spring(dx,k,body1,body2);
                 var spring2 = new SpringMassSystems1D.Spring(dx,k,body2,body3);
                 var spring3 = new SpringMassSystems1D.Spring(dx,k,body3,body4);
                 var spring4 = new SpringMassSystems1D.Spring(dx,k,body4,body5);
                 var spring5 = new SpringMassSystems1D.Spring(dx,k,body5,body6);
                 var spring6 = new SpringMassSystems1D.Spring(dx,k,body6,body7);
-                var spring7 = new SpringMassSystems1D.Spring(dx,k,body7,body8);
+                //var spring7 = new SpringMassSystems1D.Spring(dx,k,body7,body8);
                 
 
                 //body1.velocity.x = 2.0;
@@ -368,14 +369,14 @@
                 simulation.addBody(body5);
                 simulation.addBody(body6);
                 simulation.addBody(body7);
-                simulation.addBody(body8);
+                //simulation.addBody(body8);
                 simulation.addSpring(spring1);
                 simulation.addSpring(spring2);
                 simulation.addSpring(spring3);
                 simulation.addSpring(spring4);
                 simulation.addSpring(spring5);
                 simulation.addSpring(spring6);
-                simulation.addSpring(spring7);
+                //simulation.addSpring(spring7);
                 scene.add(body1.model);
                 scene.add(body2.model);
                 scene.add(body3.model);
@@ -383,14 +384,14 @@
                 scene.add(body5.model);
                 scene.add(body6.model);
                 scene.add(body7.model);
-                scene.add(body8.model);
+                //scene.add(body8.model);
                 scene.add(spring1.model);
                 scene.add(spring2.model);
                 scene.add(spring3.model);
                 scene.add(spring4.model);
                 scene.add(spring5.model);
                 scene.add(spring6.model);
-                scene.add(spring7.model);
+                //scene.add(spring7.model);
                 
                 simulation.damping = 0.01;
             }

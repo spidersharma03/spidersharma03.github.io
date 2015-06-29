@@ -63,29 +63,29 @@
                         var physicsBodies = [];
                         var boxMesh;
                         
-                        var geometry;
+                        var pauseSimulation = true;
                         var sphereRadius = 1.0;
 			var cradleWidth = 3.0;
                         var cradleHeight = 3.0;
                         var cradleLength = 5.0;
                         var groundWidth = 1.5*cradleLength;
                         var groundDepth = 1.5*cradleLength;
-                        var groundHeight = 0.1;
+                        var groundHeight = 0.4;
                         
-                        var anchorPositions = [];
-                        var indices_array = [];
-                        var impulse = new Ammo.btVector3(-3,0,0);
-                        var impulsePoint = new Ammo.btVector3(0,0,0);
-                        
+                        var meshInclineTrack;
                         var cameraPosition = new THREE.Vector3();
                         
-                        var pathLength = 40.0;
+                        var pathLength = 20.0;
+                        var pathLengthRight= 100.0;
                         var TrackPaths = [];
                         var normal = new THREE.Vector3();
                         var zVector = new THREE.Vector3(0,0,-1);
                         var negYVector = new THREE.Vector3(0,-1,0);
                         var contactNormal = new THREE.Vector3(0,-1,0);
                         var freeFlightOn = false;
+                        var angleLeft = 30 * Math.PI/180;
+                        var angleRight = 30 * Math.PI/180;
+                        var sphereMesh;
                         
                         function TrackPath() {
                             this.spline = null;
@@ -95,18 +95,74 @@
                         init();
                         animate();
                         
-                        function changeNumPendulumns(value)
-                        {
+                        function Start_Pause_Simulation() {
+                            pauseSimulation = !pauseSimulation;
                         }
                         
-
+                        function Reset() {
+                            var x = TrackPaths[0].spline.getPointAt(1).x;
+                            var y = TrackPaths[0].spline.getPointAt(1).y + sphereRadius;
+                            var z = TrackPaths[0].spline.getPointAt(1).z - 2*sphereRadius;
+                            //var z = TrackPaths[i].mesh.position.z;
+                            sphereMesh.position.x = x;
+                            sphereMesh.position.y = y;
+                            sphereMesh.position.z = z;
+                            sphereMesh.velocity = 0.0;
+                            sphereMesh.s = 0.02;
+                            sphereMesh.angle = 0.0;
+                            sphereMesh.angularSpeed = 0.0;
+                            pauseSimulation = false;
+                            updatePhysicalBodies();
+                            pauseSimulation = true;
+                        }
+                        
+                        function changeAngleRight(value)
+                        {
+                            Reset();
+                            TrackPaths.length = 0;
+                            angleRight = Number(value) * Math.PI/180;
+                            scene.remove(meshInclineTrack);
+                            makeBaseGeometry();
+                        }
+                        
+                        function createPathPointsAlongLineSegment(startPoint, endPoint, nOrder, pathPoints) {
+                            var numDivs = Math.pow(2, nOrder+1);
+                            var dx = endPoint.x - startPoint.x;
+                            var dy = endPoint.y - startPoint.y;
+                            var x = startPoint.x;
+                            var y = startPoint.y;
+                            
+                            var z = 0;
+                            for( var i=0; i<=numDivs; i++) {
+                                x = startPoint.x + dx * i/numDivs;
+                                y = startPoint.y + dy * i/numDivs;
+                                if(i%2 !== 0)
+                                    pathPoints.push(new THREE.Vector3(x, y, z));
+                            }
+                        }
+                        
+                        function createPathPoints(pathPoints) {
+                            // Left incline points
+                            var end = new THREE.Vector3(-pathLength/2, 0, 0);
+                            var start = new THREE.Vector3(end.x - pathLength * Math.cos(angleLeft), end.y + pathLength * Math.sin(angleLeft), 0);
+                            createPathPointsAlongLineSegment(start, end, 3, pathPoints);
+                            // Middle points
+                            end = new THREE.Vector3(pathLength/2, 0, 0);
+                            start = new THREE.Vector3(-pathLength/2, 0, 0);
+                            createPathPointsAlongLineSegment(start, end, 4, pathPoints);
+                            // Right incline points
+                            start = new THREE.Vector3(pathLength/2, 0, 0);
+                            end = new THREE.Vector3(start.x + pathLengthRight * Math.cos(angleRight), start.y + pathLengthRight * Math.sin(angleRight), 0);
+                            createPathPointsAlongLineSegment(start, end, 10, pathPoints);
+                        }
+                        
                         function makeBaseGeometry() {
                             var trackWallHeight = 1.0;
                             var trackWidth = 1.5;
                             var trackSpace = 4.0;    
-                            var baseGeometry    = new THREE.BoxGeometry(pathLength, 2, 2*trackSpace);
+                            var baseGeometry    = new THREE.BoxGeometry(100, 2, 20);
                             var baseMesh = new THREE.Mesh( baseGeometry, groundMaterial );
-                            baseMesh.position.y = -1.2;
+                            baseMesh.position.y = -1;
                             //scene.add( baseMesh );
                             // Shape of the Track Path
                             var pathShape = [];
@@ -114,29 +170,13 @@
                             pathShape.push(new THREE.Vector2( -trackWidth/2, trackWallHeight*0.5));
                             pathShape.push(new THREE.Vector2( -trackWidth/2, 0));
                             pathShape.push(new THREE.Vector2( trackWidth/2, 0));
-                            pathShape.push(new THREE.Vector2( trackWidth/2, trackWallHeight*0.5));
-                            
-                            var loopRadius = 6.0;
+                            pathShape.push(new THREE.Vector2( trackWidth/2, trackWallHeight*0.5));                            
                             // Loop Path
                             var arcPath = [];
-                            var offset = 5;
-                            arcPath.push(new THREE.Vector3( -30, 10+offset, 0));
-                            arcPath.push(new THREE.Vector3( -20, 8+offset, 0));
-                            arcPath.push(new THREE.Vector3( -10, 6+offset, 0));
-                            arcPath.push(new THREE.Vector3( -0, 4+offset, 0));
-
-                            var n = 20;
-                            var theta = -Math.PI;
-                            var dTheta1 = (Math.PI*2 + Math.PI/2)/(n-1);
-                            var x = 0; var dx = 2;
-                            for( var i=0; i<n; i++) {
-                                var y = loopRadius * Math.sin(theta);// * Math.exp(-0.1*Math.abs(x));
-                                x += dx;
-                                arcPath.push(new THREE.Vector3( x, y+offset, 0));
-                                theta += dTheta1;
-                            }
+                                                        
                             var track2 = new TrackPath();
                             TrackPaths.push(track2);
+                            createPathPoints(arcPath);
                             track2.spline = new THREE.SplineCurve3(arcPath);
                             var splineOffsetPoints = [];
                             var splinePoints = [];
@@ -158,18 +198,19 @@
                             
                             track2.spline = spline;
                             var extrudeSettings2 = {
-                                    steps		: 150,
+                                    steps		: 40,
                                     bevelEnabled	: false,
                                     extrudePath		: offsetSpline
                             };
                            var shape = new THREE.Shape( pathShape );
                            var geometry1 = new THREE.ExtrudeGeometry( shape, extrudeSettings2 );
-                           var mesh = new THREE.Mesh( geometry1, groundMaterial );
-                           mesh.position.z = -trackSpace/2;
-                           track2.mesh = mesh;
-                           mesh.castShadow = true;
-                           mesh.receiveShadow = true;                            
-                           scene.add( mesh );
+                           meshInclineTrack = new THREE.Mesh( geometry1, cubeMaterial );
+                           meshInclineTrack.position.z = -trackSpace/2;
+                           
+                           //track2.mesh = meshInclineTrack;
+                           meshInclineTrack.castShadow = true;
+                           meshInclineTrack.receiveShadow = true;                            
+                           scene.add( meshInclineTrack );
                         }
                         
                         function initCradleGeometry()
@@ -180,9 +221,9 @@
                             scene.add(group);
                                                         
                             // Base Plane
-                            var boxGeometry    = new THREE.BoxGeometry(pathLength, groundHeight, pathLength);
+                            var boxGeometry    = new THREE.BoxGeometry(100, groundHeight, 20);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
-                            boxMesh.position.y = -2;
+                            boxMesh.position.y = -1.6;
                             group.add( boxMesh );
                             
                             boxMesh.castShadow = true;
@@ -190,27 +231,29 @@
                             // Create Spheres
                             var sphereGeometry = new THREE.SphereGeometry(sphereRadius, 20, 20);
                             
-                            for( var i=0; i<numSpheres; i++ )
                             {
-                                var x = TrackPaths[i].spline.getPointAt(1).x;
-                                var y = TrackPaths[i].spline.getPointAt(1).y + sphereRadius;
-                                var z = TrackPaths[i].spline.getPointAt(1).z - 2*sphereRadius;
+                                var x = TrackPaths[0].spline.getPointAt(1).x;
+                                var y = TrackPaths[0].spline.getPointAt(1).y + sphereRadius;
+                                var z = TrackPaths[0].spline.getPointAt(1).z - 2*sphereRadius;
                                 //var z = TrackPaths[i].mesh.position.z;
-                                var mesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
-                                mesh.castShadow = true;
-                                mesh.receiveShadow = true;
-                                mesh.position.x = x;
-                                mesh.position.y = y;
-                                mesh.position.z = z;
-                                mesh.velocity = 0.0;
-                                mesh.direction = new THREE.Vector3();
-                                mesh.s = 0.02;
-                                mesh.angle = 0.0;
-                                mesh.angularSpeed = 0.0;
-                                group.add( mesh );
+                                sphereMesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
+                                sphereMesh.castShadow = true;
+                                sphereMesh.receiveShadow = true;
+                                sphereMesh.position.x = x;
+                                sphereMesh.position.y = y;
+                                sphereMesh.position.z = z;
+                                sphereMesh.velocity = 0.0;
+                                sphereMesh.direction = new THREE.Vector3();
+                                sphereMesh.s = 0.02;
+                                sphereMesh.angle = 0.0;
+                                sphereMesh.angularSpeed = 0.0;
+                                group.add( sphereMesh );
 
-                                spheres.push( mesh );
+                                spheres.push( sphereMesh );
                             }
+                           pauseSimulation = false;
+                           updatePhysicalBodies();
+                           pauseSimulation = true;
                         }
                         
                         function checkForCollisionWithSpline(collidingSpline, px, py) {
@@ -235,7 +278,9 @@
                         }
                         
                         function updatePhysicalBodies() 
-                        {          
+                        {   
+                            if(pauseSimulation)
+                                return;
                             var g = -9.8;
                                 var dt = 0.016;
                                 for( var i=0; i<spheres.length; i++ ) {
@@ -323,8 +368,8 @@
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
-				camera.position.z = 22;
-				camera.position.y = 4;
+				camera.position.z = 32;
+				camera.position.y = 20;
                                 controls = new THREE.OrbitControls( camera );
                                 controls.addEventListener( 'change', render );
 				// scene
@@ -343,7 +388,7 @@
                                 light.shadowMapWidth = 1024;
 				light.shadowMapHeight = 1024;
                                 
-                                var d = 30;
+                                var d = 60;
 
 				light.shadowCameraLeft = -d;
 				light.shadowCameraRight = d;
@@ -379,7 +424,7 @@
                                 var texture = THREE.ImageUtils.loadTexture("../../img/dark-metal-texture.jpg");
                                 texture.wrapS = THREE.RepeatWrapping;
                                 texture.wrapT = THREE.RepeatWrapping;
-                                texture.repeat.set(1, 1);
+                                texture.repeat.set(10, 10);
                                 var sphereTexture = THREE.ImageUtils.loadTexture( "../../img/number2.jpeg");
                                 
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();

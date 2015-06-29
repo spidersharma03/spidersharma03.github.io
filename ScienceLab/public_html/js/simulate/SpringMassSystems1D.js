@@ -304,6 +304,23 @@ SpringMassSystems1D.prototype = {
             body.velocity.x += -this.damping * body.velocity.x;
             body.position.x += body.velocity.x * dt;
         }
+        
+//        for (var b = 0; b < this.bodies.length; b++) {
+//            var body = this.bodies[b];
+//            body.velocity.x += body.internalforce.x / body.mass * dt;
+//        }
+//        for (var b = 0; b < this.bodies.length; b++) {
+//            var body = this.bodies[b];
+//            var Cdot = -body.velocity.x;
+//            var frictionImpulse = Cdot;
+//            var frictionCoeffficient = 0.1;
+//            var maxFriction = frictionCoeffficient * body.mass * 9.8 * dt;
+//            frictionImpulse = Math.max(frictionImpulse, -maxFriction);
+//            frictionImpulse = Math.min(frictionImpulse, maxFriction);
+//                            
+//            body.velocity.x += frictionImpulse;
+//            body.position.x += body.velocity.x * dt;
+//        }
     }
 };
 

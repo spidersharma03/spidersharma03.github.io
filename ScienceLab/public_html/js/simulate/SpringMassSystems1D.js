@@ -62,7 +62,7 @@ function createMassGeometry(size, leftSpringSize, rightSpringSize) {
     var colliderMesh1, colliderMesh2;
     var springLength = rightSpringSize > 0.0 ? Math.abs(rightSpringSize) : Math.abs(leftSpringSize);
     if (rightSpringSize > 0.0 || leftSpringSize > 0.0) {
-        springMeshRight = createSpringGeometry(springLength);
+        springMeshRight = createSpringGeometry(Math.abs(rightSpringSize));
         springMeshRight.position.y = height * 0.9;
         springMeshRight.rotateZ(-Math.PI / 2);
         springMeshRight.castShadow = true;
@@ -82,8 +82,9 @@ function createMassGeometry(size, leftSpringSize, rightSpringSize) {
         geometryGroup.add(colliderMesh1);
     }
     if (leftSpringSize > 0.0) {
-        springMeshLeft = springMeshRight.clone();
-        springMeshLeft.rotateZ(-Math.PI);
+        springMeshLeft = createSpringGeometry(Math.abs(leftSpringSize));
+        springMeshLeft.position.y = height * 0.9;
+        springMeshLeft.rotateZ(Math.PI/2);
         springMeshLeft.position.x = -length / 2;
         //springMeshLeft.position.y = springMeshRight.position.y;
         geometryGroup.add(springMeshLeft);

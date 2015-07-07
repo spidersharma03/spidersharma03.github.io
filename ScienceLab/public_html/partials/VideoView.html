@@ -1,0 +1,17 @@
+
+    <div class="container-fluid">
+    <h2 style="font-weight:bolder; margin-left: 100px">{{SimulationName}}</h2>
+    <br>
+    <ul class="media-list">
+       <li class="media" ng-repeat="video in VideoList">
+          <a class="pull-right">
+            <iframe width="654" height="410" src=video.src frameborder="1" allowfullscreen></iframe>
+          </a>
+          <div class="media-body">
+             <h4 class="media-heading">{{video.display_name}}</h4>
+             <br>
+             <p>{{video.description}}</p>
+          </div>
+       </li>
+    </ul>
+    </div>

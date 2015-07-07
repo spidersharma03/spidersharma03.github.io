@@ -35,10 +35,46 @@ controllers.controller('SubTopicsLoadController', function ($scope, $routeParams
     $scope.subjectCategory = $routeParams.subjectCategory;
     $scope.Topic = $routeParams.Topic;
     
+    $scope.onSubViewClick = function(subView) {
+        $scope.SubView = subView;
+    };
+    
+    $scope.onSubTopicClick = function(subTopicPage) {
+        $scope.SubTopic = subTopicPage;
+        contentLoadingServiceAPI.getSubTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase(),$scope.Topic.toLowerCase())
+        .success(function(data) {
+            $scope.categoryTopicsData = data;
+            $scope.SubView = "simulation";
+            var element = document.getElementById("tab-simulation");
+            if(element)
+               element.className = "active";
+            element = document.getElementById("tab-video");
+            if(element)
+               element.className = "";
+            element = document.getElementById("tab-questions");
+            if(element)
+               element.className = "";
+           
+            for(var i = 0; i < $scope.categoryTopicsData.topics.length; i++)
+            {
+                if($scope.categoryTopicsData.topics[i].pageLink === $scope.SubTopic) {
+                    $scope.VideoList = $scope.categoryTopicsData.topics[i].videos;
+                    $scope.SimulationList = $scope.categoryTopicsData.topics[i].simulations;
+                    $scope.SimulationDisplayName = $scope.categoryTopicsData.topics[i].display_name;
+                    $scope.SimulationFolderName = $scope.categoryTopicsData.topics[i].pageLink;
+                    $scope.SimulationSceneName = $scope.categoryTopicsData.topics[i].scene_name;            
+                    break;
+                }
+            }
+    
+        });
+    };
     contentLoadingServiceAPI.getSubTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase(),$scope.Topic.toLowerCase())
     .success(function(data) {
     $scope.categoryTopicsData = data;
     $scope.SubTopic = $scope.categoryTopicsData.topics[0].pageLink;
+    $scope.SubView = "simulation";
+    $scope.VideoList = $scope.categoryTopicsData.topics[0].videos;
     $scope.SimulationList = $scope.categoryTopicsData.topics[0].simulations;
     $scope.SimulationDisplayName = $scope.categoryTopicsData.topics[0].display_name;
     $scope.SimulationFolderName = $scope.categoryTopicsData.topics[0].pageLink;
@@ -52,8 +88,12 @@ controllers.controller('SubTopicsDataLoadController', function ($scope, $routePa
     $scope.subjectCategory = $routeParams.subjectCategory;
     $scope.Topic = $routeParams.Topic;
     $scope.SubTopic = $routeParams.SubTopic;
+    $scope.SubView = "simulation";
     $scope.onSubTopicClick = function(subTopicPage) {
         $scope.SubTopic = subTopicPage;
+    };
+    $scope.onSubViewClick = function(subView) {
+        $scope.SubView = subView;
     };
     contentLoadingServiceAPI.getSubTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase(),$scope.Topic.toLowerCase())
     .success(function(data) {
@@ -61,6 +101,7 @@ controllers.controller('SubTopicsDataLoadController', function ($scope, $routePa
     for(var i = 0; i < $scope.categoryTopicsData.topics.length; i++)
     {
         if($scope.categoryTopicsData.topics[i].pageLink === $scope.SubTopic) {
+            $scope.VideoList = $scope.categoryTopicsData.topics[i].videos;
             $scope.SimulationList = $scope.categoryTopicsData.topics[i].simulations;
             $scope.SimulationDisplayName = $scope.categoryTopicsData.topics[i].display_name;
             $scope.SimulationFolderName = $scope.categoryTopicsData.topics[i].pageLink;

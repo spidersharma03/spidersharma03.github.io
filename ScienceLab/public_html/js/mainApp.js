@@ -35,10 +35,10 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
          templateUrl: 'partials/TopicsPage.html',
          controller: 'SubTopicsLoadController'
       }).
-      when('/:subjectID/:subjectCategory/:Topic/:SubTopic', { // this is for loading topics in a category.( ex kinematics, oscillations in mechanics)
-         templateUrl: 'partials/TopicsPage.html',
-         controller: 'SubTopicsDataLoadController'
-      }).
+//      when('/:subjectID/:subjectCategory/:Topic/:SubTopic', { // this is for loading topics in a category.( ex kinematics, oscillations in mechanics)
+//         templateUrl: 'partials/TopicsPage.html',
+//         controller: 'SubTopicsDataLoadController'
+//      }).
       otherwise({  
         redirectTo: '/Home'
       });

@@ -35,7 +35,7 @@
             </div>
             <ul class="list-group" style="margin: 0px; font-weight: 200">
                 <li class="list-group-item" ng-repeat="categoryTopic in categoryTopicsData.topics" ng-click="onSubTopicClick(categoryTopic.pageLink)">
-                    <a href = "#{{subjectID}}/{{subjectCategory}}/{{Topic}}/{{categoryTopic.pageLink}}">{{categoryTopic.name}}</a></li>
+                    <a href = "#{{subjectID}}/{{subjectCategory}}/{{Topic}}">{{categoryTopic.name}}</a></li>
             </ul>
             <div class="panel-footer"><span class="glyphicon glyphicon-circle-arrow-right"></span>   
                 <a href = "#{{categoryTopicsData.Info.subject}}/{{categoryTopicsData.Info.category}}/{{categoryTopicsData.Info.nextTopic}}"> 
@@ -49,7 +49,7 @@
         </div>
           
     </div>
-
+<!--/{{categoryTopic.pageLink}}-->
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->

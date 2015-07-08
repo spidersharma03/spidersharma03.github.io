@@ -5,7 +5,7 @@
     <ul class="media-list">
        <li class="media" ng-repeat="video in VideoList">
           <a class="pull-right">
-            <iframe id="video-frame" width="600" height="410" src={{video.src}} frameborder="1" allowfullscreen onLoad="uploadDone();"></iframe>
+            <iframe id="video-frame" width="600" height="410" src={{trustSrc(video.src)}} frameborder="1" allowfullscreen></iframe>
             
           </a>
           <div class="media-body">

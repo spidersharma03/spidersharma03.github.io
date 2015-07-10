@@ -66,21 +66,27 @@
         "simulations":
             [
                {
+                   "display_name": "Force",
+                   "description":"",
+                   "image" : "test.png",
+                   "scene_name" : "Scene_Acceleration_Idea"
+               },  
+               {
+                   "display_name": "Acceleration of equal masses",
+                   "description":"Under the influence of a force applied by a stretched/compressed spring, equal masses acquire equal accelerations",
+                   "image" : "test.png",
+                   "scene_name" : "Scene_Acceleration_Idea"
+               }, 
+               {
+                   "display_name": "Acceleration of unequal masses",
+                   "description":"Under the influence of a force applied by a stretched/compressed spring, different masses possess different accelerations",
+                   "image" : "test.png",
+                   "scene_name" : "Scene_Acceleration_Idea"
+               }, 
+               {
                    "display_name": "Constant Force",
-                   "description":"Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force Constant Force",
+                   "description":"Acceleration is directly proportional to the applied force",
                    "image" : "newton_second_law_1.png",
-                   "scene_name" : "Scene"
-               },
-               {
-                   "display_name": "Equilibrium of Forces",
-                   "description":"Equilibrium of Forces Equilibrium of Forces Equilibrium of Forces Equilibrium of Forces Equilibrium of Forces Equilibrium of Forces Equilibrium of Forces Equilibrium of Forces Equilibrium of Forces Equilibrium of Forces",
-                   "image" : "test.png",
-                   "scene_name" : "Scene"
-               },
-               {
-                   "display_name": "Two Hand Carts",
-                   "description":"Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts Two Hand Carts",
-                   "image" : "test.png",
                    "scene_name" : "Scene"
                }
             ],
@@ -96,6 +102,12 @@
                {
                    "display_name": "Forces on Spring",
                    "description":"Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring Forces on Spring",
+                   "image" : "newton_third_law_1.png",
+                   "scene_name" : "Scene"
+               },
+               {
+                   "display_name": "Action Reaction Pairs",
+                   "description":"Various examples showing the action reaction force pairs are illustrated",
                    "image" : "newton_third_law_1.png",
                    "scene_name" : "Scene"
                }

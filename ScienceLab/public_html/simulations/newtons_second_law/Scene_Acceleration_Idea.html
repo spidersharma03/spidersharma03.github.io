@@ -41,9 +41,6 @@
         <script>
 
             var simulation = new SpringMassSystems1D();
-            var forceArrow1;
-            var forceArrow2;
-            var forceArrow3;
             
             var container, stats;
             var pickConstraint = null;
@@ -64,7 +61,7 @@
             var cubeMaterial;
             var groundMaterial;
             var sphereMaterial;
-
+            
             var numSpheres = 2;
             var spheres = [];
             var physicsBodies = [];
@@ -81,9 +78,7 @@
 
             var anchorPositions = [];
             var indices_array = [];
-            var impulse = new Ammo.btVector3(-3, 0, 0);
-            var impulsePoint = new Ammo.btVector3(0, 0, 0);
-
+            var tempVector = new THREE.Vector3();
             var cameraPosition = new THREE.Vector3();
 
             var arcRadius = 7;
@@ -315,44 +310,32 @@
                 renderer.shadowMapSoft = true;
 
                 makeBaseGeometry();
-
-                forceArrow1 = new Arrow3D(2);
-                forceArrow2 = new Arrow3D(2);
-                forceArrow3 = new Arrow3D(2);
-                
-                scene.add(forceArrow1.getRootNode());
-                scene.add(forceArrow2.getRootNode());
-                scene.add(forceArrow3.getRootNode());
-                
                 createMassesWithSprings();
                 
                 pauseSimulation = false;
                 syncSimulation();
-                pauseSimulation = true;
+                pauseSimulation = false;
                 
                
             }
 
             function createMassesWithSprings() {
                 // Create Physical System bodies
-                body1 = new SpringMassSystems1D.Body(1.0, 1.0, -1.0, 2.0);
-                body1.position.x = -2;
-                body2 = new SpringMassSystems1D.Body(3.0, 3.0, 2.0, -1.0);
-                body2.position.x = 2;
+                body1 = new SpringMassSystems1D.Body(1.0, 1.0, -1.0, -1.0);
+                body1.position.x = -4;
+                body2 = new SpringMassSystems1D.Body(2.0, 2.0, -1.0, -1.0);
+                body2.position.x = 4;
                 //body1.velocity.x = 2.0;
                 simulation.addBody(body1);
                 simulation.addBody(body2);
-                //var spring1 = new SpringMassSystems1D.Spring(5,1,body1,body2);
-                //simulation.addSpring(spring1);
-                //scene.add(body1.model);
-                //scene.add(body2.model);
-                //scene.add(spring1.model);
-                forceArrow1.setOrientationAxis(0);
-                forceArrow1.setPosition(new THREE.Vector3(body1.position.x,body1.position.y,0), 1);
-                forceArrow2.setOrientationAxis(2);
-                forceArrow2.setPosition(new THREE.Vector3(body1.position.x,body1.position.y,0), 2);
-                forceArrow3.setOrientationAxis(4);
-                forceArrow3.setPosition(new THREE.Vector3(body1.position.x,body1.position.y,0), 0);
+                var spring1 = new SpringMassSystems1D.Spring(4,1,body1,body2);
+                simulation.addSpring(spring1);
+                scene.add(body1.model);
+                scene.add(body2.model);
+                scene.add(spring1.model);
+                scene.add(spring1.forceArrow1.getRootNode());
+                scene.add(spring1.forceArrow2.getRootNode());
+                
             }
             
             function onDocumentMouseMove(event)

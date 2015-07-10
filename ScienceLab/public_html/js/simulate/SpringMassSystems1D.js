@@ -305,7 +305,24 @@ SpringMassSystems1D.prototype = {
             body.velocity.x += -this.damping * body.velocity.x;
             body.position.x += body.velocity.x * dt;
         }
-        
+        // Position force arrows
+        for (var i = 0; i < this.springs.length; i++) {
+            var spring = this.springs[i];
+            var body1 = spring.body1;
+            var body2 = spring.body2;
+            var arrow1 = spring.forceArrow1;
+            var arrow2 = spring.forceArrow2;
+            
+            var d = body1.position.x - body2.position.x + body1.size;
+            var delta = spring.length - Math.abs(d);
+            var force = -spring.k * delta;
+            // Position at left & right bodies
+            var scaleFactor = Math.abs(force) * 0.3;
+            arrow1.setPosition(body1.position.x + body1.size/2, body1.position.y + body1.size/2, 0, Arrow3D.HEAD);
+            arrow1.setLength(scaleFactor);
+            arrow2.setPosition(body2.position.x - body2.size/2, body2.position.y + body1.size/2, 0, Arrow3D.HEAD);
+            arrow2.setLength(scaleFactor);
+        }
 //        for (var b = 0; b < this.bodies.length; b++) {
 //            var body = this.bodies[b];
 //            body.velocity.x += body.internalforce.x / body.mass * dt;
@@ -351,6 +368,12 @@ SpringMassSystems1D.Spring = function (length, k, body1, body2) {
     this.compressionFraction = 1.0; // currentLength/this.length
     this.body1 = body1;
     this.body2 = body2;
+    this.lambertMaterial1 = new THREE.MeshLambertMaterial({color:0x111188, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+    this.lambertMaterial2 = new THREE.MeshLambertMaterial({color:0x881111, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+    this.forceArrow1 = new Arrow3D(2, this.lambertMaterial1);
+    this.forceArrow1.setOrientationAxis(0);
+    this.forceArrow2 = new Arrow3D(2, this.lambertMaterial2);
+    this.forceArrow2.setOrientationAxis(1);
     this.model = createSpringGeometry(this.length);
     this.model.rotateZ(Math.PI/2);
 };

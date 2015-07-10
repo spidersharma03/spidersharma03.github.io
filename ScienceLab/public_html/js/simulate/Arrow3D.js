@@ -25,6 +25,9 @@ function Arrow3D(length, material) {
     this.setLength(this.length);
 }
 
+Arrow3D.TAIL = 1;
+Arrow3D.HEAD = 2;
+
 Arrow3D.prototype = {
     constructor: Arrow3D,
     
@@ -42,14 +45,18 @@ Arrow3D.prototype = {
         this.coneNode.scale.z = this.radius;
     },
     
-    setPosition: function(position, positionAt) {
-        this.rootNode.position.copy(position);
-        this.origin.copy(position);
-        if( positionAt === 1) { // Tail
-            this.offsetNode.position.y += this.length/2;
+    setPosition: function(px, py, pz, positionAt) {
+        this.rootNode.position.x = px;
+        this.rootNode.position.y = py;
+        this.rootNode.position.z = pz;
+        this.origin.x = px;
+        this.origin.y = py;
+        this.origin.z = pz;
+        if( positionAt === Arrow3D.TAIL) { // Tail
+            this.offsetNode.position.y = this.length/2;
         }
-        if( positionAt === 2) { // Pointer
-            this.offsetNode.position.y -= this.length/2;
+        if( positionAt === Arrow3D.HEAD) { // Pointer
+            this.offsetNode.position.y = this.length/2;
         }
     },
     

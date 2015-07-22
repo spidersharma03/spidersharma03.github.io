@@ -49,24 +49,6 @@
         "id": "Megnatism.json", 
         "imageUrl": "",
         "description": "Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets. Study of Forces produced by magnets "
-    },
-    {
-        "name": "Fluids", 
-        "id": "ElectroMagnetics.json", 
-        "imageUrl": "", 
-        "description": "Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets. Study of Forces produced by moving charges and magnets."
-    },
-    {
-        "name": "Thermodynamics", 
-        "id": "Thermodynamics.json", 
-        "imageUrl": "", 
-        "description": "Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed. Laws of Thermodynamics and their statistical nature is discussed"
-    },
-    {
-        "name": "Modern Physics", 
-        "id": "Modern Physics.json", 
-        "imageUrl": "", 
-        "description": "If you understand Quantum mechanics, Relativity theory easily, then you probably don't understand them."
     }
 ]
 }

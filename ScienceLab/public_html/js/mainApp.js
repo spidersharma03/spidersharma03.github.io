@@ -12,7 +12,7 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
   function($routeProvider) {
     $routeProvider.
       when('/Home', {
-        templateUrl: 'partials/homePage.html',
+        templateUrl: 'ScienceLab/public_html/partials/homePage.html',
         controller: 'homePageLoadController'
       }).
       when('/Mission', {

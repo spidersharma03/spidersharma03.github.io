@@ -115,22 +115,6 @@
         "pageLink"  : "newtons_third_law"
     },
     {
-        "name": "Friction", 
-        "id": "Electricity.json", 
-        "imageUrl": "",
-        "description": "",
-        "simulations":
-            [
-               {
-                   "display_name": "Static Friction",
-                   "description":"Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction Static Friction v Static Friction Static Friction Static Friction",
-                   "image" : "newton_third_law_1.png",
-                   "scene_name" : "Scene_StaticFriction"
-               }
-            ],
-        "pageLink"  : "friction"
-    },
-    {
         "name": "Linear Momentum Conservation", 
         "id": "Electricity.json", 
         "imageUrl": "",
@@ -233,26 +217,6 @@
                }
             ],
         "pageLink"  : "centre_of_mass"
-    },
-    {
-        "name": "Energy Conservation", 
-        "id": "Electricity.json", 
-        "imageUrl": "",
-        "description": "",
-        "simulations":
-            [
-               {
-                   "display_name": "Energy Conservation for a Spring Mass System",
-                   "description":"Energy Conservation for a Spring Mass System Energy Conservation for a Spring Mass System Energy Conservation for a Spring Mass System Energy Conservation for a Spring Mass System Energy Conservation for a Spring Mass System Energy Conservation for a Spring Mass System",
-                   "image" : "test.png"
-               },
-               {
-                   "display_name": "Energy Conservation::Elastic Collisions",
-                   "description":"Energy Conservation::Elastic Collisions Energy Conservation::Elastic Collisions Energy Conservation::Elastic Collisions Energy Conservation::Elastic Collisions Energy Conservation::Elastic Collisions Energy Conservation::Elastic Collisions Energy Conservation::Elastic Collisions",
-                   "image" : "test.png"
-               }
-            ],
-        "pageLink"  : "energy_conservation"
     }
 ]
 }

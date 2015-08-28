@@ -1,3 +1,18 @@
 
     <div class="container-fluid">
+    <h2 style="font-weight:bolder; margin-left: 100px">{{SimulationName}}</h2>
+    <br>
+    <ul class="media-list">
+       <li class="media" ng-repeat="question in QuestionList">
+          <a  ng-click="onQuestionViewClick(question)" href="#Question/{{SubTopic}}/{{question.scene_name}}.html">
+             <img style ="margin: 0px 100px 0px 0px" class="well media-object" src=img/{{question.image_icon}} width =400 height = 200
+             alt="Generic placeholder image">
+          </a>
+          <div class="media-body">
+             <h4 class="media-heading">{{question.display_name}}</h4>
+             <br>
+             <p>{{question.description}}</p>
+          </div>
+       </li>
+    </ul>
     </div>

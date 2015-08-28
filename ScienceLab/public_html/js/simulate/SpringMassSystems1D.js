@@ -318,10 +318,22 @@ SpringMassSystems1D.prototype = {
             var force = -spring.k * delta;
             // Position at left & right bodies
             var scaleFactor = Math.abs(force) * 0.3;
-            arrow1.setPosition(body1.position.x + body1.size/2, body1.position.y + body1.size/2, 0, Arrow3D.HEAD);
-            arrow1.setLength(scaleFactor);
-            arrow2.setPosition(body2.position.x - body2.size/2, body2.position.y + body1.size/2, 0, Arrow3D.HEAD);
-            arrow2.setLength(scaleFactor);
+            var zOffset = 0.25;
+            if( force < 0) {
+                arrow1.setPosition(body1.position.x + body1.size/2, body1.position.y + body1.size/2, zOffset, Arrow3D.HEAD);
+                arrow1.setLength(scaleFactor);
+                arrow1.setOrientationAxis(Arrow3D.NEG_X);
+                arrow2.setPosition(body2.position.x - body2.size/2, body2.position.y + body1.size/2, zOffset, Arrow3D.HEAD);
+                arrow2.setLength(scaleFactor);
+                arrow2.setOrientationAxis(Arrow3D.POS_X);
+            } else {
+                arrow1.setPosition(body1.position.x + body1.size/2, body1.position.y + body1.size/2, zOffset, Arrow3D.HEAD);
+                arrow1.setLength(scaleFactor);
+                arrow1.setOrientationAxis(Arrow3D.POS_X);
+                arrow2.setPosition(body2.position.x - body2.size/2, body2.position.y + body1.size/2, zOffset, Arrow3D.HEAD);
+                arrow2.setLength(scaleFactor);
+                arrow2.setOrientationAxis(Arrow3D.NEG_X);
+            }
         }
 //        for (var b = 0; b < this.bodies.length; b++) {
 //            var body = this.bodies[b];
@@ -370,10 +382,14 @@ SpringMassSystems1D.Spring = function (length, k, body1, body2) {
     this.body2 = body2;
     this.lambertMaterial1 = new THREE.MeshLambertMaterial({color:0x111188, ambient: 0xaaaaaa, combine: THREE.MixOperation});
     this.lambertMaterial2 = new THREE.MeshLambertMaterial({color:0x881111, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+    this.lambertMaterial1.side = THREE.DoubleSide;
+    this.lambertMaterial2.side = THREE.DoubleSide;
     this.forceArrow1 = new Arrow3D(2, this.lambertMaterial1);
     this.forceArrow1.setOrientationAxis(0);
+    this.forceArrow1.setRadius(0.5);
     this.forceArrow2 = new Arrow3D(2, this.lambertMaterial2);
     this.forceArrow2.setOrientationAxis(1);
+    this.forceArrow2.setRadius(0.5);
     this.model = createSpringGeometry(this.length);
     this.model.rotateZ(Math.PI/2);
 };

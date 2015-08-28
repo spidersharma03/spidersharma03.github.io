@@ -1,0 +1,114 @@
+{
+   "Info":
+    {
+        "name" : "newtons_first_law",
+        "subject"    : "Physics",
+        "category" : "Mechanics",
+        "subcategory" : "linear dynamics",
+        "description": ""
+    }
+,
+    "questionlist":
+    [
+        {
+            "display_name": "Idea of Inertia",
+            "image_icon" : "galileo_thought_1.png",
+            "type" : "simulation",
+            "video" : "",
+            "image": "",
+            "scene_name" : "Scene_Inertia",
+            "questions":
+            [
+                {
+                    "type" : "single choice",
+                    "question" : "Why does the top block falls and continues when the bottom block is stopped by the stopper?",
+                    "options" :
+                    [
+                        "There is a force acting on it in the direction of motion so it continues along its path",
+                        "It continues in the direction of motion due to it's inertia"
+                    ],
+                    "correct_answer": "2",
+                    "explanation" : "TODO :: EXPLAIN THE ANSWER"
+                },
+                {
+                    "type" : "thought",
+                    "question" : "You might notice that when you start the simulation, you have the option to apply force on both the blocks or only the bottom block. what difference do you observe in these two situations?",
+                    "explanation" : "TODO :: EXPLAIN THE ANSWER"
+                }
+            ]
+            
+        },
+        
+        {
+            "display_name": "Dramatic demonstration of the idea of Inertia",
+            "image_icon" : "galileo_thought_1.png",
+            "type" : "Image",
+            "video" : "",
+            "image": "",
+            "scene_name" : "Scene_Inertia",
+            
+            "questions":
+            [
+                {
+                    "type" : "single choice",
+                    "question" : "As shown in the figure, a block of mass m is supported by a string A from the ceiling, and another string B is attached to the bottom of the block. Which string will break if you give a sudden jerk to B?",
+                    "options" :
+                    [
+                        "string A",
+                        "string B"
+                    ],
+                    "correct_answer": "2",
+                    "explanation" : "TODO :: EXPLAIN THE ANSWER"
+                },
+                {
+                    "type" : "single choice",
+                    "question" : "As shown in the figure, a block of mass m is supported by a string A from the ceiling, and another string B is attached to the bottom of the block. Which string will break if you pull steadily on B?",
+                    "options" :
+                    [
+                        "string A",
+                        "string B"
+                    ],
+                    "correct_answer": "1",
+                    "explanation" : "TODO :: EXPLAIN THE ANSWER"
+                }
+            ]
+        },
+        
+        {
+            "display_name": "Galileo's Mistake",
+            "image_icon" : "galileo_thought_1.png",
+            "type" : "simulation",
+            "video" : "",
+            "image": "",
+            "scene_name" : "Scene_Inertia",
+            
+            "questions":
+            [
+                {
+                    "type" : "single choice",
+                    "question" : "The ball moves in a circular path with a constant speed. Since the spped is not changing, do you think that inertia makes it move in this path?",
+                    "options" :
+                    [
+                        "yes",
+                        "no"
+                    ],
+                    "correct_answer": "2",
+                    "explanation" : "TODO :: EXPLAIN THE ANSWER"
+                },
+                {
+                    "type" : "single choice",
+                    "question" : "What will happen if you break the string at an instant?",
+                    "options" :
+                    [
+                        "The ball will continue to move in a circular path ",
+                        "The ball will simply fall down vertically",
+                        "The ball will move along the tangent of the circular path"
+                    ],
+                    "correct_answer": "3",
+                    "explanation" : "TODO :: EXPLAIN THE ANSWER"
+                }
+            ]
+        }
+    ]
+}
+

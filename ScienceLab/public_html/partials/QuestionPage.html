@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html>
+ <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Science</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">  
+  </head>
+    
+<body ng-controller="QuestionDataLoadController">
+
+    <div class = "row-fluid">
+        <div ng-include="guiName" class = "span2">
+        </div>
+        <div class = "span9">
+            <div class = "well"> 
+                <iframe iframe-set-dimentions-onload id="IFrame" style="width:100%; height: 400px;" src="{{LinkName}}"></iframe>
+            </div>                    
+                <div  ng-switch on="questionType">
+                    <div ng-switch-when="single choice">
+                        <div ng-include="'partials/Question_Option_View.html'" ></div>
+                    </div>
+                    <div ng-switch-when="thought">
+                        <div ng-include="'partials/Question_Descriptive_View.html'" ></div>
+                    </div>
+                </div>
+                <div>
+                                                                        
+                                                            
+                </div>
+        </div>
+    </div>
+    
+    
+    <script src="../js/lib/bootstrap.min.js"></script>
+    
+</body>
+
+</html>

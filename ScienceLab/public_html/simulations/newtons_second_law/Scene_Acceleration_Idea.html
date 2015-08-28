@@ -35,13 +35,15 @@
 
         <script src="../../js/lib/three.js/js/Detector.js"></script>
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
-        <script src="../../js/simulate/SpringMassSystems1D.js"></script>
         <script src="../../js/simulate/Arrow3D.js"></script>
+        <script src="../../js/simulate/SpringMassSystems1D.js"></script>
 
         <script>
 
             var simulation = new SpringMassSystems1D();
-            
+            var vector = new THREE.Vector3();
+            var projector = new THREE.Projector();
+                
             var container, stats;
             var pickConstraint = null;
             var camera, scene, renderer, controls;
@@ -66,7 +68,7 @@
             var spheres = [];
             var physicsBodies = [];
             var boxMesh;
-            
+            var text2 = document.createElement('div');
             var geometry;
             var sphereRadius = 1.0;
             var cradleWidth = 3.0;
@@ -185,12 +187,27 @@
                 comMesh.add(line);
                 //scene.add(comMesh);
             }
+            
+            function projectToScreenSpace(object) {
+                var w = window.innerWidth;
+                var h = window.innerHeight;
+                var width = 640, height = 480;
+                var widthHalf = w / 2, heightHalf = h / 2;
 
+                projector.projectVector( vector.setFromMatrixPosition( object.matrixWorld ), camera );
+
+                vector.x = ( vector.x * widthHalf ) + widthHalf;
+                vector.y = - ( vector.y * heightHalf ) + heightHalf;
+            }
+            
             function syncSimulation()
             {
                 if(pauseSimulation)
                     return;
                 simulation.simulate(dt);
+                projectToScreenSpace(simulation.bodies[1].model);
+                text2.style.top = vector.y + 'px';
+                text2.style.left = vector.x + 'px';
                 for( var i=0; i<simulation.bodies.length; i++) {
                     var body = simulation.bodies[i];
                     var bodyModel = body.model;
@@ -336,6 +353,15 @@
                 scene.add(spring1.forceArrow1.getRootNode());
                 scene.add(spring1.forceArrow2.getRootNode());
                 
+                text2.style.position = 'absolute';
+                //text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+                text2.style.width = 100;
+                text2.style.height = 100;
+                //text2.style.backgroundColor = "blue";
+                text2.innerHTML = "hi there!";
+                text2.style.top = 200 + 'px';
+                text2.style.left = 200 + 'px';
+                document.body.appendChild(text2);
             }
             
             function onDocumentMouseMove(event)

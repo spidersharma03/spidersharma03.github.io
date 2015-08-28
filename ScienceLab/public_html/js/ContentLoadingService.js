@@ -44,5 +44,26 @@ _contentLoadingService.factory('contentLoadingServiceAPI', function($http) {
       });
     };
     
+    contentApi.getSubTopicQuestions = function(category, subcategory, subtopic) {
+      return $http({
+        method: 'get', 
+        url: 'json/' + category + '/' + subcategory + '/'  + "questions" + '/'+ subtopic + '.json'
+      });
+    };
+    
     return contentApi;
   });
+  
+  angular.module('ContentSharingService', [])
+    .service('sharedProperties', function () {
+        var property = 'First';
+
+        return {
+            getProperty: function () {
+                return property;
+            },
+            setProperty: function(value) {
+                property = value;
+            }
+        };
+    });

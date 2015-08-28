@@ -30,13 +30,23 @@ controllers.controller('TopicsLoadController', function ($scope, $routeParams, c
 });
 
 // Loads the data for a given topic, inside a subject category(  physics/mechanics/oscillations, computer science/computer graphics/opengl, etc...)
-controllers.controller('SubTopicsLoadController', function ($scope, $sce, $routeParams, contentLoadingServiceAPI) {
+controllers.controller('SubTopicsLoadController', function ($scope, $sce, $routeParams, contentLoadingServiceAPI, sharedProperties) {
     $scope.subjectID = $routeParams.subjectID;
     $scope.subjectCategory = $routeParams.subjectCategory;
     $scope.Topic = $routeParams.Topic;
     
+    $scope.onQuestionViewClick = function(questionStructure) {
+        sharedProperties.setProperty(questionStructure);
+    };
+    
     $scope.onSubViewClick = function(subView) {
         $scope.SubView = subView;
+        if(subView === "questions") {
+            contentLoadingServiceAPI.getSubTopicQuestions($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase(),$scope.SubTopic.toLowerCase())
+            .success(function(data) {
+                $scope.QuestionList = data.questionlist;
+        });
+       }
     };
     
     $scope.trustSrc = function(src) {
@@ -73,6 +83,7 @@ controllers.controller('SubTopicsLoadController', function ($scope, $sce, $route
     
         });
     };
+    
     contentLoadingServiceAPI.getSubTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase(),$scope.Topic.toLowerCase())
     .success(function(data) {
     $scope.categoryTopicsData = data;
@@ -121,4 +132,40 @@ controllers.controller('SubTopicsDataLoadController', function ($scope, $routePa
 controllers.controller('SimulationDataLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
     $scope.LinkName =  "simulations/" + $routeParams.simulationPageName + '/' + $routeParams.simulationName;
     $scope.guiName = "partials/" + $routeParams.simulationPageName + "/" + $routeParams.simulationName;
+});
+
+// Loads the question data.
+controllers.controller('QuestionDataLoadController', function ($scope, $routeParams, contentLoadingServiceAPI, sharedProperties) {
+    $scope.LinkName =  "simulations/" + $routeParams.simulationPageName + '/' + $routeParams.simulationName;
+    $scope.guiName = "partials/" + $routeParams.simulationPageName + "/" + $routeParams.simulationName;
+    $scope.currentQuestionStructure = sharedProperties.getProperty();
+    $scope.currentQuestion = $scope.currentQuestionStructure.questions[0];
+    $scope.questionType = $scope.currentQuestionStructure.questions[0].type;
+    $scope.currentQuestionIndex = 0;
+    $scope.selectedAnswer = -1;
+    $scope.questionSolved = false;
+    $scope.submitAnswer = function() {
+        var correctAnswer = $scope.currentQuestion.correct_answer;
+        if($scope.selectedAnswer === Number(correctAnswer-1) 
+                && $scope.currentQuestionIndex < $scope.currentQuestion.options.length ){
+               $scope.questionSolved = true;
+       }
+    };
+    
+    $scope.selectAnswer = function(value) {
+        $scope.selectedAnswer = value;
+        var correctAnswer = $scope.currentQuestion.correct_answer;
+        if($scope.selectedAnswer !== Number(correctAnswer-1))
+            $scope.questionSolved = false;
+    };
+    
+    $scope.nextQuestion = function(value) {
+            $scope.currentQuestionIndex++;
+            $scope.questionSolved = false;
+            $scope.currentQuestionIndex = $scope.currentQuestionIndex >= $scope.currentQuestionStructure.questions.length ? 0 : $scope.currentQuestionIndex;
+            if($scope.currentQuestionIndex === 0)
+                $scope.questionSolved = false;
+            $scope.currentQuestion = $scope.currentQuestionStructure.questions[$scope.currentQuestionIndex];            
+            $scope.questionType = $scope.currentQuestion.type;            
+    };
 });

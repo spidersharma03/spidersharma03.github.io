@@ -1,0 +1,17 @@
+<div class="container-fluid well">
+        <h4 style="color: #006dcc">{{currentQuestion.question}}</h4>
+        <hr>
+           <div ng-repeat="option in currentQuestion.options">
+                <div class="radio">
+                    <label><input type="radio" ng-click="selectAnswer($index)" name="optradio">{{option}}</label>
+                </div>
+            </div>  
+            <input type="button"  class = "btn btn-primary offset5"   ng-click="submitAnswer()" value="Submit">
+            <div ng-show="questionSolved">
+                <hr>
+                    <div class="alert alert-success">
+                        <strong>Awesome!</strong> {{currentQuestion.explanation}}.
+                    </div>
+                   <input type="button"  class = "btn btn-success" ng-click="nextQuestion()" value="Next">
+            </div>
+     </div>    

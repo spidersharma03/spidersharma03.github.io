@@ -8,7 +8,7 @@
 /*
  * This module is responsible for all the routing.
  */
-var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'ContentLoadingService']).config(['$routeProvider',
+var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'ContentLoadingService', 'ContentSharingService']).config(['$routeProvider',
   function($routeProvider) {
     $routeProvider.
       when('/Home', {
@@ -22,6 +22,10 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
       when('/Simulation/:simulationPageName/:simulationName', {
         templateUrl: 'partials/SimulationPage.html',
         controller: 'SimulationDataLoadController'
+      }).
+      when('/Question/:simulationPageName/:simulationName', {
+        templateUrl: 'partials/QuestionPage.html',
+        controller: 'QuestionDataLoadController'
       }).
       when('/:subjectID', {         // this is for loading subject.( ex: physics,mathematics etc)
          templateUrl: 'partials/SubjectPage.html',

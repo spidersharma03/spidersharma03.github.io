@@ -290,7 +290,7 @@
                             //Give Impulse to the last sphere
                             //sphereBody.position.y = 1.0;
                             NewtonCradleSimulation.init();
-
+                            changeNumPendulumns(1);
                         }
                         
                         function updatePhysicalBodies() 
@@ -336,7 +336,16 @@
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
 				camera.position.z = -8;
-				camera.position.y = 4;
+				camera.position.y = 5;
+                                var pos = camera.position;
+                            var d = pos.length();
+                            cameraPosition.x = pos.x;
+                            cameraPosition.y = pos.y;
+                            cameraPosition.z = pos.z;
+                                cameraPosition.normalize();
+                               pos.x = cameraPosition.x*5;
+                               pos.y = cameraPosition.y*5;
+                               pos.z = cameraPosition.z*5;
                                 controls = new THREE.OrbitControls( camera );
                                 controls.addEventListener( 'change', render );
 				// scene
@@ -434,7 +443,7 @@
                             cameraPosition.x = pos.x;
                             cameraPosition.y = pos.y;
                             cameraPosition.z = pos.z;
-                            if( d < 5 )
+                            if( d < 10 )
                             {
                                cameraPosition.normalize();
                                pos.x = cameraPosition.x*5;

@@ -37,6 +37,7 @@
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
         <script src="../../js/simulate/Arrow3D.js"></script>
         <script src="../../js/simulate/SpringMassSystems1D.js"></script>
+        <script src="../../js/simulate/Text2D.js"></script>
 
         <script>
 
@@ -68,7 +69,8 @@
             var spheres = [];
             var physicsBodies = [];
             var boxMesh;
-            var text2 = document.createElement('div');
+            var text2d = new Text2D("Hello There", document);
+            var text2d_1 = new Text2D("Hello There", document);
             var geometry;
             var sphereRadius = 1.0;
             var cradleWidth = 3.0;
@@ -206,8 +208,15 @@
                     return;
                 simulation.simulate(dt);
                 projectToScreenSpace(simulation.bodies[1].model);
-                text2.style.top = vector.y + 'px';
-                text2.style.left = vector.x + 'px';
+                text2d.setPosition(vector.x, vector.y);
+                projectToScreenSpace(simulation.bodies[0].model);
+                text2d_1.setPosition(vector.x, vector.y);
+                var vx = simulation.bodies[1].velocity.x;
+                var vx1 = simulation.bodies[0].velocity.x;
+                
+                text2d.setText("v = " + vx.toPrecision(2));
+                text2d_1.setText("v = " + vx1.toPrecision(2));
+                text2d_1.setColor("red");
                 for( var i=0; i<simulation.bodies.length; i++) {
                     var body = simulation.bodies[i];
                     var bodyModel = body.model;
@@ -352,16 +361,8 @@
                 scene.add(spring1.model);
                 scene.add(spring1.forceArrow1.getRootNode());
                 scene.add(spring1.forceArrow2.getRootNode());
-                
-                text2.style.position = 'absolute';
-                //text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
-                text2.style.width = 100;
-                text2.style.height = 100;
-                //text2.style.backgroundColor = "blue";
-                text2.innerHTML = "hi there!";
-                text2.style.top = 200 + 'px';
-                text2.style.left = 200 + 'px';
-                document.body.appendChild(text2);
+                document.body.appendChild(text2d.div);
+                document.body.appendChild(text2d_1.div);
             }
             
             function onDocumentMouseMove(event)

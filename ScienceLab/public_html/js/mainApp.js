@@ -50,10 +50,26 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
  
 //
 mainApp.controller('homePageLoadController', function ($scope, $http) {
-//  $http.get('json/physics_sub.json').success(function(data) {
-//    $scope.subjects = data;
-//  });
+        $scope.login = function() {
+            resturn;
+            Parse.initialize("PgyTYm43FjxpiZxtN0GrtTxQjH7wCbHkt2ThVOz9", "HFcHZI8e1v62Avmbd4LvpELWDoLL0IecD3ZbvGVB");
+            var user = new Parse.User();
+            user.set("username", "my name");
+            user.set("password", "my pass");
+            user.set("email", "email@example.com");
+            $scope.loginSucess = false;
 
+            user.signUp(null, {
+              success: function(user) {
+                 // login success, 
+                 $scope.loginSucess = true;
+              },
+              error: function(user, error) {
+                // Show the error message somewhere and let the user try again.
+                alert("Error: " + error.code + " " + error.message);
+              }
+            });
+        }
 });
 
 mainApp.directive('iframeSetDimentionsOnload', [function(){

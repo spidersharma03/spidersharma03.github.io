@@ -13,6 +13,7 @@
     <link href="css/bootstrap.css" rel="stylesheet">
     <link href="css/bootstrap-responsive.css" rel="stylesheet">
 
+    <script src="//www.parsecdn.com/js/parse-1.6.0.min.js"></script>
     <script src="js/lib/angular.js/angular.js"></script>
     <script src="js/lib/angular.js/angular-route.js"></script>
     <script src="js/lib/jquery/jquery.js"></script>
@@ -22,6 +23,31 @@
   </head>
 
   <body ng-app ="mainApp" ng-controller="homePageLoadController">
+   
+<div class="container">
+    <div class="row">
+        <div class="modal fade" id="myModal">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">x</button>
+                <h3>Login to Eduperiment.com</h3>
+            </div>
+            <div class="modal-body">
+                <form method="post" action='' name="login_form">
+                    <p><input type="text" class="span3" name="eid" id="email" placeholder="Email"></p>
+                    <p><input type="password" class="span3" name="passwd" placeholder="Password"></p>
+                    <p><button type="submit"  ng-click="login()" class="btn btn-primary">Sign in</button>
+                        <a href="#">Forgot Password?</a>
+                    </p>
+                </form>
+            </div>
+            <div class="modal-footer">
+                New To Eduperiment.com?
+                <a href="#" class="btn btn-primary">Register</a>
+            </div>
+        </div>
+    </div>
+</div>
+      
    <div  style = " margin: 40px 20px 0px 20px">
     <h1 style="";>EduPeriment</h1>
     <h5 style=" color:darkblue">experimental learning platform</h5>
@@ -44,6 +70,7 @@
 
           <li><a href="#Mission">Our Mission</a></li>
           <li><a href="#">About us</a></li>
+          <li data-toggle="modal" data-target="#myModal"><a href="#">LogIn</a></li>
         </ul>
       </div>
     </div>

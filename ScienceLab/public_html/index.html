@@ -23,36 +23,16 @@
   </head>
 
   <body ng-app ="mainApp" ng-controller="homePageLoadController">
-   
+
 <div class="container">
-    <div class="row">
-        <div class="modal fade" id="myModal">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">x</button>
-                <h3>Login to Eduperiment.com</h3>
-            </div>
-            <div class="modal-body">
-                <form method="post" action='' name="login_form">
-                    <p><input type="text" class="span3" name="eid" id="email" placeholder="Email"></p>
-                    <p><input type="password" class="span3" name="passwd" placeholder="Password"></p>
-                    <p><button type="submit"  ng-click="login()" class="btn btn-primary">Sign in</button>
-                        <a href="#">Forgot Password?</a>
-                    </p>
-                </form>
-            </div>
-            <div class="modal-footer">
-                New To Eduperiment.com?
-                <a href="#" class="btn btn-primary">Register</a>
-            </div>
-        </div>
-    </div>
+  <div ng-include="'partials/LoginView.html'"></div>
 </div>
       
    <div  style = " margin: 40px 20px 0px 20px">
-    <h1 style="";>EduPeriment</h1>
+    <h1 style="">EduPeriment</h1>
     <h5 style=" color:darkblue">experimental learning platform</h5>
     <div class='navbar navbar-inverse'>
-      <div class='navbar-inner nav-collapse' style="height: auto;">
+      <div class='navbar-inner nav-collapse navbar-header' style="height: auto;">
         <ul class="nav">
           <li class="active"><a href="#Home">Home</a></li>
           <li class="dropdown">
@@ -70,9 +50,13 @@
 
           <li><a href="#Mission">Our Mission</a></li>
           <li><a href="#">About us</a></li>
-          <li data-toggle="modal" data-target="#myModal"><a href="#">LogIn</a></li>
         </ul>
+          <ul class="btn-primary nav navbar-nav pull-right">
+            <li ng-show="!logged_in" data-toggle="modal" ng-click="logInPressed()" data-target="#LoginModal"><a>LogIn</a></li>
+            <li ng-show="logged_in" data-toggle="modal" ng-click="logOutPressed()"><a>{{currentUserName}}</a></li>
+          </ul>   
       </div>
+      
     </div>
     
     <div class="container" style="width: 100%; margin-top: -20px">

@@ -1,24 +1,64 @@
 <div class="container">
     <div class="row">
-        <a class="btn btn-primary" data-toggle="modal" href="#myModal" >Login</a>
-
-        <div class="modal hide" id="myModal">
+        <div class="modal hide" id="LoginModal">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">x</button>
-                <h3>Login to MyWebsite.com</h3>
+                <h3>Login to Eduperiment.com</h3>
+            </div>
+            <div ng-show="emptyEmail">
+                <div class="alert alert-warning" role="alert">Enter your user name!!</div>
+            </div>
+            <div ng-show="emptyPassword">
+                <div class="alert alert-warning" role="alert">Enter your password!!</div>
+            </div>
+            <div ng-show="login_invalidUserOrPassword">
+                <div class="alert alert-error" role="alert">Invalid User name or Password!!</div>
             </div>
             <div class="modal-body">
                 <form method="post" action='' name="login_form">
-                    <p><input type="text" class="span3" name="eid" id="email" placeholder="Email"></p>
-                    <p><input type="password" class="span3" name="passwd" placeholder="Password"></p>
-                    <p><button type="submit" class="btn btn-primary">Sign in</button>
-                        <a href="#">Forgot Password?</a>
+                    <p><input type="text" class="span3" id="username" placeholder="User Name"></p>
+                    <p><input type="password" class="span3" id="password"  placeholder="Password"></p>
+                    <p><button type="submit"  ng-click="loginEvent()" class="btn btn-primary">Sign in</button>
+                        <a>Forgot Password?</a>
                     </p>
                 </form>
             </div>
             <div class="modal-footer">
-                New To MyWebsite.com?
-                <a href="#" class="btn btn-primary">Register</a>
+                New To Eduperiment.com?
+                <a class="btn btn-primary" ng-click="registerPressed()">Register</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="modal hide" id="RegisterModal">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">x</button>
+                <h3>Register to Eduperiment.com</h3>
+                <h5>Already have an account? <a ng-click="signInPressed()">Sign In</a></h5>
+            </div>
+            <div ng-show="register_emptyName">
+                <div class="alert alert-warning" role="alert">Enter your name!!</div>
+            </div>
+            <div ng-show="register_emptyEmail">
+                <div class="alert alert-warning" role="alert">Enter your email!!</div>
+            </div>
+            <div ng-show="register_emptyPassword">
+                <div class="alert alert-warning" role="alert">Enter your Password!!</div>
+            </div>
+            <div ng-show="register_InvalidEmail">
+                <div class="alert alert-error" role="alert">Invalid Email!</div>
+            </div>
+            <div class="modal-body">
+                <form method="post" action='' name="login_form">
+                    <p><input type="text" class="span3" name="name" id="register_name" placeholder="Name"></p>
+                    <p><input type="text" class="span3" name="eid" id="register_email" placeholder="Email"></p>
+                    <p><input type="password" class="span3" id="register_password" name="passwd" placeholder="Password"></p>
+                    <p><button type="submit" class="btn btn-primary" ng-click="registerEvent()">Register</button>
+                    </p>
+                </form>
             </div>
         </div>
     </div>

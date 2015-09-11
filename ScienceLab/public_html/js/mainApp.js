@@ -50,26 +50,137 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
  
 //
 mainApp.controller('homePageLoadController', function ($scope, $http) {
-        $scope.login = function() {
-            resturn;
-            Parse.initialize("PgyTYm43FjxpiZxtN0GrtTxQjH7wCbHkt2ThVOz9", "HFcHZI8e1v62Avmbd4LvpELWDoLL0IecD3ZbvGVB");
-            var user = new Parse.User();
-            user.set("username", "my name");
-            user.set("password", "my pass");
-            user.set("email", "email@example.com");
-            $scope.loginSucess = false;
-
-            user.signUp(null, {
-              success: function(user) {
-                 // login success, 
-                 $scope.loginSucess = true;
-              },
-              error: function(user, error) {
-                // Show the error message somewhere and let the user try again.
-                alert("Error: " + error.code + " " + error.message);
-              }
-            });
+        $scope.logged_in = false;
+        $scope.login_emptyEmail = false;
+        $scope.login_emptyPassword = false;
+        $scope.login_invalidUserOrPassword = false;
+        //$scope.currentUserName = "Prashant";
+        
+        $scope.register_emptyName = false;
+        $scope.register_emptyEmail = false;
+        $scope.register_emptyPassword = false;
+        $scope.register_InvalidEmail = false;
+        
+        Parse.initialize("PgyTYm43FjxpiZxtN0GrtTxQjH7wCbHkt2ThVOz9", "HFcHZI8e1v62Avmbd4LvpELWDoLL0IecD3ZbvGVB");
+        var currentUser = Parse.User.current();
+        if( currentUser ) {
+            $scope.logged_in = true;
+            $scope.currentUserName = "Prashant";
         }
+            
+        $scope.logInPressed = function() {
+           $scope.login_invalidUserOrPassword = false; 
+        };
+        
+        $scope.registerPressed = function() {
+            $scope.register_emptyName = false;
+            $scope.register_emptyEmail = false;
+            $scope.register_emptyPassword = false;
+            $scope.register_InvalidEmail = false;
+            $('#LoginModal').modal('hide');
+            $('#RegisterModal').modal('show');
+        };
+        $scope.signInPressed = function() {
+            $scope.emptyPassword = false;
+            $scope.emptyEmail = false;
+            $('#LoginModal').modal('show');
+            $('#RegisterModal').modal('hide');
+        };
+        $scope.logOutPressed = function() {
+            Parse.User.logOut();
+            $scope.logged_in = false;
+            //$scope.$apply();
+        };
+        
+        $scope.registerEvent = function() {
+            return;
+            var nameField = document.getElementById("register_name").value;
+            var emailField = document.getElementById("register_email").value;
+            var pwField = document.getElementById("register_password").value;
+             if(nameField.length === 0) {
+                 $scope.register_emptyName = false;
+                 $scope.register_emptyEmail = true;
+                 $scope.register_emptyPassword = false;
+                 $scope.register_InvalidEmail = false;
+                 $('#register_name').focus();
+                 return;
+            }
+            if(nameField.length !== 0 && emailField.length === 0) {
+                 $scope.register_emptyName = false;
+                 $scope.register_emptyEmail = true;
+                 $scope.register_emptyPassword = false;
+                 $scope.register_InvalidEmail = false;
+                 $('#register_email').focus();
+                 return;
+            }
+            if( emailField.length !== 0 && pwField.length === 0) {
+                 $scope.register_emptyName = false;
+                 $scope.register_emptyEmail = false;
+                 $scope.register_emptyPassword = true;
+                 $scope.register_InvalidEmail = false;
+                 $('#register_password').focus();
+                 return;
+            }
+            if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(emailField))  
+            {  
+                $scope.register_InvalidEmail = false;
+                // email is valid, proceed
+                var currentUser = Parse.User.current();
+                var user = new Parse.User();
+                user.set("username", nameField);
+                user.set("password", pwField);
+                user.set("email", emailField);
+
+                user.signUp(null, {
+                  success: function(user) {
+                     // registered successfully, 
+                     $('#RegisterModal').modal('hide');
+                  },
+                  error: function(user, error) {
+                    // Show the error message somewhere and let the user try again.
+                    alert("Error: " + error.code + " " + error.message);
+                  }
+                });
+                
+            }else {
+               $scope.register_InvalidEmail = true;
+            }
+            $scope.register_emptyName = false;
+            $scope.register_emptyEmail = false;
+            $scope.register_emptyPassword = false;
+        };
+        
+        $scope.loginEvent = function() {
+            var usernameField = document.getElementById("username").value;
+            var pwField = document.getElementById("password").value;
+            if(usernameField.length === 0) {
+                 $scope.emptyPassword = false;
+                 $scope.emptyEmail = true;
+                 $('#email').focus();
+                 return;
+            }
+            if( usernameField.length !== 0 && pwField.length === 0) {
+                 $scope.emptyEmail = false;
+                 $scope.emptyPassword = true;
+                 $('#password').focus();
+                 return;
+            }
+            
+            Parse.User.logIn(usernameField, pwField, {
+                success: function(user) {
+                  // Do stuff after successful login.
+                  $('#LoginModal').modal('hide');
+                  $scope.logged_in = true;
+                  $scope.currentUserName = "Prashant";
+                  $scope.$apply();
+                },
+                error: function(user, error) {
+                  // The login failed.
+                  $scope.login_invalidUserOrPassword = true;
+                  $scope.$apply();
+                }
+            });
+        };
 });
 
 mainApp.directive('iframeSetDimentionsOnload', [function(){

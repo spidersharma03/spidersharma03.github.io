@@ -159,13 +159,14 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
                 });
                 Parse.FacebookUtils.logIn(null, {
                 success: function(user) {
+                   alert("Facebook Entered!" + user); 
                   if (!user.existed()) {
                       $('#LoginModal').modal('hide');
                       $scope.logged_in = true;
                       $scope.$apply();
                       //alert("User signed up and logged in through Facebook!");
                   } else {
-                     $('#LoginModal').modal('hide');  
+                     $('#LoginModal').modal('hide');
                      $scope.logged_in = true;
                      $scope.$apply();
                      //alert("User logged in through Facebook!");

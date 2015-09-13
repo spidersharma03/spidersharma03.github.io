@@ -152,7 +152,7 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
               window.fbAsyncInit = function() {
                 Parse.FacebookUtils.init({ // this line replaces FB.init({
                   appId      : '1464553603854000', // Facebook App ID
-//                  status     : true,  // check Facebook Login status
+                  status     : true,  // check Facebook Login status
                   cookie     : true,  // enable cookies to allow Parse to access the session
                   xfbml      : true,  // initialize Facebook social plugins on the page
                   version    : 'v2.4' // point to the latest Facebook Graph API version

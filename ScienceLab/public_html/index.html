@@ -1,96 +1,108 @@
 <!DOCTYPE html>
 <html  lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
 
-    <title>eduperiment</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="css/bootstrap.css" rel="stylesheet">
-    <link href="css/bootstrap-responsive.css" rel="stylesheet">
-
-    <script src="//www.parsecdn.com/js/parse-1.6.0.min.js"></script>
-    <script src="js/lib/angular.js/angular.js"></script>
-    <script src="js/lib/angular.js/angular-route.js"></script>
-    <script src="js/lib/jquery/jquery.js"></script>
-    <script src = "js/controllers.js"></script>
-    <script src = "js/ContentLoadingService.js"></script>
-    <script src = "js/mainApp.js"></script>
-  </head>
-
-  <body ng-app ="mainApp" ng-controller="homePageLoadController">
-
-<div class="container">
-  <div ng-include="'partials/LoginView.html'"></div>
-</div>
-      
-   <div  style = " margin: 40px 20px 0px 20px">
-    <h1 style="">EduPeriment</h1>
-    <h5 style=" color:darkblue">experimental learning platform</h5>
-    <div class='navbar navbar-inverse'>
-      <div class='navbar-inner nav-collapse navbar-header' style="height: auto;">
-        <ul class="nav">
-          <li class="active"><a href="#Home">Home</a></li>
-          <li class="dropdown">
-            <a href="#Explore" target="_self" data-toggle="dropdown" class="dropdown-toggle">Explore <b class="caret"></b></a>
-            <ul class="dropdown-menu">
-<!--                <li ng-repeat="subject in subjects"> 
-                    {{ subject.name }}
-                </li>-->
-                <li><a href="#physics">Physics</a></li>
-                <!--<li><a href="#mathematics">Mathematics</a></li>-->
-                <li><a href="#computer_science">Computer Science</a></li>
-                <!--<li><a href="#chemistry">Chemistry</a></li>-->
-            </ul>
-          </li>
-
-          <li><a href="#Mission">Our Mission</a></li>
-          <li><a href="#">About us</a></li>
-        </ul>
-          <ul class="btn-primary nav navbar-nav pull-right">
-            <li ng-show="!logged_in" data-toggle="modal" ng-click="logInPressed()" data-target="#LoginModal"><a>LogIn</a></li>
-            <li ng-show="logged_in" data-toggle="modal" ng-click="logOutPressed()"><a>{{currentUserName}}</a></li>
-          </ul>   
-      </div>
-      
-    </div>
-    
-    <div class="container" style="width: 100%; margin-top: -20px">
-      <!-- Example row of columns -->
-      
-    <script>
-        function callMe(value) {
-            document.getElementById('embedFrame').contentWindow.changeNumPendulumns(value);
-        }
-    </script>
-    
-    <div ng-view> </div>
-    
-<!--    <div id="wrap">
-     <div id="main" class="container clear-top">
-         <p>Your content here</p>
-     </div>
-    </div>
-    <footer class="footer"></footer>-->
+        <title>eduperiment</title>
         
-    </div>
+        
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/bootstrap-social.css" rel="stylesheet">
+        <!-- Bootstrap core CSS -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <!--<link href="css/bootstrap-responsive.css" rel="stylesheet">-->
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="js/lib/bootstrap.min.js"></script>
-    
-<!--    <script>
-        $(document).ready(function () {
-           $('label.tree-toggler').click(function () {
-                   $(this).parent().children('ul.tree').toggle(300);
-           });
-   });
-  </script>-->
-  
-  </body>
+        <script src="//www.parsecdn.com/js/parse-1.6.0.min.js"></script>
+        <script src="js/lib/angular.js/angular.js"></script>
+        <script src="js/lib/angular.js/angular-route.js"></script>
+        <script src="js/lib/jquery/jquery.js"></script>
+        <script src = "js/controllers.js"></script>
+        <script src = "js/ContentLoadingService.js"></script>
+        <script src = "js/mainApp.js"></script>
+    </head>
+
+    <body ng-app ="mainApp" ng-controller="homePageLoadController">
+        <div id="fb-root"></div>
+        <div class="container">
+            <div ng-include="'partials/LoginView.html'"></div>
+        </div>
+
+        <div  style = " margin: 40px 20px 0px 20px">
+            <h1 style="">EduPeriment</h1>
+            <h5 style=" color:darkblue">experimental learning platform</h5>
+
+            <nav class="navbar navbar-inverse">
+                <div class="container-fluid">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="#Home">Home</a>
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                        <ul class="nav navbar-nav">
+                            <li class="dropdown">
+                                <a href="#Explore" target="_self" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Explore <span class="caret"></span></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#physics">Physics</a></li>
+                                    <li><a href="#computer_science">Computer Science</a></li>
+                                </ul>
+                            <li><a href="#Mission">Our Mission</a></li>
+                            <li><a href="#">About us</a></li>
+                            </li>
+                        </ul>
+                        
+                        <ul class="nav navbar-nav navbar-right">
+                            <div>
+                            <ul ng-show="!logged_in" class="nav navbar-nav">
+                                <li class="btn-primary" target="_self" data-toggle="modal" ng-click="logInPressed()" data-target="#LoginModal"><a href="">LogIn</a></li>
+                            </ul>  
+                            </div>   
+                            <li ng-show="logged_in" class="dropdown">
+                                <a href="#" target="_self" class="btn dropdown-toggle" data-toggle="dropdown" role="button"  aria-expanded="false">{{currentUserName}} <span class="caret"></span></a>
+                                <ul class="dropdown-menu">
+                                    <li><a ng-click="logOutPressed()" href="#">LogOut</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                        
+                    </div><!-- /.navbar-collapse -->
+                </div><!-- /.container-fluid -->
+            </nav>
+
+            <div class="row-fluid" style="width: 100%;">
+                <!-- Example row of columns -->
+                <script>
+                    function callMe(value) {
+                        document.getElementById('embedFrame').contentWindow.changeNumPendulumns(value);
+                    }
+                </script>
+                
+                <div ng-view> </div>
+<!--                   <div  ng-switch on="logged_in">
+            <div ng-switch-when="true">
+                <div ng-include="'partials/userHomePage.html'" ></div>
+            </div>   
+            <div ng-switch-when="false">
+                <div ng-include="'partials/homePage_1.html'" ></div>
+            </div>   
+    </div>-->
+
+            <!-- Bootstrap core JavaScript
+            ================================================== -->
+            <!-- Placed at the end of the document so the pages load faster -->
+            <script src="js/lib/bootstrap.min.js"></script>
+        </div>
+    </body>
 </html>

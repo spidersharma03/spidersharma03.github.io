@@ -1,63 +1,8 @@
-
-<div class="row-fluid" style="background: lightgray; height: auto">
-        <div class="span3 offset1">
-          <h3>For Teachers</h3>
-          <p style="color:darkslategray">Use our platform to explain concepts using experiments/simulations. This way of interactive learning will Increase bond with your students. You can design your own experiments to explain the concepts in a way you like!</p>
-        </div>
-        <div class="span3 offset1">
-          <h3>For Schools</h3>
-          <p style="color:darkslategray">Integrate our platform in your classes to provide a world class learning experience. Our platform provides much greater level of interaction between teachers and students. If the students like their teachers, they will like their school too!</p>
-       </div>
-        <div class="span3 offset1">
-          <h3>For Students</h3>
-          <p style=" color:darkslategray">Explore and learn on your own pace, and think and solve problems like a scientist while learning all the concepts in an experimental way.</p>
-        </div>
-      </div>
-
-<div class="row-fluid" style="background: lightgray; height: 30px">
-</div>
-
-<div class='container row-fluid' >
-
-<!--    <div class ='well  text-center' style="padding:   0px 0px 0px 0px">
-        <h4>
-            Two of the top secret's of Nature are embedded in this simulation. Could you guess which of them?
-        </h4>
-    </div>-->
-    <div class='span12 main'>     
-        <div class = 'row-fluid'>
-<!--            <div class = 'span4 text-center' style="height: 200px" >
-                <img src="http://upload.wikimedia.org/wikipedia/commons/3/39/GodfreyKneller-IsaacNewton-1689.jpg" width="50%" height="50%" >
-                <h4>Sir Isaac Newton</h4>
-                <div class = 'span12 text-center'>
-                    <em>"Truth is ever to be found in the simplicity, and not in the multiplicity and confusion of things".
-                    </em>
-                </div>
-            </div>-->
-
-            <div class = "text-success text-center">
-                <!--<iframe id="newtonCradleFrame" style="width:100%; height:100%;" src="simulations/pendulumn_waves/ScenePendulumnWaves.html"></iframe>-->
-                <iframe iframe-set-dimentions-onload id="IFrame" style="border: none; height:250px;" src="NewtonCradle/Scene.html"></iframe>
-                <div class = 'span12 row-fluid'>
-                    <!--<h4>Cycle</h4>-->
-                    <!--<input type="range" min="50" max="70" value="60" step= "5" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeCycleTime(value)})(value)">-->
-                    <!--<input type="range" min="100" max="150" value="100" step= "10" onchange="(function(){document.getElementById('newtonCradleFrame').contentWindow.changeNumOscillations(value)})(value)">-->
-                    <input type="range" min="1" value="0" max="10" onchange="(function () {
-                                document.getElementById('IFrame').contentWindow.changeNumPendulumns(value)
-                            })(value)">
-                </div>
-            </div>
-        </div>  
-        <!--          <div class ='well text-center ' style="padding:   0px 0px 0px 0px">
-                      <h4>
-                          <em>Quote.</em>
-                      </h4>
-                  </div>-->
+    <div  ng-switch on="logged_in">
+            <div ng-switch-when="true">
+                <div ng-include="'partials/userHomePage.html'" ></div>
+            </div> 
+            <div ng-switch-when="false">
+                <div ng-include="'partials/homePage_1.html'" ></div>
+            </div>   
     </div>
-
-</div>
-
-
-
-
-

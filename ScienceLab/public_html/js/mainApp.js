@@ -49,25 +49,24 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
   }]);
  
 //
-mainApp.controller('homePageLoadController', function ($scope, $http) {
+mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
         $scope.logged_in = false;
         $scope.login_emptyEmail = false;
         $scope.login_emptyPassword = false;
         $scope.login_invalidUserOrPassword = false;
-        //$scope.currentUserName = "Prashant";
         
         $scope.register_emptyName = false;
         $scope.register_emptyEmail = false;
         $scope.register_emptyPassword = false;
         $scope.register_InvalidEmail = false;
-        
-        Parse.initialize("PgyTYm43FjxpiZxtN0GrtTxQjH7wCbHkt2ThVOz9", "HFcHZI8e1v62Avmbd4LvpELWDoLL0IecD3ZbvGVB");
-        var currentUser = Parse.User.current();
-        if( currentUser ) {
-            $scope.logged_in = true;
-            $scope.currentUserName = "Prashant";
+        if (typeof Parse !== 'undefined') {
+             Parse.initialize("PgyTYm43FjxpiZxtN0GrtTxQjH7wCbHkt2ThVOz9", "HFcHZI8e1v62Avmbd4LvpELWDoLL0IecD3ZbvGVB");        
+            var currentUser = Parse.User.current();
+            if( currentUser ) {
+                $scope.logged_in = true;
+                $scope.currentUserName = "Welcome " + currentUser.get("username");
+            }
         }
-            
         $scope.logInPressed = function() {
            $scope.login_invalidUserOrPassword = false; 
         };
@@ -125,7 +124,6 @@ mainApp.controller('homePageLoadController', function ($scope, $http) {
             {  
                 $scope.register_InvalidEmail = false;
                 // email is valid, proceed
-                var currentUser = Parse.User.current();
                 var user = new Parse.User();
                 user.set("username", nameField);
                 user.set("password", pwField);
@@ -150,6 +148,39 @@ mainApp.controller('homePageLoadController', function ($scope, $http) {
             $scope.register_emptyPassword = false;
         };
         
+        $scope.fbloginEvent = function() {
+              window.fbAsyncInit = function() {
+                Parse.FacebookUtils.init({ // this line replaces FB.init({
+                  appId      : '1464553603854000', // Facebook App ID
+//                  status     : true,  // check Facebook Login status
+                  cookie     : true,  // enable cookies to allow Parse to access the session
+                  xfbml      : true,  // initialize Facebook social plugins on the page
+                  version    : 'v2.4' // point to the latest Facebook Graph API version
+                });
+                Parse.FacebookUtils.logIn(null, {
+                success: function(user) {
+                  if (!user.existed()) {
+                    alert("User signed up and logged in through Facebook!");
+                  } else {
+                    alert("User logged in through Facebook!");
+                  }
+                },
+                error: function(user, error) {
+                  alert("User cancelled the Facebook login or did not fully authorize.");
+                }
+              });
+                    // Run code after the Facebook SDK is loaded.
+              };
+
+                (function(d, s, id){
+              var js, fjs = d.getElementsByTagName(s)[0];
+              if (d.getElementById(id)) {return;}
+              js = d.createElement(s); js.id = id;
+              js.src = "//connect.facebook.net/en_US/sdk.js";
+              fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        }
+        
         $scope.loginEvent = function() {
             var usernameField = document.getElementById("username").value;
             var pwField = document.getElementById("password").value;
@@ -165,14 +196,15 @@ mainApp.controller('homePageLoadController', function ($scope, $http) {
                  $('#password').focus();
                  return;
             }
-            
-            Parse.User.logIn(usernameField, pwField, {
+            if (typeof Parse !== 'undefined') {
+                Parse.User.logIn(usernameField, pwField, {
                 success: function(user) {
                   // Do stuff after successful login.
                   $('#LoginModal').modal('hide');
                   $scope.logged_in = true;
-                  $scope.currentUserName = "Prashant";
+                  $scope.currentUserName = "Welcome " + user.get("username");
                   $scope.$apply();
+                  $route.reload();
                 },
                 error: function(user, error) {
                   // The login failed.
@@ -180,6 +212,7 @@ mainApp.controller('homePageLoadController', function ($scope, $http) {
                   $scope.$apply();
                 }
             });
+            }
         };
 });
 

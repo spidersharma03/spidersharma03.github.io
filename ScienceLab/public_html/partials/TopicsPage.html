@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html ng-app="mainApp" lang="en">
-  <head>
+<!--  <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,24 +11,26 @@
     
     <link href="css/bootstrap.min.css" rel="stylesheet">
     
-  </head>
+  </head>-->
 
   <body ng-controller="SubTopicsLoadController">
-     
-    <div  class = "row-fluid">
-        <div class="overflow-y: scroll span2 panel panel-default" style = "margin: 0px 0px 0px 0px;">
+    
+     <div>
+    <div  class = "col-md-12 ">
+        <div class="col-md-2">
+        <div class="overflow-y: scroll panel panel-primary" style = "margin: 0px 0px 0px 0px;">
             <!--<div class = "row-fluid">-->
-            <div class=" panel-heading" style="background-color: #5a87ad; color:white; margin: 0px; height: 30px">
+            <div class="panel-heading" style="background-color: #5a87ad; color:white; margin: 0px;  height: auto">
                <h4 class="panel-title" >
                    <a href="#{{categoryTopicsData.Info.subject}}">{{categoryTopicsData.Info.subject}}</a>
                </h4>
             </div>
-            <div class="panel-heading" style="background-color: #6a87ad; color:white; margin: 0px; height: 40px">
+            <div class="panel-heading panel-success" style="background-color: #6a87ad; color:white; margin: 0px; height: auto">
                 <h2 class="panel-title" >
                    <a href="#{{categoryTopicsData.Info.subject}}/{{categoryTopicsData.Info.category}}">{{categoryTopicsData.Info.category}}</a>
                </h2>
             </div>    
-            <div class="panel-heading" style = " background-color: lightblue; margin: 0px 0px 0px 0px">
+            <div class="panel-heading panel-info" style = " background-color: lightblue; margin: 0px 0px 0px 0px">
                 <h4 class="panel-title" style="margin: 10px; font-size: 20px; font-weight: bolder;">
                   {{categoryTopicsData.Info.name}}
                </h4>
@@ -37,23 +39,24 @@
                 <li class="list-group-item" ng-repeat="categoryTopic in categoryTopicsData.topics" ng-click="onSubTopicClick(categoryTopic.pageLink)">
                     <a href = "#{{subjectID}}/{{subjectCategory}}/{{Topic}}">{{categoryTopic.name}}</a></li>
             </ul>
-            <div class="panel-footer"><span class="glyphicon glyphicon-circle-arrow-right"></span>   
+            <div class="panel-footer "><span class="glyphicon glyphicon-circle-arrow-right"></span>   
                 <a href = "#{{categoryTopicsData.Info.subject}}/{{categoryTopicsData.Info.category}}/{{categoryTopicsData.Info.nextTopic}}"> 
                     <b style="color: lightseagreen; font-size: larger">{{categoryTopicsData.Info.nextTopic}}</b></a>
             </div>
         </div>
-
-        <div  class = 'span10' style="overflow-y: scroll; overflow-x: hidden;">
+        </div>    
+        <div  class = 'col-md-10' style="overflow-y: scroll;">
             <div ng-include=" 'partials/SimulationTopicPage.html' ">    
             </div>
         </div>
           
     </div>
+         
 <!--/{{categoryTopic.pageLink}}-->
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="../js/lib/bootstrap.min.js"></script>
+    <!--<script src="../js/lib/bootstrap.min.js"></script>-->
  
     
   

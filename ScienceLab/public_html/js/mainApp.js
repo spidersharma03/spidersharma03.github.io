@@ -157,6 +157,7 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
                   xfbml      : true,  // initialize Facebook social plugins on the page
                   version    : 'v2.4' // point to the latest Facebook Graph API version
                 });
+                alert("Facebook Entered!"); 
                 Parse.FacebookUtils.logIn(null, {
                 success: function(user) {
                    alert("Facebook Entered!" + user); 

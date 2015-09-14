@@ -4,8 +4,18 @@
  * and open the template in the editor.
  */
 
-function Model_Kinematics1D_Lab(jsonData) {
+function Model_Graph() {
     
 }
 
-
+Model_Graph.prototype = {
+  constructor : Model_Graph,
+  
+  addSeries: function() {
+      
+  },
+  
+  updateSeries: function() {
+      
+  }
+};

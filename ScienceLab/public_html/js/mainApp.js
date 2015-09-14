@@ -222,6 +222,9 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
             });
             }
         };
+        
+        if($scope.logged_in) {
+        }
 });
 
 mainApp.directive('iframeSetDimentionsOnload', [function(){

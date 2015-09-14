@@ -165,12 +165,12 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
                       $('#LoginModal').modal('hide');
                       $scope.logged_in = true;
                       $scope.$apply();
-                      //alert("User signed up and logged in through Facebook!");
+                      alert("User signed up and logged in through Facebook!");
                   } else {
                      $('#LoginModal').modal('hide');
                      $scope.logged_in = true;
                      $scope.$apply();
-                     //alert("User logged in through Facebook!");
+                     alert("User logged in through Facebook!");
                   }
                 },
                 error: function(user, error) {

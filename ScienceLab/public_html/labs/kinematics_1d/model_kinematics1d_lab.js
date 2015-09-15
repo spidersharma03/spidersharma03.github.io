@@ -12,6 +12,10 @@ Kinematics_Body.prototype = Object.create(PhysicalBody.prototype);
 
 function Model_Kinematics1D_Lab(labParams) {
     this.tracks = [];
+    this.bodies = [];
+    this.bRecordGraphData = false;
+    this.bRecordGraphDataEveryFrame = true;
+    this.time = 0;
 }
 
 Model_Kinematics1D_Lab.prototype = {
@@ -19,11 +23,28 @@ Model_Kinematics1D_Lab.prototype = {
     
     addTrack : function(track) {
         this.tracks.push(track);
+        this.bodies.push(track.body);
     },
     
     simulate : function(dt) {
         for( var i=0; i<this.tracks.length; i++) {
             this.tracks[i].advanceBody(dt);
+        }
+        this.recordGraphData();
+        this.time += dt;
+    },
+    
+    recordGraphData : function() {
+        if( this.bRecordGraphData ) {
+            if(this.bRecordGraphDataEveryFrame) {
+                for( var i=0; i<this.tracks.length; i++) {
+                    var body = this.tracks[i].body;
+                    if(body.pos_time_data.length > 200)continue;
+                    body.pos_time_data.push(this.time, body.pos.x);
+                }
+            } else {
+                // TODO:: Record data after the specified time interval
+            }
         }
     }
 };

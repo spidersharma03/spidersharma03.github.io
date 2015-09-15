@@ -13,7 +13,22 @@ function PhysicalBody(bodyParams) {
     this.e = 0.0;
     this.mu_k = 0.0;
     this.mu_d = 0.0;
+    this.pos_time_data = [];
+    this.graphData = [];
+    this.graphData.push(this.pos_time_data);
     if(bodyParams) {
         
     }
 }
+
+PhysicalBody.prototype = {
+    constructor : PhysicalBody,
+    
+    getPosTimeData : function() {
+        return this.pos_time_data;
+    },
+    
+    getAllGraphData : function() {
+        return this.graphData;
+    }
+};

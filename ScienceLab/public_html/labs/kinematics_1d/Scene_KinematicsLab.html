@@ -27,7 +27,7 @@
     </head>
 
     <body>
-
+        <script src="../../js/lib/dyGraph/dygraph-combined.js"></script>
         <script src="../../js/lib/three.js/three.js"></script>
         <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
         <script src="../../js/lib/three.js/js/Detector.js"></script>
@@ -39,7 +39,8 @@
             
             var lab = new Model_Kinematics1D_Lab();
             var track = new Model_Kinematics1D_Lab.StraightTrack();
-            track.body.velocity.x = 0.2;
+            track.body.velocity.x = 1.2;
+            track.body.acceleration.x = 2.5;
             lab.addTrack(track);
             
             var bodyOnTrack;
@@ -69,9 +70,56 @@
             var dt = 0.016;
             var pauseSimulation = true;
             
+            var graphData = [];
+            var graphContainer = document.createElement('div');
+            var graphParent;
+            //graphContainer.style.width = 100;
+            //graphContainer.style.height = 100;
+            
+            function initGraph() {
+                for (var i = 0; i < 1; i++) {
+                    graphData.push([i,track.body.position.x]);
+                }
+            }            
+
+            var labels = ['x'];
+            labels[1] = 'Position';
+
+            var g = new Dygraph(
+                    graphContainer,
+                    graphData,
+                    {
+                        dateWindow:[0,200],
+                        valueRange:[0,10],
+                        animatedZooms: true,
+                        series: {
+                            'Position': {
+                                strokeWidth: 1.5
+                            }
+                        },
+                        labels: labels.slice(),
+                        });
+            var count = 1;
+            
             init();
             animate();
-            
+            initGraph();
+             
+             function updateGraph() {
+                 var pos = track.body.position.x;
+                if(count > 200)
+                    return;
+                graphData.push([count, pos]);
+                if(graphData.length>250)
+                    graphData.splice(0,1);
+                g.updateOptions( { 'file': graphData } );
+                count++;
+             }
+             
+             function setGraphView(graphParent_) {
+                  graphParent = graphParent_;
+             }
+             
             function reset() {
             }
             
@@ -226,7 +274,7 @@
                 document.addEventListener('mouseup', onDocumentMouseUp, false);
                 document.addEventListener('mousewheel', onDocumentMouseWheel, false);
                 window.addEventListener('resize', onWindowResize, false);
-
+                window.addGraphToDiv(graphContainer);
                 //renderer.shadowMapEnabled = true;
                 //renderer.shadowMapSoft = true;
 
@@ -287,6 +335,7 @@
                 requestAnimationFrame(animate);
                 controls.update();
                 syncSimulation();
+                updateGraph();
                 render();
             }
 

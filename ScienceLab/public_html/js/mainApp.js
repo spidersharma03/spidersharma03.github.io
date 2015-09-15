@@ -240,3 +240,24 @@ return {
         });
     }
 };}]);
+
+mainApp.directive('graph', function() {
+    var directive = {};
+    directive.restrict = 'E'; /* restrict this directive to elements */
+
+    directive.compile = function(element, attributes) {
+        // do one-time configuration of element.
+
+        var linkFunction = function($scope, element, atttributes) {
+            var frame = document.getElementById('IFrame');
+            frame.contentWindow.addGraphToDiv = function(graphContainer) {
+                var div = document.getElementById('GraphDiv');
+                div.appendChild(graphContainer);
+            };
+            //frame.contentWindow.setGraphView(element[0]);
+            //$scope.$apply();
+        };
+        return linkFunction;
+    };
+    return directive;
+}); 

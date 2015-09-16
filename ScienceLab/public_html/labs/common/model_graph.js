@@ -30,3 +30,21 @@ Model_Graph.prototype = {
       this._graph.updateOptions(options);
   }
 };
+
+var data = "X,Y\n" +
+                 "1,0\n" +
+                 "2,2\n" +
+                 "3,4\n" +
+                 "4,6\n" +
+                 "5,8\n" +
+                 "6,10\n" +
+                 "7,12\n" +
+                 "8,14\n";
+var options = {
+                     // options go here. See http://dygraphs.com/options.html
+                     legend: 'always',
+                     animatedZooms: true,
+                     title: 'dygraphs chart template'
+                 };
+                 
+var modelGraph = new Model_Graph(document.getElementById("graphDiv"), data, options);

@@ -26,9 +26,6 @@
         </style>
     </head>
     <body>
-        <div>
-            <div id="graph1"></div>
-        </div>
         <script src="../../js/lib/dyGraph/dygraph-combined-dev.js"></script>
         <script src="../../js/lib/three.js/three.js"></script>
         <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
@@ -38,25 +35,6 @@
         <script src="../../labs/common/model_graph.js"></script>
         <script src="../../labs/kinematics_1d/model_kinematics1d_lab.js"></script>
         <script>
-            g = new Dygraph(document.getElementById("graph1"),
-                 // For possible data formats, see http://dygraphs.com/data.html
-                 // The x-values could also be dates, e.g. "2012/03/15"
-                 "X,Y,Z\n" +
-                 "1,0,3\n" +
-                 "2,2,6\n" +
-                 "3,4,8\n" +
-                 "4,6,9\n" +
-                 "5,8,9\n" +
-                 "6,10,8\n" +
-                 "7,12,6\n" +
-                 "8,14,3\n",
-                 {
-                     // options go here. See http://dygraphs.com/options.html
-                     legend: 'always',
-                     animatedZooms: true,
-                     title: 'dygraphs chart template'
-                 });
-            
             var lab = new Model_Kinematics1D_Lab();
             var track = new Model_Kinematics1D_Lab.StraightTrack();
             track.body.velocity.x = 1.2;
@@ -225,6 +203,7 @@
             }
 
             function init() {
+                modelGraph.updateOptions({});
                 container = document.createElement('div');
                 document.body.appendChild(container);
 
@@ -289,7 +268,7 @@
                 document.addEventListener('mouseup', onDocumentMouseUp, false);
                 document.addEventListener('mousewheel', onDocumentMouseWheel, false);
                 window.addEventListener('resize', onWindowResize, false);
-                window.addGraphToDiv(graphContainer);
+                //window.addGraphToDiv(graphContainer);
                 //renderer.shadowMapEnabled = true;
                 //renderer.shadowMapSoft = true;
 

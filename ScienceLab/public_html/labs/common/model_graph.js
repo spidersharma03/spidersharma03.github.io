@@ -4,10 +4,15 @@
  * and open the template in the editor.
  */
 
-function Model_Graph(parentdiv, data, options) {
+function Model_Graph(parentdiv, options, numSeries) {
     this.series_data = [];
-    this.series_data.push(data);
-    this._graph = new Dygraph(parentdiv, data, options);
+    this.numSeries = numSeries;
+    var array = [];
+    for(var i=0; i<numSeries; i++){
+        array.push(0);
+    }
+    this.series_data.push(array);
+    this._graph = new Dygraph(parentdiv, this.series_data, options);
 }
 
 Model_Graph.prototype = {
@@ -28,23 +33,14 @@ Model_Graph.prototype = {
   
   updateOptions: function(options) {
       this._graph.updateOptions(options);
+  },
+  
+  addData: function(data) {
+      if(this.numSeries !== data.length) {
+          console.log("ERROR::model_graph.js::Mismatch between data length and number of series specified for this graph");
+          return;
+      }
+      this.series_data.push(data);
+      this.updateData();
   }
 };
-
-var data = "X,Y\n" +
-                 "1,0\n" +
-                 "2,2\n" +
-                 "3,4\n" +
-                 "4,6\n" +
-                 "5,8\n" +
-                 "6,10\n" +
-                 "7,12\n" +
-                 "8,14\n";
-var options = {
-                     // options go here. See http://dygraphs.com/options.html
-                     legend: 'always',
-                     animatedZooms: true,
-                     title: 'dygraphs chart template'
-                 };
-                 
-var modelGraph = new Model_Graph(document.getElementById("graphDiv"), data, options);

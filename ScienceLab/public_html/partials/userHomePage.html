@@ -1,11 +1,16 @@
 
-<div class = "well container row-fluid">
-    <div class="col-md-6">
-    <iframe iframe-set-dimentions-onload id="IFrame" style="height:450px; width:100%" src="labs/kinematics_1d/Scene_KinematicsLab.html"></iframe>
+<div class = "well container row-fluid" ng-controller="TestController">
+    <div class="row-fluid col-md-6">
+        <div>
+             <div ng-include="'labs/kinematics_1d/KinematicsLab_Options.html'"></div>
+        </div>
+        <div>
+            <iframe iframe-set-dimentions-onload id="IFrame" onload="onSimFrameLoad()" style="height:450px; width:100%" src="labs/kinematics_1d/Scene_KinematicsLab.html"></iframe>
+        </div>
     </div>
     <div  id="GraphDiv" class = " col-md-6" style="height:450px;">
-        <graph></graph>
-        <iframe iframe-set-dimentions-onload id="IFrameGraph" style="height:450px;width:100%" src="labs/common/Scene_GraphView.html"></iframe>
+        <!--<graph></graph>-->
+        <iframe iframe-set-dimentions-onload id="IFrameGraph" onload="onGraphFrameLoad()" style="height:450px;width:100%" src="labs/common/Scene_GraphView.html"></iframe>
     </div>
 </div>
 

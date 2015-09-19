@@ -224,7 +224,21 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
         };
         
         if($scope.logged_in) {
-        }
+        }        
+});
+
+mainApp.controller('TestController', function($rootScope, $scope){
+    window.onSimFrameLoad = function()
+    {
+    };
+    window.onGraphFrameLoad = function()
+    {
+            var iframe = document.getElementById('IFrameGraph');
+            var innerDocGraph = iframe.contentDocument || iframe.contentWindow.document;
+            var iframe = document.getElementById('IFrame');
+            var innerDocSim = iframe.contentDocument || iframe.contentWindow.document;
+            innerDocSim.modelGraph = innerDocGraph.modelGraph;
+    };
 });
 
 mainApp.directive('iframeSetDimentionsOnload', [function(){
@@ -248,12 +262,10 @@ mainApp.directive('graph', function() {
     directive.compile = function(element, attributes) {
         // do one-time configuration of element.
 
-        var linkFunction = function($scope, element, atttributes) {
+        var linkFunction = function($rootScope, $scope, element, atttributes) {
             var frame = document.getElementById('IFrame');
-            frame.contentWindow.addGraphToDiv = function(graphContainer) {
-                var div = document.getElementById('GraphDiv');
-                div.appendChild(graphContainer);
-            };
+            var div = document.getElementById('graphDiv');
+            $rootScope.graphDiv = div;
             //frame.contentWindow.setGraphView(element[0]);
             //$scope.$apply();
         };

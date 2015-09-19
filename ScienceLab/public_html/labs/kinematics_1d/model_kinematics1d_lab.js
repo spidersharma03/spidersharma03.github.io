@@ -10,12 +10,21 @@ function Kinematics_Body(bodyParams) {
 }
 Kinematics_Body.prototype = Object.create(PhysicalBody.prototype);
 
+Kinematics_Body.prototype.updateTagsOffsets = function() {
+    
+};
+
 function Model_Kinematics1D_Lab(labParams) {
     this.tracks = [];
     this.bodies = [];
-    this.bRecordGraphData = false;
+    this.bRecordGraphData = true;
     this.bRecordGraphDataEveryFrame = true;
+    this.NumFramesToSkipForDataRecord = 1;
     this.time = 0;
+    this.timeRecordCounter = 0;
+    this.graphObserver = null;
+    this.textViewObserver = null;
+    this.view3dObserver = null;
 }
 
 Model_Kinematics1D_Lab.prototype = {
@@ -24,28 +33,93 @@ Model_Kinematics1D_Lab.prototype = {
     addTrack : function(track) {
         this.tracks.push(track);
         this.bodies.push(track.body);
+        if(this.view3dObserver) {
+            this.view3dObserver.addObject3D(track.body);
+        }
+        if(this.textViewObserver) {
+            for (var tagname in track.body.tags) {
+                var object3d = this.view3dObserver.getObject3D(track.body);
+                var pos = this.view3dObserver.projectToScreenSpace(object3d);
+                //pos.x = 100;
+                //pos.y = 100;
+                var tagObject = track.body.tags[tagname];
+                this.textViewObserver.addTextView(tagname, tagObject.value, pos, tagObject.color);
+            }
+        }
     },
     
     simulate : function(dt) {
         for( var i=0; i<this.tracks.length; i++) {
             this.tracks[i].advanceBody(dt);
         }
-        this.recordGraphData();
+        this.syncViews();
+        if(this.timeRecordCounter === 0)
+            this.recordGraphData();
         this.time += dt;
+        this.timeRecordCounter++;
+        if(this.timeRecordCounter > this.NumFramesToSkipForDataRecord)
+            this.timeRecordCounter = 0;
+    },
+    getPosition : function() {
+        
+    },
+    syncViews : function() {
+        for( var i=0; i<this.tracks.length; i++) {
+            var body = this.tracks[i].body;
+            this.view3dObserver.updateObject3D(body);
+        }
+        if(this.textViewObserver) {
+        for( var i=0; i<this.tracks.length; i++) {
+            var body = this.tracks[i].body;
+            for (var tagname in track.body.tags) {
+                var object3d = this.view3dObserver.getObject3D(body);
+                var projectedPos = this.view3dObserver.projectToScreenSpace(object3d);
+                var tagObject = track.body.tags[tagname];
+                var tagAttribute = tagObject.attribute;
+                var tagOffset = tagObject.offset;
+                var value_ = tagname;
+                if(tagOffset) {
+                    projectedPos.x += tagOffset.x;
+                    projectedPos.y -= tagOffset.y;
+                }
+                if(tagAttribute === PhysicalBody.POSITION_ATTRIBUTE) {
+                    value_ = value_ + track.body.position.x.toPrecision(3);
+                }
+                if(tagAttribute === PhysicalBody.VELOCITY_ATTRIBUTE) {
+                    value_ = value_ + track.body.velocity.x.toPrecision(3);
+                }
+                if(tagAttribute === PhysicalBody.ACCELERATION_ATTRIBUTE) {
+                    value_ = value_ + track.body.acceleration.x.toPrecision(3);
+                }
+                this.textViewObserver.updateTextView(tagname, value_, projectedPos);
+            }
+        }
+        }
     },
     
     recordGraphData : function() {
+        if(this.time > 3)
+            return;
         if( this.bRecordGraphData ) {
-            if(this.bRecordGraphDataEveryFrame) {
-                for( var i=0; i<this.tracks.length; i++) {
-                    var body = this.tracks[i].body;
-                    if(body.pos_time_data.length > 200)continue;
-                    body.pos_time_data.push(this.time, body.pos.x);
+            for( var i=0; i<this.tracks.length; i++) {
+                var body = this.tracks[i].body;
+                if(this.graphObserver) {
+                    this.graphObserver.addData([this.time, body.position.x, body.velocity.x, body.acceleration.x]);
                 }
-            } else {
-                // TODO:: Record data after the specified time interval
             }
         }
+    },
+    
+    addGraphObserver : function(graphObserver) {
+        this.graphObserver = graphObserver;
+    },
+    
+    addTextViewObserver: function(textViewObserver) {
+        this.textViewObserver = textViewObserver;
+    },
+    
+    addView3dObserver: function(textViewObserver) {
+        this.view3dObserver = textViewObserver;
     }
 };
 

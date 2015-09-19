@@ -8,9 +8,19 @@
         <script src="../../js/lib/dyGraph/dygraph-combined-dev.js"></script>
     </head>
     <body>
-        <div>
+        <div ng-controller="TestController">
             <div id="graphDiv"></div>
         </div>
         <script src="../../labs/common/model_graph.js"></script>
+        <script>
+            var options = {
+                     labels: ['t', 'x', 'v', 'a'],
+                     legend: 'always',
+                     animatedZooms: true,
+                     title: 'Kinematics',
+                     showRangeSelector:true
+                 };    
+            document.modelGraph = new Model_Graph(document.getElementById("graphDiv"), options, 4);
+        </script>
     </body>
 </html>

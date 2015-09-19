@@ -11,6 +11,7 @@ function Text2D(text, parent) {
     this.div.style.position = 'absolute';
     this.div.style.width = 100;
     this.div.style.height = 100;
+    this.setColor("black");
 }
 
 Text2D.prototype = {
@@ -27,5 +28,9 @@ Text2D.prototype = {
     
     setColor: function(color) {
         this.div.style.color = color;
+    },
+    
+    setVisible: function(bVisible) {
+        this.div.style.visibility = bVisible ? 'visible' : 'hidden';
     }
 };

@@ -31,32 +31,28 @@
         <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
         <script src="../../js/lib/three.js/js/Detector.js"></script>
         <script src="../../js/simulate/Arrow3D.js"></script>
+        <script src="../../js/simulate/Text2D.js"></script>
         <script src="../../labs/common/PhysicalBody.js"></script>
         <script src="../../labs/common/model_graph.js"></script>
+        <script src="../../labs/common/TextViewObserver.js"></script>
         <script src="../../labs/kinematics_1d/model_kinematics1d_lab.js"></script>
+        <script src="../../labs/kinematics_1d/Kinematics3DView.js"></script>
+        <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
         <script>
-            var lab = new Model_Kinematics1D_Lab();
-            var track = new Model_Kinematics1D_Lab.StraightTrack();
-            track.body.velocity.x = 1.2;
-            track.body.acceleration.x = 2.5;
-            lab.addTrack(track);
             
-            var bodyOnTrack;
+            var lab, track;
+            var kinematics3DView, textViewObserver;
+            var container = document.createElement('div');
+            document.body.appendChild(container);
+                
+            var stats = new Stats();
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.top = '0px';
+            //container.appendChild( stats.domElement );
             
-            var container, stats;
+            createModelAndView();
+            
             var camera, scene, renderer, controls;
-
-            var fov = 70,
-                    isUserInteracting = false,
-                    onMouseDownMouseX = 0, onMouseDownMouseY = 0,
-                    lon = 0, onMouseDownLon = 0,
-                    lat = 0, onMouseDownLat = 0,
-                    phi = 0, theta = 0;
-
-            var mouseX = 0, mouseY = 0;
-
-            var windowHalfX = window.innerWidth / 2;
-            var windowHalfY = window.innerHeight / 2;
 
             var cubeMaterial;
             var groundMaterial;
@@ -64,215 +60,42 @@
             
             var cameraPosition = new THREE.Vector3();
             
-            var trackSize = 1.0;
             var dt = 0.016;
-            var pauseSimulation = true;
             
-            var graphData = [];
-            var graphContainer = document.createElement('div');
-            var graphParent;
-           
-            function initGraph() {
-                for (var i = 0; i < 1; i++) {
-                    graphData.push([i,track.body.position.x]);
-                }
-            }            
-
-            var labels = ['x'];
-            labels[1] = 'Position';
-            var graphOptions = {
-                        dateWindow:[0,3],
-                        valueRange:[0,10],
-                        animatedZooms: true,
-                        series: {
-                            'Position': {
-                                strokeWidth: 1.5
-                            }
-                        },
-                        labels: labels.slice()
-                        };
-            var graph = new Model_Graph(graphContainer, graphData, graphOptions);
-            var count = 0;
+            animate();                         
             
-            init();
-            animate();
-            initGraph();
-             
-             function updateGraph() {
-                var pos = track.body.position.x;
-                if(count > 3)
-                    return;
-                graphData.push([count, pos]);
-                if(graphData.length>250)
-                    graphData.splice(0,1);
-                graph.updateOptions( { 'file': graphData } );
-                count+=dt;
-             }
-             
-             function setGraphView(graphParent_) {
-                  graphParent = graphParent_;
-             }
-             
-            function reset() {
+            function changeTagVisibility(objectId, type, visiblity) {
             }
             
-            function start_pause() {
-                pauseSimulation = !pauseSimulation;
+            function changeObjectName(objectId, name) {
             }
             
-            function timeScale(value) {
-                dt = Number(value);
+            function changeObjectProperty(objectId, property, value) {
             }
             
-            function createMassGeometryStraightTrack(size, mass, material) {
-                var width = 0.1;
-                var height = 0.7;
-                var length = size;
-                var geometryGroup = new THREE.Object3D();
-                var geometry1 = new THREE.BoxGeometry(length, height, width);
-                var mesh1 = new THREE.Mesh(geometry1, material);
-                mesh1.castShadow = true;
-                mesh1.receiveShadow = true;
-                geometryGroup.add(mesh1);
-                var mesh2 = mesh1.clone();
-                var mesh3 = mesh1.clone();
-                geometryGroup.add(mesh2);
-                mesh1.rotation.x = Math.PI / 6;
-                mesh2.rotation.x = -Math.PI / 6;
-                mesh1.position.z = -height / 4.0;
-                mesh2.position.z = height / 4.0;
-                mesh3.position.y += height * 0.9;
-                geometryGroup.add(mesh3);
-                return geometryGroup;
-            };
-
-            function makeBaseGeometry() {
-                var trackLength = 240.0;
-
-                var trackGeometryPath = [];
-
-                trackGeometryPath.push(new THREE.Vector2(trackSize / 2, 0));
-                trackGeometryPath.push(new THREE.Vector2(0, trackSize / 2 * Math.sqrt(3.0)));
-                trackGeometryPath.push(new THREE.Vector2(-trackSize / 2, 0));
-
-                var extrudeSettings = {
-                    amount: trackLength,
-                    steps: 2,
-                    material: 1,
-                    extrudeMaterial: 0,
-                    bevelEnabled: false
-                };
-
-                var shape = new THREE.Shape(trackGeometryPath);
-                var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-                var mesh = new THREE.Mesh(geometry, groundMaterial);
-
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                mesh.rotation.y = Math.PI / 2;
-                mesh.position.x = -trackLength / 2;
-                mesh.position.y -= trackSize - 0.7 * 0.5;
-                scene.add(mesh);
-
-                var baseGroup = new THREE.Object3D();
-                var baseGeometry1 = new THREE.BoxGeometry(trackLength, trackSize, 0.1);
-                var baseMesh1 = new THREE.Mesh(baseGeometry1, groundMaterial);
-                baseMesh1.castShadow = false;
-                baseMesh1.receiveShadow = true;
-                var baseMesh2 = baseMesh1.clone();
-                baseMesh1.position.z = trackSize / 2;
-                baseMesh2.position.z = -trackSize / 2;
-                baseGroup.position.y = -trackSize / 2;
-                baseGroup.add(baseMesh1);
-                baseGroup.add(baseMesh2);
-                baseGroup.position.y -= trackSize - 0.7 * 0.5;
-                scene.add(baseGroup);    
-                
-                bodyOnTrack = createMassGeometryStraightTrack(1,1, sphereMaterial);
-                bodyOnTrack.position.y = 0.05;
-                scene.add(bodyOnTrack);    
+            function createModelAndView() {
+                kinematics3DView = new Kinematics3DView();
+                lab = new Model_Kinematics1D_Lab();
+                textViewObserver = new TextViewObserver(document);
+                kinematics3DView.appendToParent(container);
+                lab.addView3dObserver(kinematics3DView);
+                lab.addTextViewObserver(textViewObserver);
+                lab.addGraphObserver(document.modelGraph);
+                track = new Model_Kinematics1D_Lab.StraightTrack();
+                track.body.velocity.x = -2.2;
+                track.body.acceleration.x = 2.5;
+                track.body.addTag({Name:"Kinematics Body", offset:{x:0, y:40}, color:"red"});
+                track.body.updateTag("Kinematics Body", "color", "green");
+                track.body.addTag({Name:"x = ", value:0, attribute:PhysicalBody.POSITION_ATTRIBUTE, offset:{x:15, y:20}});
+                track.body.addTag({Name:"v = ", value:0, attribute:PhysicalBody.VELOCITY_ATTRIBUTE, offset:{x:15, y:10}});
+                track.body.addTag({Name:"a = ", value:0, attribute:PhysicalBody.ACCELERATION_ATTRIBUTE, offset:{x:15, y:0}});
+                lab.addTrack(track);
             }
-
+            
             function syncSimulation()
             {
                 // Update the lab
                 lab.simulate(dt);
-                
-                // Sync between lab data and 3d models
-                bodyOnTrack.position.x = track.body.position.x;
-            }
-
-            function init() {
-                modelGraph.updateOptions({});
-                container = document.createElement('div');
-                document.body.appendChild(container);
-
-                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100);
-                camera.position.z = 22;
-                camera.position.y = 4;
-                controls = new THREE.OrbitControls(camera);
-                controls.addEventListener('change', render);
-                
-                // scene
-                scene = new THREE.Scene();
-                var ambient = new THREE.AmbientLight(0x101030);
-                scene.add(ambient);
-                var light = new THREE.DirectionalLight(0xffeedd);
-                light.position.set(50, 200, -100);
-                light.castShadow = true;
-                light.shadowMapWidth = 1024;
-                light.shadowMapHeight = 1024;
-
-                var d = 20;
-                light.shadowCameraLeft = -d;
-                light.shadowCameraRight = d;
-                light.shadowCameraTop = d;
-                light.shadowCameraBottom = -d;
-                light.shadowCameraFar = 1000;
-                light.shadowDarkness = 0.5;
-                scene.add(light);
-                var hemiLight = new THREE.HemisphereLight(0xaabbff, 0x111111, 4.0);
-                scene.add(hemiLight);
-
-                var manager = new THREE.LoadingManager();
-                manager.onProgress = function (item, loaded, total) {
-                    console.log(item, loaded, total);
-                };
-
-                var path = "../../img/pisa/";
-                var format = '.png';
-                var urls = [
-                    path + 'px' + format, path + 'nx' + format,
-                    path + 'py' + format, path + 'ny' + format,
-                    path + 'pz' + format, path + 'nz' + format
-                ];
-
-                var reflectionCube = THREE.ImageUtils.loadTextureCube(urls);
-                reflectionCube.format = THREE.RGBFormat;
-                var texture = THREE.ImageUtils.loadTexture("../../img/dark-metal-texture.jpg");
-                texture.wrapS = THREE.RepeatWrapping;
-                texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(1, 1);
-                var sphereTexture = THREE.ImageUtils.loadTexture("../../img/billboard.jpeg");
-
-                cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine: THREE.MixOperation});
-                groundMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: texture, color: 0xffffff, specular: 0xffffff, combine: THREE.MixOperation, bumpScale: 0.010, bumpMap: texture, ambient: 0x555555, reflectivity: 0.5, metal: true, shininess: 1000});
-                sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: sphereTexture, color: 0xff0000, specular: 0xffffff, combine: THREE.MixOperation, ambient: 0x555555, reflectivity: 0.8, shininess: 10});
-
-                renderer = new THREE.WebGLRenderer({antialias: true});
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                container.appendChild(renderer.domElement);
-
-                document.addEventListener('mousemove', onDocumentMouseMove, false);
-                document.addEventListener('mousedown', onDocumentMouseDown, false);
-                document.addEventListener('mouseup', onDocumentMouseUp, false);
-                document.addEventListener('mousewheel', onDocumentMouseWheel, false);
-                window.addEventListener('resize', onWindowResize, false);
-                //window.addGraphToDiv(graphContainer);
-                //renderer.shadowMapEnabled = true;
-                //renderer.shadowMapSoft = true;
-
-                makeBaseGeometry();
             }
             
             function onDocumentMouseMove(event)
@@ -281,6 +104,7 @@
 
             function onDocumentMouseWheel(event)
             {
+                return;
                 var pos = camera.position;
                 var d = pos.length();
                 cameraPosition.x = pos.x;
@@ -304,7 +128,8 @@
                 }
 
             }
-
+                        
+            
             function onDocumentMouseDown(e)
             {
             }
@@ -314,28 +139,21 @@
             }
 
             function onWindowResize() {
-
-                windowHalfX = window.innerWidth / 2;
-                windowHalfY = window.innerHeight / 2;
-
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-
-                renderer.setSize(window.innerWidth, window.innerHeight);
-
+                kinematics3DView.camera.aspect = window.innerWidth / window.innerHeight;
+                kinematics3DView.camera.updateProjectionMatrix();
+                kinematics3DView.renderer.setSize(window.innerWidth, window.innerHeight);
             }
 
             function animate() {
                 requestAnimationFrame(animate);
-                controls.update();
+                //controls.update();
                 syncSimulation();
-                updateGraph();
                 render();
+                stats.update();
             }
 
             function render() {
-                renderer.setClearColor(0xffffff, 1);
-                renderer.render(scene, camera);
+                kinematics3DView.render();
             }
         </script>
 

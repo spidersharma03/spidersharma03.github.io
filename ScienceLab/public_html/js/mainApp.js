@@ -240,68 +240,185 @@ mainApp.controller('TestController', function($scope){
     
     window.onSimFrameLoad = function()
     {
-        $scope.KinematicsTabName = "Kinematics";
-        $scope.$apply();
-        var div = document.getElementById('Kinematics_Input_Graph');
-        
-        $scope.graphMouseDown = function(event, g, context) {
-           var l = 0;
-           var graphPos = Dygraph.findPos(g.graphDiv);
-           var canvasx = Dygraph.pageX(event) - graphPos.x;
-           var canvasy = Dygraph.pageY(event) - graphPos.y;
-           var coord = $scope.graph.eventToDomCoords(event);
-           var x = $scope.graph.toDataXCoord(coord[0]);
-           var y = $scope.graph.toDataXCoord(coord[1]);
-           l++;
-        };
-        
-        $scope.graph = new Dygraph(div,
-                 // For possible data formats, see http://dygraphs.com/data.html
-                 // The x-values could also be dates, e.g. "2012/03/15"
-                 "X,Y\n" +
-                 "0,0.0\n" +
-                 "0.1,0.1\n" +
-                 "0.2,0.2\n" +
-                 "0.3,0.3\n" +
-                 "0.4,0.4\n" +
-                 "0.5,0.5\n" +
-                 "0.6,0.6\n" +
-                 "0.7,0.7\n" +
-                 "0.8,0.8\n" +
-                 "0.9,0.9\n" +
-                 "1.0,1.0\n",
-                 {
-                     dateWindow:[0,1.5],
-                     legend: 'always',
-                     animatedZooms: true,
-                     drawGrid:false,
-//                     interactionModel:{
-//                        'mousedown':$scope.graphMouseDown
-//                     },
-                     underlayCallback: function(canvas, area, g) {
-                        var coords = g.toDomCoords(0.1, 0);
-                        //var left = bottom_left[0];
-                        //var right = top_right[0];
-                        var splitX = coords[0];
-                        var splitY = coords[1];
+      $scope.KinematicsTabName = "Kinematics";
+      $scope.$apply();
+      var div = document.getElementById('Kinematics_Input_Graph');
+      var v4Active = false;
+      var v4Canvas = null;
+      var clickedPoint = null;
+      
+      function initSplineStuff() {
+          var numPoints = 10;
+          var numSplines = numPoints - 1;
+          $scope.numDivisionsbetweenPoints = 10;
+          $scope.splines = [];
+          for ( var i = 0 ; i < numSplines ; i++){
+              $scope.splines[i] = new CubicSpline();
+          }
+          var numTotalPoints = $scope.numDivisionsbetweenPoints * numSplines;
+          $scope.sparsePoints = [];
+          $scope.sparsePoints.push(0.5);
+          var graphData = [];
+          graphData.push([0.0,0.5,0.5]);
+          for( var i=1; i<=numTotalPoints; i++) {
+              var t = i/(numTotalPoints-1);
+              var rand = (Math.random())*0.5;
+              var val = (i%$scope.numDivisionsbetweenPoints) === 0 ? rand : null;
+              if(val !== null) {
+                  $scope.sparsePoints.push(val);
+              }
+              graphData.push([t,val,0.5]);
+          }
+          $scope.data = graphData;
+          
+          CalculateCubicSplineData($scope.sparsePoints);
+          updateDensePointsInGraphData();
+      }
+      
+      function updateDensePointsInGraphData() {
+          var count = 0;
+          for(var i=0; i<$scope.splines.length; i++) {
+            var currentSpline = $scope.splines[i];
+            for(var j=0; j<$scope.numDivisionsbetweenPoints; j++) {
+                var t = j/($scope.numDivisionsbetweenPoints-1);
+                var interpolatedVal = currentSpline.Value(t);
+                var vals = $scope.data[count++];
+                vals[2] = interpolatedVal;
+            }
+          }
+          for(var i=0; i<$scope.data.length; i++) {
+          }
+          derivativeTest();
+      }
+      
+      function derivativeTest() {
+          for(var i=0; i<$scope.splines.length-1; i++) {
+                var currentSpline = $scope.splines[i];
+                var nextSpline = $scope.splines[i+1];
+                var currentVal = currentSpline.Value(1);
+                var nextVal = nextSpline.Value(0);
+                var currentFirstDerivative = currentSpline.FirstDerivative(1);
+                var nextFirstDerivative = currentSpline.FirstDerivative(0);
+                var currentSecondDerivative = currentSpline.SecondDerivative(1);
+                var nextSecondDerivative = currentSpline.SecondDerivative(0);
+          }
+      }
+      
+      function CalculateCubicSplineData(data) {            
+            var D = [], y = [], rhs = [];
+            for ( var i = 0 ; i < data.length ; i ++){
+                y[i] = data[i];
+            }
+            for ( var i = 1 ; i < data.length - 1   ; i++){
+                rhs[i] = 3 * ( y[i+1] - y[i-1] );
+            }
+            rhs[0] = 3 * ( y[1] - y[0]);
+            rhs[data.length-1] = 3 * ( y[data.length-1] - y[data.length-2]);
+            
+            CubicSplineInterpolator.tridia_sl(rhs, D);
+            CubicSplineInterpolator.findSplineCoeff($scope.splines, D, y);
+      }
+      
+      function downV4(event, g, context) {
+          context.initializeMouseDown(event, g, context);
+          v4Active = true;
+          moveV4(event, g, context); // in case the mouse went down on a data point.
+        }
+      
+      function mouseMotion(event, g, context) {
+          if(clickedPoint !== null) {
+              var graphPos = Dygraph.findPos(g.graphDiv);
+              var canvasx = Dygraph.pageX(event) - graphPos.x;
+              var canvasy = Dygraph.pageY(event) - graphPos.y;
+              var vals = $scope.data[clickedPoint];
+              var newvals = g.toDataCoords(canvasx, canvasy);
+               vals[1] = newvals[1];
+               var index = Math.floor(clickedPoint/$scope.numDivisionsbetweenPoints);
+               $scope.sparsePoints[index] = newvals[1];
+               CalculateCubicSplineData($scope.sparsePoints);
+               updateDensePointsInGraphData();
+               $scope.graph.updateOptions({ 'file': $scope.data });
+          }
+      }
+      
+      function moveV4(event, g, context) {
+          var RANGE = 7;
+          if (v4Active) {
+            var graphPos = Dygraph.findPos(g.graphDiv);
+            var canvasx = Dygraph.pageX(event) - graphPos.x;
+            var canvasy = Dygraph.pageY(event) - graphPos.y;
 
-                // The drawing area doesn't start at (0, 0), it starts at (area.x, area.y).
-                // That's why we subtract them from splitX and splitY. This gives us the
-                // actual distance from the upper-left hand corder of the graph itself.
-                        var leftSideWidth = splitX - area.x;
-                        var rightSideWidth = area.w - leftSideWidth;
-                        var topHeight = splitY - area.y;
-                        var bottomHeight = area.h - topHeight;
+            var rows = g.numRows();
+            for (var row = 0; row < rows; row++) {
+              var date = g.getValue(row, 0);
+              var x = g.toDomCoords(date, null)[0];
+              var diff = Math.abs(canvasx - x);
+              if (diff < RANGE) {
+                for (var col = 1; col < 2; col++) {
+                  var vals =  g.getValue(row, col);
+                  if (vals == null) { 
+                      continue; 
+                  }
+                  var y = g.toDomCoords(null, vals)[1];
+                  var diff2 = Math.abs(canvasy - y);
+                  if (diff2 < RANGE) {
+                      clickedPoint = row;
+                      return;
+                  }
+                }
+              }
+            }
+          }
+        }
 
-                        canvas.fillStyle = 'lightblue';
-                        canvas.fillRect(area.x, area.y, leftSideWidth, topHeight/2);
-                
-                        canvas.beginPath();
-                        canvas.arc(area.x + leftSideWidth, area.y + topHeight/2, 5, 0, 2 * Math.PI);
-                        canvas.fillStyle = "red";
-                        canvas.fill();
-                      }
-                 });
+      function upV4(event, g, context) {
+          if (v4Active) {
+            v4Active = false;
+            clickedPoint = null;
+          }
+        }
+        
+      function drawV4(x, y) {
+            var ctx = v4Canvas;
+
+            ctx.strokeStyle = "#000000";
+            ctx.fillStyle = "#FFFF00";
+            ctx.beginPath();
+            ctx.arc(x,y,5,0,Math.PI*2,true);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+          }
+
+      initSplineStuff();
+      
+      $scope.graph = new Dygraph(div,
+        $scope.data,
+        {
+             dateWindow:[-0.1,1.1],
+             valueRange:[0,1],
+             labels:['x', 'A', 'B'],
+             series:{
+                 'A':{
+                     strokeWidth:0.0,
+                     drawPoints:true,
+                     pointSize:4,
+                     highlightCircleSize:6   
+                 },
+                 'B':{
+                     highlightCircleSize:3,
+                     drawPoints:true,
+                 }
+             },
+             legend: 'never',
+             animatedZooms: true,
+             drawGrid:false,
+             interactionModel:{
+                'mousedown' : downV4,
+                'mousemove' : mouseMotion,
+                'mouseup' : upV4,
+             }
+         });
     };
     window.onGraphFrameLoad = function()
     {

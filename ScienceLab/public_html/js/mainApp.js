@@ -227,9 +227,81 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
         }        
 });
 
-mainApp.controller('TestController', function($rootScope, $scope){
+mainApp.controller('TestController', function($scope){
+    
+    $scope.OnKinematicsTabClick = function(tabName) {
+        $scope.KinematicsTabName = tabName;
+        if(tabName === "Graph") {
+            var parentdiv = document.getElementById("content");
+            var w = parentdiv.offsetWidth;
+            $scope.graph.resize(w,100);
+        }
+    };
+    
     window.onSimFrameLoad = function()
     {
+        $scope.KinematicsTabName = "Kinematics";
+        $scope.$apply();
+        var div = document.getElementById('Kinematics_Input_Graph');
+        
+        $scope.graphMouseDown = function(event, g, context) {
+           var l = 0;
+           var graphPos = Dygraph.findPos(g.graphDiv);
+           var canvasx = Dygraph.pageX(event) - graphPos.x;
+           var canvasy = Dygraph.pageY(event) - graphPos.y;
+           var coord = $scope.graph.eventToDomCoords(event);
+           var x = $scope.graph.toDataXCoord(coord[0]);
+           var y = $scope.graph.toDataXCoord(coord[1]);
+           l++;
+        };
+        
+        $scope.graph = new Dygraph(div,
+                 // For possible data formats, see http://dygraphs.com/data.html
+                 // The x-values could also be dates, e.g. "2012/03/15"
+                 "X,Y\n" +
+                 "0,0.0\n" +
+                 "0.1,0.1\n" +
+                 "0.2,0.2\n" +
+                 "0.3,0.3\n" +
+                 "0.4,0.4\n" +
+                 "0.5,0.5\n" +
+                 "0.6,0.6\n" +
+                 "0.7,0.7\n" +
+                 "0.8,0.8\n" +
+                 "0.9,0.9\n" +
+                 "1.0,1.0\n",
+                 {
+                     dateWindow:[0,1.5],
+                     legend: 'always',
+                     animatedZooms: true,
+                     drawGrid:false,
+//                     interactionModel:{
+//                        'mousedown':$scope.graphMouseDown
+//                     },
+                     underlayCallback: function(canvas, area, g) {
+                        var coords = g.toDomCoords(0.1, 0);
+                        //var left = bottom_left[0];
+                        //var right = top_right[0];
+                        var splitX = coords[0];
+                        var splitY = coords[1];
+
+                // The drawing area doesn't start at (0, 0), it starts at (area.x, area.y).
+                // That's why we subtract them from splitX and splitY. This gives us the
+                // actual distance from the upper-left hand corder of the graph itself.
+                        var leftSideWidth = splitX - area.x;
+                        var rightSideWidth = area.w - leftSideWidth;
+                        var topHeight = splitY - area.y;
+                        var bottomHeight = area.h - topHeight;
+
+                        canvas.fillStyle = 'lightblue';
+                        canvas.fillRect(area.x, area.y, leftSideWidth, topHeight/2);
+                
+                        canvas.beginPath();
+                        canvas.arc(area.x + leftSideWidth, area.y + topHeight/2, 5, 0, 2 * Math.PI);
+                        canvas.fillStyle = "red";
+                        canvas.fill();
+                      }
+                 });
     };
     window.onGraphFrameLoad = function()
     {
@@ -249,6 +321,7 @@ return {
                var iFrameHeight = element[0].contentWindow.document.body.scrollHeight + 'px';
 //               element[0].contentWindow.onWindowResize();
                var iFrameWidth = '100%';
+               return;
                element.css('width', iFrameWidth);
                element.css('height', iFrameHeight);
         });
@@ -261,12 +334,7 @@ mainApp.directive('graph', function() {
 
     directive.compile = function(element, attributes) {
         // do one-time configuration of element.
-
-        var linkFunction = function($rootScope, $scope, element, atttributes) {
-            var frame = document.getElementById('IFrame');
-            var div = document.getElementById('graphDiv');
-            $rootScope.graphDiv = div;
-            //frame.contentWindow.setGraphView(element[0]);
+        var linkFunction = function($rootScope, $scope, element, atttributes) {            
             //$scope.$apply();
         };
         return linkFunction;

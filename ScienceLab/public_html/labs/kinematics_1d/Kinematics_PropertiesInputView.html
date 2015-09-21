@@ -1,0 +1,56 @@
+<div id="collapseExample" class="panel-body">
+    <div class="row-fluid collapse">
+        <div class="col-md-2">
+            Name
+        </div>
+        <div class="col-md-10">
+            <input type="text"/>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="col-md-2">
+            Position
+        </div>
+        <div class="col-md-6">
+            <input id="sliderPosition" type ="range" min ="-20" max="20" step ="1" value ="0"/>
+        </div> 
+        <div class="col-md-2">
+            Visible
+        </div>
+        <div class="col-md-2">
+            <input type="checkbox" value="on" onchange="(function () {
+                                document.getElementById('IFrame').contentWindow.changeTagVisibility(value)
+                            })(value)"/>
+        </div>
+    </div>
+
+    <div class="row-fluid">
+        <div class="col-md-2">
+            Velocity
+        </div>
+        <div class="col-md-6">
+            <input id="sliderVelocity"  type ="range" min ="-20" max="20" step ="1" value ="0"/>
+        </div> 
+        <div class="col-md-2">
+            Visible
+        </div>
+        <div class="col-md-2">
+            <input type="checkbox"/>
+        </div>
+    </div>
+
+    <div class="row-fluid">
+        <div class="col-md-2">
+            Acceleration
+        </div>
+        <div class="col-md-6">
+            <input id="sliderAcceleration" type ="range" min ="-20" max="20" step ="1" value ="0"/>
+        </div> 
+        <div class="col-md-2">
+            Visible
+        </div>
+        <div class="col-md-2">
+            <input type="checkbox"/>
+        </div>
+    </div>
+</div>

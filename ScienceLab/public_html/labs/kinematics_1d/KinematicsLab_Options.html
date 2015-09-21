@@ -1,3 +1,16 @@
+<!--<div class="panel panel-primary">
+    <div class="panel-heading" role="tab" id="headingOne">
+        <h4 class="panel-title">
+            <a target=_self role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne_" aria-expanded="true" aria-controls="collapseOne_">
+                Simulation Properties
+            </a>
+        </h4>
+    </div>
+     <div id="collapseOne_" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne_">
+        
+    </div>
+</div>-->
+
 <div class="panel panel-primary">
     <div class="panel-heading" role="tab" id="headingOne">
         <h4 class="panel-title">
@@ -6,61 +19,23 @@
             </a>
         </h4>
     </div>
-    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
-        <div id="collapseExample" class="panel-body">
-            <div class="row-fluid collapse">
-                <div class="col-md-2">
-                    Name
-                </div>
-                <div class="col-md-10">
-                    <input type="text"/>
-                </div>
-            </div>
-            <div class="row-fluid">
-                <div class="col-md-2">
-                    Position
-                </div>
-                <div class="col-md-6">
-                    <input id="sliderPosition" type ="range" min ="-20" max="20" step ="1" value ="0"/>
-                </div> 
-                <div class="col-md-2">
-                    Visible
-                </div>
-                <div class="col-md-2">
-                    <input type="checkbox" value="on" onchange="(function(){document.getElementById('IFrame').contentWindow.changeTagVisibility(value)})(value)"/>
-                </div>
-            </div>
 
-            <div class="row-fluid">
-                <div class="col-md-2">
-                    Velocity
-                </div>
-                <div class="col-md-6">
-                    <input id="sliderVelocity"  type ="range" min ="-20" max="20" step ="1" value ="0"/>
+    <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+        <div id="content">
+            <ul id="tabs" class="nav nav-pills" data-tabs="tabs">
+                <li  class="active" id ="tab-input-props"><a ng-click="OnKinematicsTabClick('Kinematics')" data-toggle="tab">Kinematic Input</a></li>
+                <li  id ="tab-input-graph" ><a ng-click="OnKinematicsTabClick('Graph')"  data-toggle="tab">Graph Input</a></li>
+            </ul>
+            <div>
+                <div ng-show="KinematicsTabName === 'Kinematics'">
+                      <div ng-include="'labs/kinematics_1d/Kinematics_PropertiesInputView.html'" ></div>
                 </div> 
-                <div class="col-md-2">
-                    Visible
+                <div ng-show="KinematicsTabName === 'Graph'">
+                      <div ng-include="'labs/kinematics_1d/Kinematics_GraphInputView.html'" ></div>
                 </div>
-                <div class="col-md-2">
-                    <input type="checkbox"/>
-                </div>
-            </div>
-
-            <div class="row-fluid">
-                <div class="col-md-2">
-                    Acceleration
-                </div>
-                <div class="col-md-6">
-                    <input id="sliderAcceleration" type ="range" min ="-20" max="20" step ="1" value ="0"/>
-                </div> 
-                <div class="col-md-2">
-                    Visible
-                </div>
-                <div class="col-md-2">
-                    <input type="checkbox"/>
-                </div>
-            </div>
+             </div>   
         </div>
+
     </div>
 </div>
 

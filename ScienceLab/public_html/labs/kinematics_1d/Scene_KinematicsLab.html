@@ -33,7 +33,6 @@
         <script src="../../js/simulate/Arrow3D.js"></script>
         <script src="../../js/simulate/Text2D.js"></script>
         <script src="../../labs/common/PhysicalBody.js"></script>
-        <script src="../../labs/common/model_graph.js"></script>
         <script src="../../labs/common/TextViewObserver.js"></script>
         <script src="../../labs/kinematics_1d/model_kinematics1d_lab.js"></script>
         <script src="../../labs/kinematics_1d/Kinematics3DView.js"></script>
@@ -81,14 +80,25 @@
                 lab.addView3dObserver(kinematics3DView);
                 lab.addTextViewObserver(textViewObserver);
                 lab.addGraphObserver(document.modelGraph);
+                var seriesOptions = {
+                    'x' : {
+                        strokeWidth: 1.0
+                    },
+                    'v' : {
+                    },
+                    'a' : {   
+                    }
+                };
+                document.modelGraph.updateOptions({series : seriesOptions});
+                //document.modelGraph._graph.setVisibility(0,false);
                 track = new Model_Kinematics1D_Lab.StraightTrack();
-                track.body.velocity.x = -2.2;
-                track.body.acceleration.x = 2.5;
-                track.body.addTag({Name:"Kinematics Body", offset:{x:0, y:40}, color:"red"});
+                track.body.velocity.x = 0;
+                track.body.acceleration.x = 1.0;
+                track.body.addTag({name:"Kinematics Body", offset:{x:0, y:40}, color:"red"});
                 track.body.updateTag("Kinematics Body", "color", "green");
-                track.body.addTag({Name:"x = ", value:0, attribute:PhysicalBody.POSITION_ATTRIBUTE, offset:{x:15, y:20}});
-                track.body.addTag({Name:"v = ", value:0, attribute:PhysicalBody.VELOCITY_ATTRIBUTE, offset:{x:15, y:10}});
-                track.body.addTag({Name:"a = ", value:0, attribute:PhysicalBody.ACCELERATION_ATTRIBUTE, offset:{x:15, y:0}});
+                track.body.addTag({name:"x = ", value:0, attribute:PhysicalBody.POSITION_ATTRIBUTE, offset:{x:15, y:20}});
+                track.body.addTag({name:"v = ", value:0, attribute:PhysicalBody.VELOCITY_ATTRIBUTE, offset:{x:15, y:10}});
+                track.body.addTag({name:"a = ", value:0, attribute:PhysicalBody.ACCELERATION_ATTRIBUTE, offset:{x:15, y:0}});
                 lab.addTrack(track);
             }
             
@@ -104,29 +114,6 @@
 
             function onDocumentMouseWheel(event)
             {
-                return;
-                var pos = camera.position;
-                var d = pos.length();
-                cameraPosition.x = pos.x;
-                cameraPosition.y = pos.y;
-                cameraPosition.z = pos.z;
-                var min = 5;
-                var max = 40;
-                if (d < min)
-                {
-                    cameraPosition.normalize();
-                    pos.x = cameraPosition.x * min;
-                    pos.y = cameraPosition.y * min;
-                    pos.z = cameraPosition.z * min;
-                }
-                if (d > max)
-                {
-                    cameraPosition.normalize();
-                    pos.x = cameraPosition.x * max;
-                    pos.y = cameraPosition.y * max;
-                    pos.z = cameraPosition.z * max;
-                }
-
             }
                         
             

@@ -6,6 +6,7 @@
 
 function Kinematics3DView(kinematics_lab) {
     this.kinematics_lab = kinematics_lab;
+    this.time_snap_objects = [];
     this.objects_3d = [];
     this.scene = null;
     this.camera = null;
@@ -17,6 +18,9 @@ function Kinematics3DView(kinematics_lab) {
     this.projectedCoords = new THREE.Vector3();
     this.init();
     this.makeBaseGeometry();
+    
+    var map = THREE.ImageUtils.loadTexture( "../../img/sprite.png" );
+    this.spriteMaterial = new THREE.SpriteMaterial( { map: map, transparent:true } );
 }
 
 Kinematics3DView.prototype = {
@@ -26,11 +30,23 @@ Kinematics3DView.prototype = {
         return this.objects_3d[modelObject.id];
     },
     
-    addObject3D : function(modelObject) {
-        var bodyOnTrack = this.createMassGeometryStraightTrack(1,1, this.sphereMaterial);
-        this.objects_3d[modelObject.id] = bodyOnTrack;
-        bodyOnTrack.position.y = 0.05;
-        this.scene.add(bodyOnTrack);
+    addObject3D : function(modelObject, position, scale) {
+        if(modelObject.type === "SIMULATIONBODY") {
+            var sprite = this.createSpriteObject();
+            sprite.position.copy(position);
+            sprite.scale.x = scale;
+            sprite.scale.y = scale;            
+            this.objects_3d[modelObject.id] = sprite;
+            this.scene.add(sprite);
+            return sprite;
+        }
+        if(modelObject.type === "PHYSICALBODY") {
+            var bodyOnTrack = this.createMassGeometryStraightTrack(1,1, this.sphereMaterial);
+            this.objects_3d[modelObject.id] = bodyOnTrack;
+            bodyOnTrack.position.y = 0.05;
+            this.scene.add(bodyOnTrack);
+            return bodyOnTrack;
+        }
     },
     
     updateObject3D: function(modelObject) {
@@ -188,6 +204,20 @@ Kinematics3DView.prototype = {
         this.projectedCoords.x = ( this.projectedCoords.x * widthHalf ) + widthHalf;
         this.projectedCoords.y = - ( this.projectedCoords.y * heightHalf ) + heightHalf;
         return this.projectedCoords;
-    }
+    },
     
+    createSpriteObject: function() {
+        var sprite = new THREE.Sprite( this.spriteMaterial );
+        return sprite;
+    },
+    
+    addSpriteToScene: function(position, scale) {
+        var spriteObject = this.createSpriteObject();
+        spriteObject.position.x = position.x;
+        spriteObject.position.y = position.y;
+        spriteObject.position.z = position.z;
+        spriteObject.scale.x = scale;
+        spriteObject.scale.y = scale;
+        this.scene.add(spriteObject);
+    }
 };

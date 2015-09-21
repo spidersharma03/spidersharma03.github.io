@@ -15,10 +15,14 @@
         <script>
             var options = {
                      labels: ['t', 'x', 'v', 'a'],
+                     xlabel:'Time',
+                     ylabel:'Position/Velocity/Acceleration',
                      legend: 'always',
                      animatedZooms: true,
                      title: 'Kinematics',
-                     showRangeSelector:true
+                     
+//                     stackedGraph:true
+//                     showRangeSelector:true
                  };    
             document.modelGraph = new Model_Graph(document.getElementById("graphDiv"), options, 4);
         </script>

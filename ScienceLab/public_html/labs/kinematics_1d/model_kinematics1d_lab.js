@@ -17,11 +17,18 @@ Kinematics_Body.prototype.updateTagsOffsets = function() {
 function Model_Kinematics1D_Lab(labParams) {
     this.tracks = [];
     this.bodies = [];
+    this.timesnap_objects = [];
+    this.annotations = [];
+
     this.bRecordGraphData = true;
     this.bRecordGraphDataEveryFrame = true;
     this.NumFramesToSkipForDataRecord = 1;
+    this.NumFramesToSkipForTimeSnap = 60;
     this.time = 0;
     this.timeRecordCounter = 0;
+    this.timeSnapRecordCounter = 0;
+    this.timeSnapPosition = new THREE.Vector3(0,0,0);
+    this.pauseSimulation = false;
     this.graphObserver = null;
     this.textViewObserver = null;
     this.view3dObserver = null;
@@ -40,8 +47,6 @@ Model_Kinematics1D_Lab.prototype = {
             for (var tagname in track.body.tags) {
                 var object3d = this.view3dObserver.getObject3D(track.body);
                 var pos = this.view3dObserver.projectToScreenSpace(object3d);
-                //pos.x = 100;
-                //pos.y = 100;
                 var tagObject = track.body.tags[tagname];
                 this.textViewObserver.addTextView(tagname, tagObject.value, pos, tagObject.color);
             }
@@ -49,62 +54,152 @@ Model_Kinematics1D_Lab.prototype = {
     },
     
     simulate : function(dt) {
+        if(this.pauseSimulation)
+            return;
+        
         for( var i=0; i<this.tracks.length; i++) {
             this.tracks[i].advanceBody(dt);
         }
         this.syncViews();
+        
+        this.recordGraphData();
+        
         if(this.timeRecordCounter === 0)
-            this.recordGraphData();
-        this.time += dt;
+                this.updateGraphData();
+
+        if(this.timeSnapRecordCounter === 0)
+            this.timeSnap();
+        
+        this.time += dt;        
         this.timeRecordCounter++;
+        this.timeSnapRecordCounter++;
         if(this.timeRecordCounter > this.NumFramesToSkipForDataRecord)
             this.timeRecordCounter = 0;
+        if(this.timeSnapRecordCounter > this.NumFramesToSkipForTimeSnap)
+            this.timeSnapRecordCounter = 0;
     },
     getPosition : function() {
         
     },
-    syncViews : function() {
+    
+    timeSnap : function() {
         for( var i=0; i<this.tracks.length; i++) {
             var body = this.tracks[i].body;
-            this.view3dObserver.updateObject3D(body);
-        }
-        if(this.textViewObserver) {
-        for( var i=0; i<this.tracks.length; i++) {
-            var body = this.tracks[i].body;
-            for (var tagname in track.body.tags) {
-                var object3d = this.view3dObserver.getObject3D(body);
-                var projectedPos = this.view3dObserver.projectToScreenSpace(object3d);
-                var tagObject = track.body.tags[tagname];
-                var tagAttribute = tagObject.attribute;
-                var tagOffset = tagObject.offset;
-                var value_ = tagname;
-                if(tagOffset) {
-                    projectedPos.x += tagOffset.x;
-                    projectedPos.y -= tagOffset.y;
-                }
-                if(tagAttribute === PhysicalBody.POSITION_ATTRIBUTE) {
-                    value_ = value_ + track.body.position.x.toPrecision(3);
-                }
-                if(tagAttribute === PhysicalBody.VELOCITY_ATTRIBUTE) {
-                    value_ = value_ + track.body.velocity.x.toPrecision(3);
-                }
-                if(tagAttribute === PhysicalBody.ACCELERATION_ATTRIBUTE) {
-                    value_ = value_ + track.body.acceleration.x.toPrecision(3);
-                }
-                this.textViewObserver.updateTextView(tagname, value_, projectedPos);
+            if(body.velocity.x === 0){
+                continue;
             }
+            var object3d = this.view3dObserver.getObject3D(body);
+            this.timeSnapPosition.copy(object3d.position);
+            this.timeSnapPosition.y += 1.5;
+            var simBody = new SimulationBody();
+            this.timesnap_objects.push(simBody);
+            this.view3dObserver.addObject3D(simBody, this.timeSnapPosition, 0.25);
+            this.annotations.push( {
+                series: 'v',
+                x: this.time,
+                icon: '../../img/sprite.png',
+                width: 15,
+                height: 15,
+                tickHeight: 14,
+                text: this.time
+            } );
+            this.graphObserver._graph.setAnnotations(this.annotations);
+            return;
+            //this.view3dObserver.addSpriteToScene(this.timeSnapPosition, 0.25);
+            var taginfo1 = simBody.addTag({name:  "[a] = ", value:body.acceleration.x.toPrecision(3), offset:{x:0, y:80}});
+            var taginfo2 = simBody.addTag({name:  "[v] = ", value:body.velocity.x.toPrecision(3), offset:{x:0, y:60}});
+            var taginfo3 = simBody.addTag({name:  "[x] = ", value:body.position.x.toPrecision(3), offset:{x:0, y:40}});
+            this.textViewObserver.addTextView(taginfo1.name, taginfo1.value, {x:0,y:0}, "blue");
+            this.textViewObserver.addTextView(taginfo2.name, taginfo2.value, {x:0,y:0}, "blue");
+            this.textViewObserver.addTextView(taginfo3.name, taginfo3.value, {x:0,y:0}, "blue");
         }
+    },
+    sync3DView: function() {
+        if(this.view3dObserver) {
+            for( var i=0; i<this.tracks.length; i++) {
+                var body = this.tracks[i].body;
+                this.view3dObserver.updateObject3D(body);
+            }
         }
     },
     
+    syncText2DView: function() {
+        if(this.textViewObserver) {
+            // Update tags related to all the bodies
+            for( var i=0; i<this.tracks.length; i++) {
+                var body = this.tracks[i].body;
+                for (var tagname in track.body.tags) {
+                    var tagObject = track.body.tags[tagname];
+                    if(!tagObject.dirty)
+                        continue;
+                    var tagAttribute = tagObject.attribute;
+                    var tagOffset = tagObject.offset;
+                    var value_ = tagname;
+                    
+                    var object3d = this.view3dObserver.getObject3D(body);
+                    var projectedPos = this.view3dObserver.projectToScreenSpace(object3d);
+                    if(tagOffset) {
+                        projectedPos.x += tagOffset.x;
+                        projectedPos.y -= tagOffset.y;
+                    }
+                    body.updateTag(tagname, "value", value_);
+
+                    if(tagAttribute === PhysicalBody.POSITION_ATTRIBUTE) {
+                        value_ = value_ + track.body.position.x.toPrecision(3);
+                        tagObject.dirty = true;
+                    }
+                    if(tagAttribute === PhysicalBody.VELOCITY_ATTRIBUTE) {
+                        value_ = value_ + track.body.velocity.x.toPrecision(3);
+                        tagObject.dirty = true;
+                    }
+                    if(tagAttribute === PhysicalBody.ACCELERATION_ATTRIBUTE) {
+                        value_ = value_ + track.body.acceleration.x.toPrecision(3);
+                        tagObject.dirty = true;
+                    }
+                    this.textViewObserver.updateTextView(tagname, value_, projectedPos);
+                }
+            }
+            // Update the position of time snap tags, which should follow the corresponding sprites.
+            for( var i=0; i<this.timesnap_objects.length; i++) {
+                var body = this.timesnap_objects[i];
+                for (var tagname in body.tags) {
+                    var tagObject = body.tags[tagname];
+                    if(!tagObject.dirty)
+                        continue;
+                    var tagOffset = tagObject.offset;
+                    var value_ = tagname + tagObject.value;
+                    
+                    var object3d = this.view3dObserver.getObject3D(body);
+                    var projectedPos = this.view3dObserver.projectToScreenSpace(object3d);
+                    if(tagOffset) {
+                        projectedPos.x += tagOffset.x;
+                        projectedPos.y -= tagOffset.y;
+                    }
+                    this.textViewObserver.updateTextView(tagname, value_, projectedPos);
+                }
+            }
+        }
+    },
+    
+    syncViews : function() {
+        this.sync3DView();
+        this.syncText2DView();
+    },
+    
+    updateGraphData: function() {
+        if(this.time > 5)
+            return;
+        this.graphObserver.updateData();
+    },
+    
     recordGraphData : function() {
-        if(this.time > 3)
+        if(this.time > 5)
             return;
         if( this.bRecordGraphData ) {
             for( var i=0; i<this.tracks.length; i++) {
                 var body = this.tracks[i].body;
                 if(this.graphObserver) {
-                    this.graphObserver.addData([this.time, body.position.x, body.velocity.x, body.acceleration.x]);
+                    this.graphObserver.recordData([this.time, body.position.x, body.velocity.x, body.acceleration.x]);
                 }
             }
         }
@@ -128,7 +223,7 @@ Model_Kinematics1D_Lab.StraightTrack = function(trackParams) {
         this.type = trackParams.type;
     } else {
         this.type = Model_Kinematics1D_Lab.StraightTrack.STRAIGHT_TRACK;
-        this.length = 20;
+        this.length = 30;
         this.mathInput = false;
         this.graphInput = false;
         this.isFinite = true;

@@ -3,46 +3,25 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
-
-function PhysicalBody(bodyParams) {
-    this.position = new THREE.Vector3();
-    this.velocity = new THREE.Vector3();
-    this.acceleration = new THREE.Vector3();
-    this.mass = 1.0;
-    this.e = 0.0;
-    this.mu_k = 0.0;
-    this.mu_d = 0.0;
-    this.views = [];
-    
-    this.id = PhysicalBody.STATIC_COUNT++;
-    this.tagDirty = false;
-    
-    this.name = 'No Name';
+function SimulationBody() {
+    this.id = SimulationBody.STATIC_COUNT++; 
+    this.type = "SIMULATIONBODY";
     this.tags = [];
-    this.fnCall = null;
-    if(bodyParams) {
-        
-    }
 }
 
-PhysicalBody.TagInfo = function() {
-    this.Name = "";
-    this.value = "",
-    this.attribute = -1;
-    this.offset = {x:0, y:0};        
-};
+SimulationBody.STATIC_COUNT = 0;
 
-PhysicalBody.STATIC_COUNT = 0;
-PhysicalBody.POSITION_ATTRIBUTE = 0;
-PhysicalBody.VELOCITY_ATTRIBUTE = 1;
-PhysicalBody.ACCELERATION_ATTRIBUTE = 2;
-
-PhysicalBody.prototype = {
-    constructor : PhysicalBody,
+SimulationBody.prototype = {
+    constructor : SimulationBody,
     
     addTag : function(tagInfo) {
-        this.tags[tagInfo.Name] = tagInfo;
+        this.tags[tagInfo.name] = tagInfo;
+        tagInfo.dirty = true;
+        return tagInfo;
+    },
+    
+    getTag : function(name) {
+        return this.tags[name];
     },
     
     removeTag: function(name) {
@@ -53,7 +32,37 @@ PhysicalBody.prototype = {
         var tagObject = this.tags[name];
         if(tagObject) {
             tagObject[property] = value;
-            this.tagDirty = true;
+            //tagObject.dirty = false;
         }
     }  
 };
+
+PhysicalBody.prototype = Object.create(SimulationBody.prototype);
+
+function PhysicalBody(bodyParams) {
+    SimulationBody.call(this);
+    this.type = "PHYSICALBODY";
+    this.position = new THREE.Vector3();
+    this.velocity = new THREE.Vector3();
+    this.acceleration = new THREE.Vector3();
+    this.mass = 1.0;
+    this.e = 0.0;
+    this.mu_k = 0.0;
+    this.mu_d = 0.0;
+       
+    if(bodyParams) {
+        
+    }
+}
+
+PhysicalBody.TagInfo = function() {
+    this.name = "";
+    this.value = "",
+    this.attribute = -1;
+    this.offset = {x:0, y:0};
+    this.color = "red";
+};
+
+PhysicalBody.POSITION_ATTRIBUTE = 0;
+PhysicalBody.VELOCITY_ATTRIBUTE = 1;
+PhysicalBody.ACCELERATION_ATTRIBUTE = 2;

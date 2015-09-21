@@ -35,12 +35,21 @@ Model_Graph.prototype = {
       this._graph.updateOptions(options);
   },
   
-  addData: function(data) {
+  recordData: function(data) {
       if(this.numSeries !== data.length) {
           console.log("ERROR::model_graph.js::Mismatch between data length and number of series specified for this graph");
           return;
       }
       this.series_data.push(data);
-      this.updateData();
+  },
+  
+  setLabelX: function(label) {
+      var labeldata = {xlabel : label};
+      this.updateOptions(labeldata);
+  },
+  
+   setLabelY: function(label) {
+      var labeldata = {ylabel : label};
+      this.updateOptions(labeldata);
   }
 };

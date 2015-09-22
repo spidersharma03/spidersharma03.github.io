@@ -279,8 +279,11 @@ mainApp.controller('TestController', function($scope){
           var count = 0;
           for(var i=0; i<$scope.splines.length; i++) {
             var currentSpline = $scope.splines[i];
-            for(var j=0; j<$scope.numDivisionsbetweenPoints; j++) {
-                var t = j/($scope.numDivisionsbetweenPoints-1);
+            var n = $scope.numDivisionsbetweenPoints;
+            if( i === $scope.splines.length - 1)
+                n = $scope.numDivisionsbetweenPoints + 1;
+            for(var j=0; j<n; j++) {
+                var t = j/$scope.numDivisionsbetweenPoints;
                 var interpolatedVal = currentSpline.Value(t);
                 var vals = $scope.data[count++];
                 vals[2] = interpolatedVal;
@@ -288,22 +291,8 @@ mainApp.controller('TestController', function($scope){
           }
           for(var i=0; i<$scope.data.length; i++) {
           }
-          derivativeTest();
       }
-      
-      function derivativeTest() {
-          for(var i=0; i<$scope.splines.length-1; i++) {
-                var currentSpline = $scope.splines[i];
-                var nextSpline = $scope.splines[i+1];
-                var currentVal = currentSpline.Value(1);
-                var nextVal = nextSpline.Value(0);
-                var currentFirstDerivative = currentSpline.FirstDerivative(1);
-                var nextFirstDerivative = currentSpline.FirstDerivative(0);
-                var currentSecondDerivative = currentSpline.SecondDerivative(1);
-                var nextSecondDerivative = currentSpline.SecondDerivative(0);
-          }
-      }
-      
+            
       function CalculateCubicSplineData(data) {            
             var D = [], y = [], rhs = [];
             for ( var i = 0 ; i < data.length ; i ++){
@@ -316,7 +305,7 @@ mainApp.controller('TestController', function($scope){
             rhs[data.length-1] = 3 * ( y[data.length-1] - y[data.length-2]);
             
             CubicSplineInterpolator.tridia_sl(rhs, D);
-            CubicSplineInterpolator.findSplineCoeff($scope.splines, D, y);
+            CubicSplineInterpolator.findSplineCoeff($scope.splines, D, y);            
       }
       
       function downV4(event, g, context) {

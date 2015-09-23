@@ -61,10 +61,10 @@ Arrow3D.prototype = {
         this.origin.y = py;
         this.origin.z = pz;
         if( positionAt === Arrow3D.TAIL) { // Tail
-            this.offsetNode.position.y = -this.length/2;
+            this.offsetNode.position.y = this.length/2;
         }
         if( positionAt === Arrow3D.HEAD) { // Pointer
-            this.offsetNode.position.y = this.length/2;
+            this.offsetNode.position.y = -this.length/2;
         }
     },
     

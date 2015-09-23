@@ -320,17 +320,17 @@ SpringMassSystems1D.prototype = {
             var scaleFactor = Math.abs(force) * 0.3;
             var zOffset = 0.25;
             if( force < 0) {
-                arrow1.setPosition(body1.position.x + body1.size/2, body1.position.y + body1.size/2, zOffset, Arrow3D.HEAD);
+                arrow1.setPosition(body1.position.x + body1.size/2, body1.position.y + body1.size/2, zOffset, Arrow3D.TAIL);
                 arrow1.setLength(scaleFactor);
                 arrow1.setOrientationAxis(Arrow3D.NEG_X);
-                arrow2.setPosition(body2.position.x - body2.size/2, body2.position.y + body1.size/2, zOffset, Arrow3D.HEAD);
+                arrow2.setPosition(body2.position.x - body2.size/2, body2.position.y + body1.size/2, zOffset, Arrow3D.TAIL);
                 arrow2.setLength(scaleFactor);
                 arrow2.setOrientationAxis(Arrow3D.POS_X);
             } else {
-                arrow1.setPosition(body1.position.x + body1.size/2, body1.position.y + body1.size/2, zOffset, Arrow3D.HEAD);
+                arrow1.setPosition(body1.position.x + body1.size/2, body1.position.y + body1.size/2, zOffset, Arrow3D.TAIL);
                 arrow1.setLength(scaleFactor);
                 arrow1.setOrientationAxis(Arrow3D.POS_X);
-                arrow2.setPosition(body2.position.x - body2.size/2, body2.position.y + body1.size/2, zOffset, Arrow3D.HEAD);
+                arrow2.setPosition(body2.position.x - body2.size/2, body2.position.y + body1.size/2, zOffset, Arrow3D.TAIL);
                 arrow2.setLength(scaleFactor);
                 arrow2.setOrientationAxis(Arrow3D.NEG_X);
             }

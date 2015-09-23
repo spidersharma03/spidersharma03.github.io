@@ -21,6 +21,10 @@ function Kinematics3DView(kinematics_lab) {
     
     var map = THREE.ImageUtils.loadTexture( "../../img/sprite.png" );
     this.spriteMaterial = new THREE.SpriteMaterial( { map: map, transparent:true } );
+    this.lambertMaterial1 = new THREE.MeshLambertMaterial({color:0x111188, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+    this.lambertMaterial2 = new THREE.MeshLambertMaterial({color:0x881111, ambient: 0xaaaaaa, combine: THREE.MixOperation});
+    this.lambertMaterial1.side = THREE.DoubleSide;
+    this.lambertMaterial2.side = THREE.DoubleSide;
 }
 
 Kinematics3DView.prototype = {
@@ -28,6 +32,18 @@ Kinematics3DView.prototype = {
     
     getObject3D: function(modelObject) {
         return this.objects_3d[modelObject.id];
+    },
+    
+    setObjectVisibility: function(modelObject, bVisible){
+        this.objects_3d[modelObject.id].visible = bVisible;
+    },
+    
+    setVelocityArrowVisibility: function(modelObject, bVisible){
+        this.objects_3d[modelObject.id].velocityArrow.getRootNode().visible = bVisible;
+    },
+    
+    setAccelerationArrowVisibility: function(modelObject, bVisible){
+        this.objects_3d[modelObject.id].accelerationArrow.getRootNode().visible = bVisible;
     },
     
     addObject3D : function(modelObject, position, scale) {
@@ -45,6 +61,15 @@ Kinematics3DView.prototype = {
             this.objects_3d[modelObject.id] = bodyOnTrack;
             bodyOnTrack.position.y = 0.05;
             this.scene.add(bodyOnTrack);
+            // Add 3d arrows for velocity and acceleration
+            bodyOnTrack.velocityArrow = new Arrow3D(1, this.lambertMaterial1);
+            bodyOnTrack.velocityArrow.setRadius(0.5);
+            bodyOnTrack.velocityArrow.getRootNode().visible = false;
+            bodyOnTrack.accelerationArrow = new Arrow3D(1, this.lambertMaterial2);
+            bodyOnTrack.accelerationArrow.setRadius(0.5);
+            bodyOnTrack.accelerationArrow.getRootNode().visible = false;
+            this.scene.add(bodyOnTrack.velocityArrow.getRootNode());
+            this.scene.add(bodyOnTrack.accelerationArrow.getRootNode());
             return bodyOnTrack;
         }
     },
@@ -52,7 +77,28 @@ Kinematics3DView.prototype = {
     updateObject3D: function(modelObject) {
         var object3d = this.objects_3d[modelObject.id];
         if(object3d) {
-            object3d.position.x = modelObject.position.x;
+            var position = modelObject.position.x;
+            var velocity = modelObject.velocity.x;
+            var acceleration = modelObject.acceleration.x;
+            object3d.position.x = position;
+            // Update 3d arrows
+            if(velocity > 0) {
+                object3d.velocityArrow.visible = true;
+                object3d.velocityArrow.setOrientationAxis(Arrow3D.POS_X);
+                object3d.velocityArrow.setPosition(position + object3d.size/2, object3d.position.y + object3d.size/2, 0, Arrow3D.TAIL);
+            }
+            else {
+                object3d.velocityArrow.setPosition(position - object3d.size/2, object3d.position.y + object3d.size/2, 0, Arrow3D.TAIL);
+                object3d.velocityArrow.setOrientationAxis(Arrow3D.NEG_X);
+            }
+            if(acceleration > 0) {
+                object3d.accelerationArrow.setOrientationAxis(Arrow3D.POS_X);
+                object3d.accelerationArrow.setPosition(position + object3d.size/2, object3d.position.y + object3d.size, 0, Arrow3D.TAIL);
+            }
+            else {
+                object3d.accelerationArrow.setPosition(position - object3d.size/2, object3d.position.y + object3d.size, 0, Arrow3D.TAIL);
+                object3d.accelerationArrow.setOrientationAxis(Arrow3D.NEG_X);
+            }
         }
     },
     
@@ -118,6 +164,7 @@ Kinematics3DView.prototype = {
         mesh2.position.z = height / 4.0;
         mesh3.position.y += height * 0.9;
         geometryGroup.add(mesh3);
+        geometryGroup.size = size;
         return geometryGroup;
     },
     

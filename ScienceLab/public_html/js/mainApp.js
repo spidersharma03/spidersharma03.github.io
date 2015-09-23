@@ -245,6 +245,10 @@ mainApp.controller('TestController', function($scope){
       var div = document.getElementById('Kinematics_Input_Graph');
       var splineGraph = new SplineGraph(div); 
       $scope.splineGraph = splineGraph;
+      var iframe = document.getElementById('IFrame');
+      if(iframe.contentWindow.lab !== undefined) {
+         iframe.contentWindow.lab.setGraphInput(splineGraph);
+      }
     };
     window.onGraphFrameLoad = function()
     {

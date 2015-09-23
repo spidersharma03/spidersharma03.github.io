@@ -58,7 +58,7 @@ Model_Kinematics1D_Lab.prototype = {
             return;
         
         for( var i=0; i<this.tracks.length; i++) {
-            this.tracks[i].advanceBody(dt);
+            this.tracks[i].advanceBody(this.time, dt);
         }
         this.syncViews();
         
@@ -215,6 +215,9 @@ Model_Kinematics1D_Lab.prototype = {
     
     addView3dObserver: function(textViewObserver) {
         this.view3dObserver = textViewObserver;
+    },
+    setGraphInput: function(graphInput) {
+        this.tracks[0].setGraphInput(graphInput);
     }
 };
 
@@ -229,6 +232,7 @@ Model_Kinematics1D_Lab.StraightTrack = function(trackParams) {
         this.isFinite = true;
         this.isElasticAtEndPoints = false;
         this.body = new Kinematics_Body();
+        this.graphInput = null;
     }
 };
 
@@ -239,13 +243,17 @@ Model_Kinematics1D_Lab.StraightTrack.CURVED_TRACK = 2;
 Model_Kinematics1D_Lab.StraightTrack.prototype = {
     constructor : Model_Kinematics1D_Lab.Track,
     
-    advanceBody : function(dt) {
+    setGraphInput: function(graphInput) {
+        this.graphInput = graphInput;
+    },
+    
+    advanceBody : function(time, dt) {
         // Check If the acceleration is governed by a spline or math equation
         if(this.mathInput) {
             
         }
         if(this.graphInput) {
-            
+            //this.body.acceleration.x = this.graphInput.Acceleration(time);
         }
         // Update 
         this.body.velocity.x += this.body.acceleration.x * dt;

@@ -13,7 +13,9 @@ function SplineGraph(div) {
     this.sparsePoints = [];
     this.v4Active = false;
     this.clickedPoint = null;
-
+    
+    this.timeWindow = 7;
+    this.curveType = SplineGraph.X_T;
     this.initSplineStuff();
     function mouseMotion_(event, g, context) {
         if (this.clickedPoint !== null) {
@@ -67,7 +69,7 @@ function SplineGraph(div) {
     function downV4_(event, g, context) {
         context.initializeMouseDown(event, g, context);
         this.v4Active = true;
-        moveV4(event, g, context); // in case the mouse went down on a data point.
+        moveV4(event, g, context);
     };
 
     var downV4 = downV4_.bind(this);
@@ -110,6 +112,10 @@ function SplineGraph(div) {
 
             });
 }
+
+SplineGraph.X_T = 0;
+SplineGraph.V_T = 1;
+SplineGraph.A_T = 2;
 
 SplineGraph.prototype.initSplineStuff = function () {
     for (var i = 0; i < this.numSplines; i++) {
@@ -161,4 +167,39 @@ SplineGraph.prototype.updateDensePointsInGraphData = function () {
         }
     }
 };
-      
+
+SplineGraph.prototype.Value = function(t) {
+    // Find the spline index
+    var deltaT = this.timeWindow/this.numSplines;
+    var index = Math.floor(t * this.graphRange);
+    var spline = this.splines[index];
+    if(spline) {
+       var tval = t/deltaT;
+       return spline.Value(tval);
+    }
+};
+
+SplineGraph.prototype.Velocity = function(t) {
+    // Find the spline index
+    var deltaT = this.timeWindow/this.numSplines;
+    var index = Math.floor(t * this.graphRange);
+    var spline = this.splines[index];
+    if(spline) {
+       var tval = t/deltaT;
+       return spline.FirstDerivative(tval);
+    }
+}; 
+
+SplineGraph.prototype.Acceleration = function(t) {
+    // Find the spline index
+    var deltaT = this.timeWindow/this.numSplines;
+    var index = Math.floor(t * this.timeWindow);
+    var spline = this.splines[index];
+    if(spline) {
+       var tval = t/deltaT;
+       return spline.SecondDerivative(tval);
+    } else {
+        var test = 0;
+        test++;
+    }
+}; 

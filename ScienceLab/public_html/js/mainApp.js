@@ -228,13 +228,40 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
 });
 
 mainApp.controller('TestController', function($scope){
+    $scope.data = {
+       selectedSplineGraphInputType : 0,
+       selectedGraphType : 3,
+       selectedProbeType : 0
+    };
+    $scope.selectedSplineGraphInputTypeChanged = function() {
+    };
+    
+    $scope.selectedProbeTypeChanged = function(){
+        var selectedProbeType = Number($scope.data.selectedProbeType);
+    };
+
+    $scope.selectedGraphTypeChanged = function(){
+        var selectedType = Number($scope.data.selectedGraphType);
+        if(selectedType === 3) {
+           for(var i=0; i<3; i++) {
+                $scope.modelGraph.setSeriesVisibility(i, true);
+            }
+        }
+       else {
+            for(var i=0; i<3; i++) {
+                var bVisible = (i === selectedType) ? true : false;
+                $scope.modelGraph.setSeriesVisibility(i, bVisible);
+            }
+        }
+        $scope.modelGraph.hairlines.type = selectedType;
+    };
     
     $scope.OnKinematicsTabClick = function(tabName) {
         $scope.KinematicsTabName = tabName;
         if(tabName === "Graph") {
             var parentdiv = document.getElementById("content");
             var w = parentdiv.offsetWidth;
-            $scope.splineGraph.graph.resize(w,100);
+            $scope.splineGraph.graph.resize(w,200);
         }
     };
     
@@ -257,6 +284,7 @@ mainApp.controller('TestController', function($scope){
             var iframe = document.getElementById('IFrame');
             var innerDocSim = iframe.contentDocument || iframe.contentWindow.document;
             innerDocSim.modelGraph = innerDocGraph.modelGraph;
+            $scope.modelGraph = innerDocSim.modelGraph;
     };
 });
 

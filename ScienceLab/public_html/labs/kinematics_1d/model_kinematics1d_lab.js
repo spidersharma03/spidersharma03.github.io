@@ -32,6 +32,10 @@ function Model_Kinematics1D_Lab(labParams) {
     this.graphObserver = null;
     this.textViewObserver = null;
     this.view3dObserver = null;
+    this.mouseMotion = function() {
+        var test = 0;
+        test++;
+    };
 }
 
 Model_Kinematics1D_Lab.prototype = {
@@ -207,6 +211,15 @@ Model_Kinematics1D_Lab.prototype = {
     
     addGraphObserver : function(graphObserver) {
         this.graphObserver = graphObserver;
+        
+//        var options = {legend:"never", interactionModel: {
+//                    'mousedown': function (event, g, context){
+//                        var test = 0;
+//                        test++;
+//                    }
+//                },
+//            };
+//        this.graphObserver.updateOptions(options);    
     },
     
     addTextViewObserver: function(textViewObserver) {
@@ -257,12 +270,8 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
         }
         // Update 
         this.body.velocity.x += this.body.acceleration.x * dt;
-        this.body.velocity.y += this.body.acceleration.y * dt;
-        this.body.velocity.z += this.body.acceleration.z * dt;
         
         this.body.position.x += this.body.velocity.x * dt;
-        this.body.position.y += this.body.velocity.y * dt;
-        this.body.position.z += this.body.velocity.z * dt;
         // Handle collision at end points for a finite track
         if( this.isFinite ) {
             var size = this.body.size;

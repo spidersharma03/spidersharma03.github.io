@@ -36,10 +36,14 @@
         <script src="../../labs/common/TextViewObserver.js"></script>
         <script src="../../labs/kinematics_1d/model_kinematics1d_lab.js"></script>
         <script src="../../labs/kinematics_1d/Kinematics3DView.js"></script>
+        <script src="../../labs/kinematics_1d/CustomKinematicsGraphOperations.js"></script>
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+        <script src="../../js/lib/dyGraph/super-annotations.js"></script>
         <script>
             
             var lab, track;
+            var customGraphOperations = new CustomKinematicsGraphOperations(document.modelGraph);
+            customGraphOperations.changeProbeType(0);
             var kinematics3DView, textViewObserver;
             var container = document.createElement('div');
             document.body.appendChild(container);
@@ -51,12 +55,7 @@
             
             createModelAndView();
             
-            var camera, scene, renderer, controls;
-
-            var cubeMaterial;
-            var groundMaterial;
-            var sphereMaterial;
-            
+            var camera, scene, renderer, controls;            
             var cameraPosition = new THREE.Vector3();
             
             var dt = 0.016;

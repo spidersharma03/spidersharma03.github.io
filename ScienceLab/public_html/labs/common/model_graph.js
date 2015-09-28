@@ -51,5 +51,10 @@ Model_Graph.prototype = {
    setLabelY: function(label) {
       var labeldata = {ylabel : label};
       this.updateOptions(labeldata);
+  },
+  
+  setSeriesVisibility: function(number, value) {
+      this._graph.setVisibility(number, value);
   }
+  
 };

@@ -1,2 +1,7 @@
-<div id="Kinematics_Input_Graph" style="width: 100%; height: 40">    
+<select  ng-model="data.selectedSplineGraphInputType" ng-change="selectedSplineGraphInputTypeChanged()">
+    <option value="0">position-time</option>
+    <option value="1">velocity-time</option>
+    <option value="2">acceleration-time</option>
+</select>
+<div id="Kinematics_Input_Graph" style="width: 100%; height: 40; border: 1px solid #005580; box-shadow: 3px 3px 5px #888888;">    
 </div>

@@ -16,6 +16,8 @@ function SplineGraph(div) {
     
     this.timeWindow = 7;
     this.curveType = SplineGraph.X_T;
+    this.scaleFactor = 5.0;
+    
     this.initSplineStuff();
     function mouseMotion_(event, g, context) {
         if (this.clickedPoint !== null) {
@@ -109,7 +111,6 @@ function SplineGraph(div) {
                     'mousemove': mouseMotion,
                     'mouseup': upV4
                 }
-
             });
 }
 
@@ -168,38 +169,54 @@ SplineGraph.prototype.updateDensePointsInGraphData = function () {
     }
 };
 
+SplineGraph.prototype.setType = function(type) {
+    this.curveType = type;
+};
+
 SplineGraph.prototype.Value = function(t) {
+    if(t > this.timeWindow)
+        return 0;
     // Find the spline index
     var deltaT = this.timeWindow/this.numSplines;
-    var index = Math.floor(t * this.graphRange);
+    var tval = t/deltaT;
+    var index = Math.floor(tval);
     var spline = this.splines[index];
     if(spline) {
-       var tval = t/deltaT;
-       return spline.Value(tval);
+       var val = spline.Value(tval - index) * this.scaleFactor;
+       return val;
+    } else {
+        return 0;
     }
 };
 
 SplineGraph.prototype.Velocity = function(t) {
+    if(t > this.timeWindow)
+        return 0;
     // Find the spline index
     var deltaT = this.timeWindow/this.numSplines;
-    var index = Math.floor(t * this.graphRange);
+    var tval = t/deltaT;
+    var index = Math.floor(tval);
     var spline = this.splines[index];
     if(spline) {
-       var tval = t/deltaT;
-       return spline.FirstDerivative(tval);
+       var val = spline.FirstDerivative(tval - index) * this.scaleFactor;
+       return val;
+    } else {
+        return 0;
     }
 }; 
 
 SplineGraph.prototype.Acceleration = function(t) {
+    if(t > this.timeWindow)
+        return 0;
     // Find the spline index
     var deltaT = this.timeWindow/this.numSplines;
-    var index = Math.floor(t * this.timeWindow);
+    var tval = t/deltaT;
+    var index = Math.floor(tval);
     var spline = this.splines[index];
     if(spline) {
-       var tval = t/deltaT;
-       return spline.SecondDerivative(tval);
+       var val = spline.SecondDerivative(tval - index) * this.scaleFactor;
+       return val;
     } else {
-        var test = 0;
-        test++;
-    }
+        return 0;
+    }   
 }; 

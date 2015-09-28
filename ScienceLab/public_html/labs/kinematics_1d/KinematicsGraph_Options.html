@@ -1,0 +1,37 @@
+<div class="panel panel-primary">
+    <div class="panel-heading" role="tab" id="headingOne1">
+        <h4 class="panel-title">
+            <a target=_self role="button" data-toggle="collapse" data-parent="#accordion1" href="#collapseOne1" aria-expanded="true" aria-controls="collapseOne1">
+                Graph Options
+            </a>
+        </h4>
+    </div>
+
+    <div id="collapseOne1" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne1">
+        <div class="row" id="content">
+            <div class="col-md-1">
+                show
+            </div>
+            <div class="col-md-offset-3">
+                <select  ng-model="data.selectedGraphType" ng-change="selectedGraphTypeChanged()">
+                    <option value="0">position-time</option>
+                    <option value="1">velocity-time</option>
+                    <option value="2">acceleration-time</option>
+                    <option value="3">all</option>
+               </select>
+            </div>
+            <div class="col-md-1">
+                probes
+            </div>
+            <div class="col-md-offset-3">
+                <select  ng-model="data.selectedProbeType" ng-change="selectedProbeTypeChanged()">
+                        <option value="0">Value</option>
+                        <option value="1">Tangents</option>
+                        <option value="2">Area</option>
+                        <option value="3">Chord</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+

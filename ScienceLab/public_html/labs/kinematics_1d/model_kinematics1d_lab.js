@@ -203,6 +203,8 @@ Model_Kinematics1D_Lab.prototype = {
             for( var i=0; i<this.tracks.length; i++) {
                 var body = this.tracks[i].body;
                 if(this.graphObserver) {
+                    var time = this.time;
+                    var vel = body.velocity.x;
                     this.graphObserver.recordData([this.time, body.position.x, body.velocity.x, body.acceleration.x]);
                 }
             }

@@ -8,9 +8,10 @@ function CustomKinematicsGraphOperations(graph) {
     this.graph = graph;
     this.dygraph = null;
     this.areaProbeData = {x1: 0, y1:0, x2: 1, y2: 0};
-    this.chordProbeData = {x1: 0, y1:0, x2: 1, y2: 0};
+    this.chordProbeData = {x1: 0, y1:[0,0,0], x2: 1, y2: [0,0,0]};
     this.graphTypeArray = [0, 1, 2];
     this.labelHtml = "";
+    this.graphYLabels = ["Position", "Velocity", "Acceleration"];
     this.canvas = null;
     this.probeType = 0;
     this.underlayBindCallback = this.underlayCallback.bind(this);
@@ -34,9 +35,17 @@ CustomKinematicsGraphOperations.prototype.changeGraphType = function(graphType) 
     this.graphTypeArray = [];
     if(graphType === 3) {
         this.graphTypeArray = [0, 1, 2];
+        this.graph.updateOptions({ylabel:'Position/Velocity/Acceleration'});
     }
-    else
+    else {
         this.graphTypeArray.push(graphType);
+        var yLabel = this.graphYLabels[graphType];
+        this.graph.updateOptions({ylabel:yLabel});
+    }
+    if(this.probeType === 3) { // Chord probe
+        var hairlines = this.graph.hairlines.get();
+        this.calculateAverageValues(hairlines);
+    }
 };
 
 CustomKinematicsGraphOperations.prototype.changeProbeType = function (probeType) {
@@ -58,6 +67,7 @@ CustomKinematicsGraphOperations.prototype.changeProbeType = function (probeType)
             hairlines.push({xval:x1, interpolated : true});
             hairlines.push({xval:x2, interpolated : true});
             this.graph.hairlines.set(hairlines);
+            this.calculateAverageValues(hairlines);
      }
 };
 
@@ -71,13 +81,20 @@ CustomKinematicsGraphOperations.prototype.underlayCallback = function (canvas, a
 };
 
 CustomKinematicsGraphOperations.prototype.drawLinesForChord = function(canvas) {
+    for( var i=0; i<this.graphTypeArray.length; i++) {    
+        var seriesIndex = this.graphTypeArray[i];
         var x1 = this.chordProbeData.x1;
-        var y1 = this.chordProbeData.y1;
+        var y1 = this.chordProbeData.y1[seriesIndex];
         var x2 = this.chordProbeData.x2;
-        var y2 = this.chordProbeData.y2;
+        var y2 = this.chordProbeData.y2[seriesIndex];
         var point1 = this.graph._graph.toDomCoords(x1, y1);
         var point2 = this.graph._graph.toDomCoords(x2, y2);
-        canvas.strokeStyle = "red";
+        var c = Dygraph.toRGB_(this.dygraph.getColors()[seriesIndex]);
+        //c.r = Math.floor(255 - 0.5 * (255 - c.r));
+        //c.g = Math.floor(255 - 0.5 * (255 - c.g));
+        //c.b = Math.floor(255 - 0.5 * (255 - c.b));
+        var color = 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
+        canvas.strokeStyle = color;
         canvas.lineWidth = 1.0;
         
         if( point1 !== undefined) {
@@ -105,6 +122,7 @@ CustomKinematicsGraphOperations.prototype.drawLinesForChord = function(canvas) {
             canvas.closePath();
             canvas.stroke();  
         }
+    }
 };
 
 CustomKinematicsGraphOperations.prototype.highlightCallback = function (event, x, points, row, seriesName) {
@@ -129,17 +147,17 @@ CustomKinematicsGraphOperations.prototype.showValues = function (event, x, point
         if (seriesIndex === 2)
             acc = points[i].yval.toFixed(2);
 
-        var c = Dygraph.toRGB_(this.dygraph.getColors()[i]);
-        c.r = Math.floor(255 - 0.5 * (255 - c.r));
-        c.g = Math.floor(255 - 0.5 * (255 - c.g));
-        c.b = Math.floor(255 - 0.5 * (255 - c.b));
+        var c = Dygraph.toRGB_(this.dygraph.getColors()[seriesIndex]);
+//        c.r = Math.floor(255 - 0.5 * (255 - c.r));
+//        c.g = Math.floor(255 - 0.5 * (255 - c.g));
+//        c.b = Math.floor(255 - 0.5 * (255 - c.b));
         var color = 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
         ctx.strokeStyle = color;
         ctx.beginPath();
         ctx.arc(x_, y_, 3, 0, Math.PI * 2, true);
         ctx.closePath();
         ctx.stroke();
-        ctx.fill();
+        //ctx.fill();
     }
     this.labelHtml = "<span>time = " + time + "</span><br>";
     if(pos !== undefined)
@@ -186,7 +204,7 @@ CustomKinematicsGraphOperations.prototype.calculateTangents = function (event, x
         ctx.stroke();
         ctx.fill();
 
-        var c = Dygraph.toRGB_(this.dygraph.getColors()[seriesIndex+1]);
+        var c = Dygraph.toRGB_(this.dygraph.getColors()[seriesIndex]);
         c.r = Math.floor(255 - 0.5 * (255 - c.r));
         c.g = Math.floor(255 - 0.5 * (255 - c.g));
         c.b = Math.floor(255 - 0.5 * (255 - c.b));
@@ -264,38 +282,60 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
 };
 
 CustomKinematicsGraphOperations.prototype.calculateAverageValues = function(hl) {
-    this.graph._graph.updateOptions({});
-    var sum = 0;
     var nRows = this.graph._graph.numRows();
+    var deltax, deltav, deltaa, deltat;
     if (hl.length > 1) {
         var x1 = hl[0].xval;
         var x2 = hl[1].xval;
-        var y1, y2;
+        deltat = Math.abs(x2 - x1);
+        var y1 = [0,0,0], y2 = [0,0,0];
         // Find the corresponding row for each hairline
         for( var i=0; i<nRows; i++ ) {
             var val = this.graph._graph.getValue(i,0);
             var diff = Math.abs(val - x1);
-            if( diff < 1e-2) {
-                y1 = this.graph._graph.getValue(i,1);
-            }
+            
+                if( diff < 1e-2) {
+                    for(var j=0; j<this.graphTypeArray.length; j++) {
+                        var seriesIndex = this.graphTypeArray[j];
+                        y1[seriesIndex] = this.graph._graph.getValue(i,seriesIndex+1);
+                    }
+                }
+            
             diff = Math.abs(val - x2);
             if( diff < 1e-2) {
-                y2 = this.graph._graph.getValue(i,1);
+                    for(var j=0; j<this.graphTypeArray.length; j++) {
+                        var seriesIndex = this.graphTypeArray[j];
+                        y2[seriesIndex] = this.graph._graph.getValue(i,seriesIndex+1);
+                    }
             }
         }
         // 
         this.chordProbeData.x1 = x1;
         this.chordProbeData.x2 = x2;
-        this.chordProbeData.y1 = y1;
-        this.chordProbeData.y2 = y2;
+        this.chordProbeData.y1[0] = y1[0];
+        this.chordProbeData.y2[0] = y2[0];
+        this.chordProbeData.y1[1] = y1[1];
+        this.chordProbeData.y2[1] = y2[1];
+        this.chordProbeData.y1[2] = y1[2];
+        this.chordProbeData.y2[2] = y2[2];
+        deltax = Math.abs(y2[0] - y1[0]);
+        deltav = Math.abs(y2[1] - y1[1]);
+        deltaa = Math.abs(y2[2] - y1[2]);
 //        var c = Dygraph.toRGB_(this.dygraph.getColors()[0]);
 //        c.r = Math.floor(255 - 0.5 * (255 - c.r));
 //        c.g = Math.floor(255 - 0.5 * (255 - c.g));
 //        c.b = Math.floor(255 - 0.5 * (255 - c.b));
 //        var color = 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
     }
-    var html = "<span>Area = " + sum.toFixed(2) + "</span>";
-    this.graph.labelDiv.innerHTML = html;
+    this.labelHtml = "<span>delt = " + deltat.toFixed(2) + "</span><br>";
+    if(deltax > 0)
+        this.labelHtml += "<span>delx ~ " + deltax.toFixed(2) + "</span><br>";
+    if(deltav > 0)
+        this.labelHtml += "<span>delv ~ " + deltav.toFixed(2) + "</span><br>";
+    if(deltaa > 0)
+        this.labelHtml += "<span>dela ~ " + deltaa.toFixed(2) + "</span><br>";
+    this.graph.labelDiv.innerHTML = this.labelHtml;
+    this.graph.updateOptions({});
 };
 
 CustomKinematicsGraphOperations.prototype.unhighlightCallback = function (event) {

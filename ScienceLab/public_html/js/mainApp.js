@@ -238,10 +238,12 @@ mainApp.controller('TestController', function($scope){
     
     $scope.selectedProbeTypeChanged = function(){
         var selectedProbeType = Number($scope.data.selectedProbeType);
+        $scope.modelGraph.customGraphOperations.changeProbeType(selectedProbeType);
     };
 
     $scope.selectedGraphTypeChanged = function(){
         var selectedType = Number($scope.data.selectedGraphType);
+        $scope.modelGraph.customGraphOperations.changeGraphType(selectedType);
         if(selectedType === 3) {
            for(var i=0; i<3; i++) {
                 $scope.modelGraph.setSeriesVisibility(i, true);

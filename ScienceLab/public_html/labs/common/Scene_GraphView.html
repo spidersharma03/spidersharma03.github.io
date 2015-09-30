@@ -14,6 +14,7 @@
     
         <script src="../../js/lib/dyGraph/super-annotations.js"></script>
         <script src="../../js/lib/dyGraph/hairlines.js"></script>
+        <script src="../../labs/kinematics_1d/CustomKinematicsGraphOperations.js"></script>
         <style>
             .hairline-info {
                 border: 1px solid black;
@@ -21,8 +22,8 @@
                 border-bottom-right-radius: 5px;
 
                 display: table;  /* shrink to fit */
-                min-width: 100px;
-
+                min-width: 30px;
+                min-height: 20px;
                 z-index: 10;  /* should appear on top of the chart */
                 padding: 3px;
                 background: white;
@@ -65,8 +66,9 @@
         </style>  
     </head>
     <body>
-        <div id="hairline-template" class="hairline-info" style="display:none">
-            <button class='hairline-kill-button'>Kill</button>
+        
+        <div id="hairline-template" class="hairline-info" style="display:none; background-color : rgba(100, 100, 255, 0.4);;">
+            <!--<button class='hairline-kill-button'>Kill</button>-->
             <div class='hairline-legend'></div>
         </div>
         <div id="annotation-template" class="annotation-info" style="display:none">
@@ -89,6 +91,10 @@
         <script>
     var hairlines = new Dygraph.Plugins.Hairlines({
     divFiller: function (div, data) {
+        return;
+        if(hairlines.type > 1) {
+            return;
+        }
         var newpoints = [];
         if(hairlines.type !== 3) {
             newpoints.push(data.points[hairlines.type]);
@@ -110,20 +116,20 @@ annotations = new Dygraph.Plugins.SuperAnnotations({
 });
 var options = {
     labels: ['t', 'x', 'v', 'a'],
-    labelsDiv: document.getElementById("labels"),
+//    labelsDiv: document.getElementById("labels"),
     xlabel: 'Time',
     ylabel: 'Position/Velocity/Acceleration',
     legend: 'always',
-    animatedZooms: true,
-    labelsDivWidth: 100,
-    labelsDivStyles: {
-      'backgroundColor': 'rgba(200, 200, 255, 0.1)',
-      'padding': '4px',
-      'border': '1px solid black',
-      'borderRadius': '10px',
-      'boxShadow': '4px 4px 4px #888'
-    },
-    labelsSeparateLines: true,
+//    animatedZooms: true,
+//    labelsDivWidth: 100,
+//    labelsDivStyles: {
+//      'backgroundColor': 'rgba(200, 200, 255, 0.1)',
+//      'padding': '4px',
+//      'border': '1px solid black',
+//      'borderRadius': '10px',
+//      'boxShadow': '4px 4px 4px #888'
+//    },
+//    labelsSeparateLines: true,
     yAxisLabelWidth: 20,
     axes: {
                   x: {
@@ -137,13 +143,17 @@ var options = {
                 },
     title: 'Kinematics',
     // Set the plug-ins in the options.
-//                plugins : [
-//                  hairlines
-//                ]
+                plugins : [
+                  hairlines
+                ]
 };
 document.modelGraph = new Model_Graph(document.getElementById("graphDiv"), options, 4);
 document.modelGraph.hairlines = hairlines;
-
+document.modelGraph.labelDiv = document.getElementById("labels");
+var customGraphOperations = new CustomKinematicsGraphOperations(document.modelGraph);
+customGraphOperations.changeProbeType(0);
+document.modelGraph.customGraphOperations = customGraphOperations;
+            
 $(hairlines).on('hairlineCreated', function(e) {
         var hl = this.get();
         if(hl.length > 2) {
@@ -151,30 +161,9 @@ $(hairlines).on('hairlineCreated', function(e) {
             this.set(hl);
         }
       });
-      
-$(hairlines).on('hairlinesChanged', function(e, param) {
-        var hl = this.get();
-        if(hl.length > 1) {
-            var end = hl[0].xval;
-            var start = hl[1].xval;
-            var nRows = document.modelGraph._graph.numRows();
-            var sum = 0, sum_lower = 0, sum_upper = 0;
-            for( var i=0; i<nRows-1; i++) {
-                var t1 = document.modelGraph._graph.getValue(i, 0);
-                if( t1 < start)
-                    continue;
-                var t2 = document.modelGraph._graph.getValue(i+1, 0);
-                 if( t2 > end)
-                    continue;
-                var val1 = document.modelGraph._graph.getValue(i, 2);                
-                var val2 = document.modelGraph._graph.getValue(i+1, 2);
-                var avg = ( val1 + val2) * 0.5;
-                sum += avg * (t2 - t1);
-                sum_lower += val1 * (t2 - t1);
-                sum_upper += val2 * (t2 - t1);
-            }
-        }
-      });      
+
+     $(hairlines).on('hairlineMoved', customGraphOperations.hairlineProbeChanges);
+ 
         </script>
     </body>
 </html>

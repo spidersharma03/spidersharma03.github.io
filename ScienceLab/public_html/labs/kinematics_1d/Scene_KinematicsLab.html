@@ -36,14 +36,11 @@
         <script src="../../labs/common/TextViewObserver.js"></script>
         <script src="../../labs/kinematics_1d/model_kinematics1d_lab.js"></script>
         <script src="../../labs/kinematics_1d/Kinematics3DView.js"></script>
-        <script src="../../labs/kinematics_1d/CustomKinematicsGraphOperations.js"></script>
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
         <script src="../../js/lib/dyGraph/super-annotations.js"></script>
         <script>
             
             var lab, track;
-            var customGraphOperations = new CustomKinematicsGraphOperations(document.modelGraph);
-            customGraphOperations.changeProbeType(0);
             var kinematics3DView, textViewObserver;
             var container = document.createElement('div');
             document.body.appendChild(container);
@@ -89,7 +86,6 @@
                     }
                 };
                 document.modelGraph.updateOptions({series : seriesOptions});
-                //document.modelGraph._graph.setVisibility(0,false);
                 track = new Model_Kinematics1D_Lab.StraightTrack();
                 track.body.velocity.x = 0;
                 track.body.acceleration.x = 1.0;

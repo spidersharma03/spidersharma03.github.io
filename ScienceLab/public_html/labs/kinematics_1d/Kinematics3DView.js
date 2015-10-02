@@ -25,6 +25,7 @@ function Kinematics3DView(kinematics_lab) {
     this.lambertMaterial2 = new THREE.MeshLambertMaterial({color:0x881111, ambient: 0xaaaaaa, combine: THREE.MixOperation});
     this.lambertMaterial1.side = THREE.DoubleSide;
     this.lambertMaterial2.side = THREE.DoubleSide;
+    this.render();
 }
 
 Kinematics3DView.prototype = {
@@ -81,6 +82,7 @@ Kinematics3DView.prototype = {
             var velocity = modelObject.velocity.x;
             var acceleration = modelObject.acceleration.x;
             object3d.position.x = position;
+            object3d.updateMatrixWorld();
             // Update 3d arrows
             if(velocity > 0) {
                 object3d.velocityArrow.visible = true;

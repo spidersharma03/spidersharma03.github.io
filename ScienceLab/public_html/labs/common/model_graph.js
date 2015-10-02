@@ -55,6 +55,11 @@ Model_Graph.prototype = {
   
   setSeriesVisibility: function(number, value) {
       this._graph.setVisibility(number, value);
+  },
+  
+  clearData: function() {
+      this.series_data = [];
+      this._graph.updateOptions({ 'file': this.series_data });
   }
   
 };

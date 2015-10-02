@@ -12,19 +12,37 @@ function TextViewObserver(parent) {
 TextViewObserver.prototype = {
     constructor : TextViewObserver,
     
-    addTextView : function(name, data, position, color) {
+    addTextView : function(id, name, data, position, color) {
         var textView = new Text2D(data, this.parent);
-        this.textViews[name] = textView;
+        var tagid = name + id;
+        this.textViews[tagid] = textView;
         textView.setPosition(position.x, position.y);
         textView.setColor(color);
         document.body.appendChild(textView.div);
     },
     
-    updateTextView : function(name, data, position){
-        var textView = this.textViews[name];
+    updateTextView : function(id, name, data, position){
+        var tagid = name + id;
+        var textView = this.textViews[tagid];
         if(textView) {
             textView.setText(data);
             textView.setPosition(position.x, position.y);
+        }
+    },
+    
+    setVisible: function(id, name, bVisible) {
+        var tagid = name + id;
+        var textView = this.textViews[tagid];
+        if(textView) {
+            textView.setVisible(bVisible);
+        }
+    },
+    
+    setText: function(id, name, text) {
+        var tagid = name + id;
+        var textView = this.textViews[tagid];
+        if(textView) {
+            textView.setText(text);
         }
     }
 };

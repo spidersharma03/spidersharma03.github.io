@@ -187,7 +187,7 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
               js.src = "//connect.facebook.net/en_US/sdk.js";
               fjs.parentNode.insertBefore(js, fjs);
             }(document, 'script', 'facebook-jssdk'));
-        }
+        };
         
         $scope.loginEvent = function() {
             var usernameField = document.getElementById("username").value;
@@ -231,8 +231,144 @@ mainApp.controller('TestController', function($scope){
     $scope.data = {
        selectedSplineGraphInputType : 0,
        selectedGraphType : 3,
-       selectedProbeType : 0
+       selectedProbeType : 0,
+       
+       // Simulation Data
+       playPauseButtonState:"Play",
+       
+       // Object Data
+       selectedStateType:3,
+       
+       positionValue:0,
+       velocityValue:0,
+       accelerationValue:1,
+       nameTag:"Kinematics Body",
+       accelerationArrowVisibility:false,
+       velocityArrowVisibility:false,
+       positionTextVisibility:true,
+       velocityTextVisibility:true,
+       accelerationTextVisibility:true
     };
+    
+    $scope.positionValueChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+             var model = iframe.contentWindow.lab.tracks[0].body;
+             model.position.x = Number($scope.data.positionValue);
+             iframe.contentWindow.lab.syncViews();
+        }
+    };
+    
+    $scope.velocityValueChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+             var model = iframe.contentWindow.lab.tracks[0].body;
+             model.velocity.x = Number($scope.data.velocityValue);
+             iframe.contentWindow.lab.syncViews();
+        }
+    };
+    
+    $scope.accelerationValueChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+             var model = iframe.contentWindow.lab.tracks[0].body;
+             model.acceleration.x = Number($scope.data.accelerationValue);
+             iframe.contentWindow.lab.syncViews();
+        }
+    };
+    
+    $scope.selectedStateTypeChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var selectedStateNumber = Number($scope.data.selectedStateType);
+            if(selectedStateNumber === 3) { // User defined
+                $scope.data.positionValue = 0;
+                $scope.data.velocityValue = 1;
+                $scope.data.accelerationValue = 0;
+            }
+            else {
+                var state = iframe.contentWindow.lab.states[selectedStateNumber];
+                iframe.contentWindow.lab.tracks[0].setBodyState(state);
+                $scope.data.positionValue = state.position;
+                $scope.data.velocityValue = state.velocity;
+                $scope.data.accelerationValue = state.acceleration;
+            }
+            iframe.contentWindow.lab.syncViews();
+        }
+    };
+    
+    $scope.OnResetPressed = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            iframe.contentWindow.lab.resetSimulation();
+            $scope.data.playPauseButtonState = "Play";
+        }
+    },
+    
+    $scope.OnPlayPauseButtonPressed = function() {
+        var iframe = document.getElementById('IFrame');
+        if( $scope.data.playPauseButtonState === "Play") {
+            if(iframe.contentWindow.lab !== undefined) {
+                iframe.contentWindow.lab.playSimulation(true);
+            }
+            $scope.data.playPauseButtonState = "Pause";
+        } else {
+            if(iframe.contentWindow.lab !== undefined) {
+                iframe.contentWindow.lab.playSimulation(false);
+            }
+            $scope.data.playPauseButtonState = "Play";
+        }
+    };
+    
+    $scope.OnNameChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            model.updateTag("textTag", "text", $scope.data.nameTag);
+            iframe.contentWindow.lab.syncText2DView();
+        }
+    };
+    
+    $scope.OnAccelerationArrowVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.kinematics3DView.setAccelerationArrowVisibility(model, $scope.data.accelerationArrowVisibility);
+        }
+    };
+    
+    $scope.OnVelocityArrowVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.kinematics3DView.setVelocityArrowVisibility(model, $scope.data.velocityArrowVisibility);
+        }
+    };
+    
+    $scope.OnPositionTextVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.textViewObserver.setVisible(model.id, "positionTag",$scope.data.positionTextVisibility);
+        }
+    };
+    
+    $scope.OnVelocityTextVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.textViewObserver.setVisible(model.id, "velocityTag",$scope.data.velocityTextVisibility);
+        }
+    };
+    
+    $scope.OnAccelerationTextVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.textViewObserver.setVisible(model.id, "accelerationTag",$scope.data.accelerationTextVisibility);
+        }
+    };
+    
     $scope.selectedSplineGraphInputTypeChanged = function() {
     };
     
@@ -240,7 +376,7 @@ mainApp.controller('TestController', function($scope){
         var selectedProbeType = Number($scope.data.selectedProbeType);
         $scope.modelGraph.customGraphOperations.changeProbeType(selectedProbeType);
     };
-
+    
     $scope.selectedGraphTypeChanged = function(){
         var selectedType = Number($scope.data.selectedGraphType);
         $scope.modelGraph.customGraphOperations.changeGraphType(selectedType);

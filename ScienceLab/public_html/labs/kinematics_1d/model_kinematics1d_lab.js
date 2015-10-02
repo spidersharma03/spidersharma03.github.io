@@ -19,7 +19,11 @@ function Model_Kinematics1D_Lab(labParams) {
     this.bodies = [];
     this.timesnap_objects = [];
     this.annotations = [];
-
+    this.states = [];
+    this.states.push(this.UniformVelocityState);
+    this.states.push(this.UniformAccelerationState);
+    this.states.push(this.UniformDecelerationState);
+    
     this.bRecordGraphData = true;
     this.bRecordGraphDataEveryFrame = true;
     this.NumFramesToSkipForDataRecord = 1;
@@ -28,18 +32,18 @@ function Model_Kinematics1D_Lab(labParams) {
     this.timeRecordCounter = 0;
     this.timeSnapRecordCounter = 0;
     this.timeSnapPosition = new THREE.Vector3(0,0,0);
-    this.pauseSimulation = false;
+    this.pauseSimulation = true;
     this.graphObserver = null;
     this.textViewObserver = null;
     this.view3dObserver = null;
-    this.mouseMotion = function() {
-        var test = 0;
-        test++;
-    };
 }
 
 Model_Kinematics1D_Lab.prototype = {
     constructor : Model_Kinematics1D_Lab,
+    
+    UniformVelocityState : {name: "",position:0, velocity:1, acceleration:0},
+    UniformAccelerationState : {name: "", position:0, velocity:0, acceleration:1},
+    UniformDecelerationState : {name: "", position:0, velocity:0, acceleration:-1},
     
     addTrack : function(track) {
         this.tracks.push(track);
@@ -52,9 +56,24 @@ Model_Kinematics1D_Lab.prototype = {
                 var object3d = this.view3dObserver.getObject3D(track.body);
                 var pos = this.view3dObserver.projectToScreenSpace(object3d);
                 var tagObject = track.body.tags[tagname];
-                this.textViewObserver.addTextView(tagname, tagObject.value, pos, tagObject.color);
+                this.textViewObserver.addTextView(track.body.id, tagname, tagObject.value, pos, tagObject.color);
             }
         }
+    },
+    
+    resetSimulation: function(time) {
+        this.pauseSimulation = true;
+        for( var i=0; i<this.tracks.length; i++) {
+            this.tracks[i].resetState();          
+        }
+        if( this.graphObserver) {
+            this.graphObserver.clearData();
+        }
+        this.syncViews();
+    },
+    
+    playSimulation: function(bPlay) {
+        this.pauseSimulation = !bPlay;
     },
     
     simulate : function(dt) {
@@ -81,9 +100,6 @@ Model_Kinematics1D_Lab.prototype = {
             this.timeRecordCounter = 0;
         if(this.timeSnapRecordCounter > this.NumFramesToSkipForTimeSnap)
             this.timeSnapRecordCounter = 0;
-    },
-    getPosition : function() {
-        
     },
     
     timeSnap : function() {
@@ -113,11 +129,12 @@ Model_Kinematics1D_Lab.prototype = {
             var taginfo1 = simBody.addTag({name:  "[a] = ", value:body.acceleration.x.toPrecision(3), offset:{x:0, y:80}});
             var taginfo2 = simBody.addTag({name:  "[v] = ", value:body.velocity.x.toPrecision(3), offset:{x:0, y:60}});
             var taginfo3 = simBody.addTag({name:  "[x] = ", value:body.position.x.toPrecision(3), offset:{x:0, y:40}});
-            this.textViewObserver.addTextView(taginfo1.name, taginfo1.value, {x:0,y:0}, "blue");
-            this.textViewObserver.addTextView(taginfo2.name, taginfo2.value, {x:0,y:0}, "blue");
-            this.textViewObserver.addTextView(taginfo3.name, taginfo3.value, {x:0,y:0}, "blue");
+            this.textViewObserver.addTextView(simBody.id, taginfo1.name, taginfo1.value, {x:0,y:0}, "blue");
+            this.textViewObserver.addTextView(simBody.id, taginfo2.name, taginfo2.value, {x:0,y:0}, "blue");
+            this.textViewObserver.addTextView(simBody.id, taginfo3.name, taginfo3.value, {x:0,y:0}, "blue");
         }
     },
+    
     sync3DView: function() {
         if(this.view3dObserver) {
             for( var i=0; i<this.tracks.length; i++) {
@@ -138,7 +155,7 @@ Model_Kinematics1D_Lab.prototype = {
                         continue;
                     var tagAttribute = tagObject.attribute;
                     var tagOffset = tagObject.offset;
-                    var value_ = tagname;
+                    var value_ = tagObject.text;
                     
                     var object3d = this.view3dObserver.getObject3D(body);
                     var projectedPos = this.view3dObserver.projectToScreenSpace(object3d);
@@ -160,7 +177,7 @@ Model_Kinematics1D_Lab.prototype = {
                         value_ = value_ + track.body.acceleration.x.toPrecision(3);
                         tagObject.dirty = true;
                     }
-                    this.textViewObserver.updateTextView(tagname, value_, projectedPos);
+                    this.textViewObserver.updateTextView(body.id, tagname, value_, projectedPos);
                 }
             }
             // Update the position of time snap tags, which should follow the corresponding sprites.
@@ -171,7 +188,7 @@ Model_Kinematics1D_Lab.prototype = {
                     if(!tagObject.dirty)
                         continue;
                     var tagOffset = tagObject.offset;
-                    var value_ = tagname + tagObject.value;
+                    var value_ = tagObject.text + tagObject.value;
                     
                     var object3d = this.view3dObserver.getObject3D(body);
                     var projectedPos = this.view3dObserver.projectToScreenSpace(object3d);
@@ -179,7 +196,7 @@ Model_Kinematics1D_Lab.prototype = {
                         projectedPos.x += tagOffset.x;
                         projectedPos.y -= tagOffset.y;
                     }
-                    this.textViewObserver.updateTextView(tagname, value_, projectedPos);
+                    this.textViewObserver.updateTextView(body.id, tagname, value_, projectedPos);
                 }
             }
         }
@@ -212,16 +229,7 @@ Model_Kinematics1D_Lab.prototype = {
     },
     
     addGraphObserver : function(graphObserver) {
-        this.graphObserver = graphObserver;
-        
-//        var options = {legend:"never", interactionModel: {
-//                    'mousedown': function (event, g, context){
-//                        var test = 0;
-//                        test++;
-//                    }
-//                },
-//            };
-//        this.graphObserver.updateOptions(options);    
+        this.graphObserver = graphObserver;   
     },
     
     addTextViewObserver: function(textViewObserver) {
@@ -240,6 +248,7 @@ Model_Kinematics1D_Lab.StraightTrack = function(trackParams) {
     if( trackParams ) {
         this.type = trackParams.type;
     } else {
+        this.state = null;
         this.type = Model_Kinematics1D_Lab.StraightTrack.STRAIGHT_TRACK;
         this.length = 30;
         this.mathInput = false;
@@ -257,6 +266,15 @@ Model_Kinematics1D_Lab.StraightTrack.CURVED_TRACK = 2;
 
 Model_Kinematics1D_Lab.StraightTrack.prototype = {
     constructor : Model_Kinematics1D_Lab.Track,
+    
+    resetState: function() {
+        this.setBodyState(this.state);
+    },
+    
+    setBodyState: function(state) {
+        this.state = state;
+        this.body.setState(state.position, state.velocity, state.acceleration);
+    },
     
     setGraphInput: function(graphInput) {
         this.graphInput = graphInput;

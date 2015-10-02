@@ -55,6 +55,12 @@ function PhysicalBody(bodyParams) {
     }
 }
 
+PhysicalBody.prototype.setState = function(position, velocity, acceleration) {
+    this.position.x = position;
+    this.velocity.x = velocity;
+    this.acceleration.x = acceleration;
+};
+
 PhysicalBody.TagInfo = function() {
     this.name = "";
     this.value = "",

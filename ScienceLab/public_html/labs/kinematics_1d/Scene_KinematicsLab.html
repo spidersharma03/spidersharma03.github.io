@@ -87,14 +87,14 @@
                 };
                 document.modelGraph.updateOptions({series : seriesOptions});
                 track = new Model_Kinematics1D_Lab.StraightTrack();
-                track.body.velocity.x = 0;
-                track.body.acceleration.x = 1.0;
-                track.body.addTag({name:"Kinematics Body", offset:{x:0, y:40}, color:"red"});
-                track.body.updateTag("Kinematics Body", "color", "green");
-                track.body.addTag({name:"x = ", value:0, attribute:PhysicalBody.POSITION_ATTRIBUTE, offset:{x:15, y:20}});
-                track.body.addTag({name:"v = ", value:0, attribute:PhysicalBody.VELOCITY_ATTRIBUTE, offset:{x:15, y:10}});
-                track.body.addTag({name:"a = ", value:0, attribute:PhysicalBody.ACCELERATION_ATTRIBUTE, offset:{x:15, y:0}});
+                track.setBodyState(lab.UniformAccelerationState);
+                track.body.addTag({name:"textTag", text:"Kinematics Body", offset:{x:0, y:40}, color:"red"});
+                track.body.updateTag("textTag", "color", "green");
+                track.body.addTag({name:"positionTag", text:"x = ", value:0, attribute:PhysicalBody.POSITION_ATTRIBUTE, offset:{x:15, y:20}});
+                track.body.addTag({name:"velocityTag", text:"v = ", value:0, attribute:PhysicalBody.VELOCITY_ATTRIBUTE, offset:{x:15, y:10}});
+                track.body.addTag({name:"accelerationTag", text:"a = ", value:0, attribute:PhysicalBody.ACCELERATION_ATTRIBUTE, offset:{x:15, y:0}});
                 lab.addTrack(track);
+                lab.syncViews(); // first frame sync
             }
             
             function syncSimulation()
@@ -105,10 +105,14 @@
             
             function onDocumentMouseMove(event)
             {
+                if(lab.pauseSimulation)
+                    lab.syncText2DView();
             }
 
             function onDocumentMouseWheel(event)
             {
+                if(lab.pauseSimulation)
+                    lab.syncText2DView();
             }
                         
             

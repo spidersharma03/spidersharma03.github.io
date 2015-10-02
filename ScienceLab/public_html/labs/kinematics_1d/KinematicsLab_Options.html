@@ -1,4 +1,4 @@
-<!--<div class="panel panel-primary">
+<div class="panel panel-primary">
     <div class="panel-heading" role="tab" id="headingOne">
         <h4 class="panel-title">
             <a target=_self role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne_" aria-expanded="true" aria-controls="collapseOne_">
@@ -7,9 +7,12 @@
         </h4>
     </div>
      <div id="collapseOne_" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne_">
-        
+         <div class="panel-body">
+            <button class="btn btn-warning" ng-click="OnPlayPauseButtonPressed()">{{data.playPauseButtonState}}</button>
+            <button class="btn btn-warning" ng-click="OnResetPressed()">Reset</button>
+         </div>
     </div>
-</div>-->
+</div>
 
 <div class="panel panel-primary">
     <div class="panel-heading" role="tab" id="headingOne">
@@ -22,7 +25,7 @@
 
     <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
         <div id="content">
-            <ul id="tabs" class="nav nav-pills" data-tabs="tabs">
+            <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
                 <li  class="active" id ="tab-input-props"><a ng-click="OnKinematicsTabClick('Kinematics')" data-toggle="tab">Kinematic Input</a></li>
                 <li  id ="tab-input-graph" ><a ng-click="OnKinematicsTabClick('Graph')"  data-toggle="tab">Graph Input</a></li>
             </ul>

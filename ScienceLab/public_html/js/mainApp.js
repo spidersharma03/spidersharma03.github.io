@@ -233,6 +233,9 @@ mainApp.controller('TestController', function($scope){
        selectedGraphType : 3,
        selectedProbeType : 0,
        
+       // Math expression
+       mathExpression:"",
+       mathExpressionSyntaxError:false,
        // Simulation Data
        playPauseButtonState:"Play",
        
@@ -370,6 +373,7 @@ mainApp.controller('TestController', function($scope){
     };
     
     $scope.selectedSplineGraphInputTypeChanged = function() {
+        $scope.splineGraph.curveType = Number($scope.data.selectedSplineGraphInputType);
     };
     
     $scope.selectedProbeTypeChanged = function(){
@@ -394,12 +398,33 @@ mainApp.controller('TestController', function($scope){
         $scope.modelGraph.hairlines.type = selectedType;
     };
     
+    $scope.OnMathExpressionChanged = function() {
+        $scope.data.mathExpressionSyntaxError = !$scope.mathInput.setExpression($scope.data.mathExpression);
+    };
+    
     $scope.OnKinematicsTabClick = function(tabName) {
         $scope.KinematicsTabName = tabName;
+        var iframe = document.getElementById('IFrame');
+        var lab = iframe.contentWindow.lab;
+            
         if(tabName === "Graph") {
             var parentdiv = document.getElementById("content");
             var w = parentdiv.offsetWidth;
             $scope.splineGraph.graph.resize(w,200);
+            if(lab !== undefined) {
+                lab.setGraphInput($scope.splineGraph);
+            }
+        }
+        else if( tabName === "Kinematics") {
+            if(lab !== undefined) {
+                lab.setGraphInput(null);
+            }
+        }
+        else if( tabName === "Math") {
+            if(lab !== undefined) {
+                lab.setGraphInput(null);
+                lab.setMathInput($scope.mathInput);
+            }
         }
     };
     
@@ -410,10 +435,7 @@ mainApp.controller('TestController', function($scope){
       var div = document.getElementById('Kinematics_Input_Graph');
       var splineGraph = new SplineGraph(div); 
       $scope.splineGraph = splineGraph;
-      var iframe = document.getElementById('IFrame');
-      if(iframe.contentWindow.lab !== undefined) {
-         iframe.contentWindow.lab.setGraphInput(splineGraph);
-      }
+      $scope.mathInput = new MathInput();   
     };
     window.onGraphFrameLoad = function()
     {

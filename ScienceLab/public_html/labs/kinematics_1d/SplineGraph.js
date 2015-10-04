@@ -89,7 +89,7 @@ function SplineGraph(div) {
             this.data,
             {
                 dateWindow: [-0.1, 1.1],
-                valueRange: [0, 1],
+                valueRange: [-0.1, 1.1],
                 labels: ['x', 'A', 'B'],
                 series: {
                     'A': {
@@ -123,11 +123,11 @@ SplineGraph.prototype.initSplineStuff = function () {
         this.splines[i] = new CubicSpline();
     }
     var numTotalPoints = this.numDivisionsbetweenPoints * this.numSplines;
-    this.sparsePoints.push(0.5);
-    this.data.push([0.0, 0.5, 0.5]);
+    this.sparsePoints.push(0.0);
+    this.data.push([0.0, 0.0, 0.0]);
     for (var i = 1; i <= numTotalPoints; i++) {
-        var t = i / (numTotalPoints - 1);
-        var rand = (Math.random()) * 0.5;
+        var t = i / (numTotalPoints);
+        var rand = t*t;
         var val = (i % this.numDivisionsbetweenPoints) === 0 ? rand : null;
         if (val !== null) {
             this.sparsePoints.push(val);

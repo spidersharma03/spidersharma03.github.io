@@ -47,6 +47,23 @@ Kinematics3DView.prototype = {
         this.objects_3d[modelObject.id].accelerationArrow.getRootNode().visible = bVisible;
     },
     
+    removeObject3D: function(modelObject) {
+        if(modelObject.type === "SIMULATIONBODY") {    
+//            var object3d = this.objects_3d[modelObject.id];
+//            for( var i=0; i<this.objects_3d.length; i++) {
+//                if( object3d === this.objects_3d[i]) {
+//                    this.objects_3d.splice(modelObject.id,1);
+//                    break;
+//                }
+//            }
+            var object3d = this.objects_3d[modelObject.id];
+            if(object3d !== undefined) {
+                this.scene.remove(object3d);
+                this.objects_3d.splice(modelObject.id,1);
+            }
+        }
+    },
+    
     addObject3D : function(modelObject, position, scale) {
         if(modelObject.type === "SIMULATIONBODY") {
             var sprite = this.createSpriteObject();
@@ -83,22 +100,35 @@ Kinematics3DView.prototype = {
             var acceleration = modelObject.acceleration.x;
             object3d.position.x = position;
             object3d.updateMatrixWorld();
+//            if(velocity === 0) {
+//                this.setVelocityArrowVisibility(modelObject, false);
+//            } else {
+//                this.setVelocityArrowVisibility(modelObject, true);
+//            }
+//            if(acceleration === 0) {
+//                this.setAccelerationArrowVisibility(modelObject, false);
+//            } else {
+//                this.setAccelerationArrowVisibility(modelObject, true);
+//            }
             // Update 3d arrows
+            var velocityScale = Math.abs(velocity);
+            object3d.velocityArrow.setLength(velocityScale);
+            var accelerationScale = Math.abs(acceleration);
+            object3d.accelerationArrow.setLength(accelerationScale);
             if(velocity > 0) {
-                object3d.velocityArrow.visible = true;
                 object3d.velocityArrow.setOrientationAxis(Arrow3D.POS_X);
-                object3d.velocityArrow.setPosition(position + object3d.size/2, object3d.position.y + object3d.size/2, 0, Arrow3D.TAIL);
+                object3d.velocityArrow.setPosition(position + object3d.size/2, object3d.position.y + object3d.size/4, 0, Arrow3D.TAIL);
             }
             else {
-                object3d.velocityArrow.setPosition(position - object3d.size/2, object3d.position.y + object3d.size/2, 0, Arrow3D.TAIL);
+                object3d.velocityArrow.setPosition(position - object3d.size/2, object3d.position.y + object3d.size/4, 0, Arrow3D.TAIL);
                 object3d.velocityArrow.setOrientationAxis(Arrow3D.NEG_X);
             }
             if(acceleration > 0) {
                 object3d.accelerationArrow.setOrientationAxis(Arrow3D.POS_X);
-                object3d.accelerationArrow.setPosition(position + object3d.size/2, object3d.position.y + object3d.size, 0, Arrow3D.TAIL);
+                object3d.accelerationArrow.setPosition(position + object3d.size/2, object3d.position.y + object3d.size/2, 0, Arrow3D.TAIL);
             }
             else {
-                object3d.accelerationArrow.setPosition(position - object3d.size/2, object3d.position.y + object3d.size, 0, Arrow3D.TAIL);
+                object3d.accelerationArrow.setPosition(position - object3d.size/2, object3d.position.y + object3d.size/2, 0, Arrow3D.TAIL);
                 object3d.accelerationArrow.setOrientationAxis(Arrow3D.NEG_X);
             }
         }

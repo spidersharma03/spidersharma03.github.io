@@ -28,6 +28,7 @@
             <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
                 <li  class="active" id ="tab-input-props"><a ng-click="OnKinematicsTabClick('Kinematics')" data-toggle="tab">Kinematic Input</a></li>
                 <li  id ="tab-input-graph" ><a ng-click="OnKinematicsTabClick('Graph')"  data-toggle="tab">Graph Input</a></li>
+                <li  id ="tab-input-math" ><a ng-click="OnKinematicsTabClick('Math')"  data-toggle="tab">Math Input</a></li>
             </ul>
             <div>
                 <div ng-show="KinematicsTabName === 'Kinematics'">
@@ -35,6 +36,9 @@
                 </div> 
                 <div ng-show="KinematicsTabName === 'Graph'">
                       <div ng-include="'labs/kinematics_1d/Kinematics_GraphInputView.html'" ></div>
+                </div>
+                <div ng-show="KinematicsTabName === 'Math'">
+                      <div ng-include="'labs/kinematics_1d/Kinematics_MathInputView.html'" ></div>
                 </div>
              </div>   
         </div>

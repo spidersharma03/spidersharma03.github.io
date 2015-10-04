@@ -63,10 +63,16 @@ Model_Kinematics1D_Lab.prototype = {
     
     resetSimulation: function(time) {
         this.pauseSimulation = true;
+        this.time = 0;
+        for(var i=0; i<this.timesnap_objects.length; i++) {
+            this.view3dObserver.removeObject3D(this.timesnap_objects[i]);
+        }
+        this.timesnap_objects = [];
         for( var i=0; i<this.tracks.length; i++) {
             this.tracks[i].resetState();          
         }
         if( this.graphObserver) {
+            this.annotations = [];
             this.graphObserver.clearData();
         }
         this.syncViews();
@@ -221,7 +227,6 @@ Model_Kinematics1D_Lab.prototype = {
                 var body = this.tracks[i].body;
                 if(this.graphObserver) {
                     var time = this.time;
-                    var vel = body.velocity.x;
                     this.graphObserver.recordData([this.time, body.position.x, body.velocity.x, body.acceleration.x]);
                 }
             }
@@ -239,8 +244,13 @@ Model_Kinematics1D_Lab.prototype = {
     addView3dObserver: function(textViewObserver) {
         this.view3dObserver = textViewObserver;
     },
+    
     setGraphInput: function(graphInput) {
         this.tracks[0].setGraphInput(graphInput);
+    },
+    
+    setMathInput: function(mathInput) {
+        this.tracks[0].setMathInput(mathInput);        
     }
 };
 
@@ -257,6 +267,7 @@ Model_Kinematics1D_Lab.StraightTrack = function(trackParams) {
         this.isElasticAtEndPoints = false;
         this.body = new Kinematics_Body();
         this.graphInput = null;
+        this.mathInput = null;
     }
 };
 
@@ -280,17 +291,20 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
         this.graphInput = graphInput;
     },
     
+    setMathInput: function(mathInput) {
+        this.mathInput = mathInput;
+    },
+    
     advanceBody : function(time, dt) {
         // Check If the acceleration is governed by a spline or math equation
         if(this.mathInput) {
-            
+            this.body.acceleration.x = this.mathInput.Value(time);
         }
         if(this.graphInput) {
-            //this.body.acceleration.x = this.graphInput.Acceleration(time);
+            this.body.acceleration.x = this.graphInput.Value(time);
         }
         // Update 
         this.body.velocity.x += this.body.acceleration.x * dt;
-        
         this.body.position.x += this.body.velocity.x * dt;
         // Handle collision at end points for a finite track
         if( this.isFinite ) {

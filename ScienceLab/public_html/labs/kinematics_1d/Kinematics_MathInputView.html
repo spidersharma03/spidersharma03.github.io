@@ -1,0 +1,14 @@
+<div>
+    Type
+    <select  ng-model="data.selectedSplineGraphInputType" ng-change="selectedSplineGraphInputTypeChanged()">
+        <option value="0">position-time</option>
+        <option value="1">velocity-time</option>
+        <option value="2">acceleration-time</option>
+    </select>
+    <div>
+        Math Input<input type="text" ng-model="data.mathExpression" ng-change="OnMathExpressionChanged()"/>        
+    </div>
+    <div ng-show="data.mathExpressionSyntaxError === true" style="color: red">
+        Syntax Error
+    </div>
+</div>

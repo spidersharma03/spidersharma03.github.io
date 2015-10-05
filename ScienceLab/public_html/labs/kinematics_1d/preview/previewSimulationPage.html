@@ -1,0 +1,44 @@
+
+<div class = "row" ng-controller="Kinematic1dViewController">
+    <div  class="row-fluid col-md-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                    <a target=_self role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne_" aria-expanded="true" aria-controls="collapseOne_">
+                        Simulation Properties
+                    </a>
+                </h4>
+            </div>
+             <div id="collapseOne_" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne_">
+                 <div class="panel-body">
+                    <button class="btn btn-warning" ng-click="OnPlayPauseButtonPressed()">{{data.playPauseButtonState}}</button>
+                    <button class="btn btn-warning" ng-click="OnResetPressed()">Reset</button>
+                 </div>
+            </div>
+        </div>
+        <div ng-show="(publishOptions.selectedViewType === 'View3D') || (publishOptions.selectedViewType === 'Both') ">
+            <div>
+                 <div ng-include="'labs/kinematics_1d/preview/KinematicsLabPreview_Options.html'"></div>
+            </div>
+            <div>
+                <iframe iframe-set-dimentions-onload id="IFrame" onload="onSimFrameLoad()" style="border: none; height:450px; width:100%; box-shadow: 3px 3px 5px 3px #888888;" src="labs/kinematics_1d/Scene_KinematicsLab.html"></iframe>
+            </div>
+        </div>    
+    </div>
+    
+    <div ng-show="(publishOptions.selectedViewType === 'Graph') || (publishOptions.selectedViewType === 'Both') " class="row-fluid col-md-6">
+        <div >
+             <div ng-include="'labs/kinematics_1d/preview/KinematicsGraphPreview_Options.html'"></div>
+        </div>
+        <div>
+            <iframe iframe-set-dimentions-onload id="IFrameGraph" onload="onGraphFrameLoad()" style="height:450px;width:100%; border: none; box-shadow: 3px 3px 5px 3px #888888;" src="labs/common/Scene_GraphView.html"></iframe>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+

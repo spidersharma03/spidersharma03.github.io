@@ -1,3 +1,6 @@
+<div class="container">
+        <div ng-include="'labs/kinematics_1d/PublishOptionsModel.html'"></div>
+</div>
 <div class="panel panel-primary">
     <div class="panel-heading" role="tab" id="headingOne">
         <h4 class="panel-title">
@@ -10,6 +13,7 @@
          <div class="panel-body">
             <button class="btn btn-warning" ng-click="OnPlayPauseButtonPressed()">{{data.playPauseButtonState}}</button>
             <button class="btn btn-warning" ng-click="OnResetPressed()">Reset</button>
+            <button class="btn btn-warning" target="_self" data-toggle="modal"  data-target="#PublishOptionsModel"><a style="color: white" href="">Publish</a></button>
          </div>
     </div>
 </div>

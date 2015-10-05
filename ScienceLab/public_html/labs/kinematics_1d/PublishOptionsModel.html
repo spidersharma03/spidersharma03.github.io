@@ -1,0 +1,110 @@
+<div class="modal fade" id="PublishOptionsModel" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>        
+            <h4 class="btn btn-warning modal-title" id="myModalLabel">Publish Options</h4>
+      </div>
+       <div class="row-fluid col-md-12">
+            <h4>
+                <span class="label col-md-3" style="color: black">
+                View Type
+               </span>
+            </h4>
+            <div class="col-md-4">
+                <select  ng-model="publishOptions.selectedViewType" ng-change="selectedViewTypeChanged()">
+                    <option value="View3D">View3D</option>
+                    <option value="Graph">Graph</option>
+                    <option value="Both">Both</option>
+               </select>
+            </div>
+        </div> 
+        
+      <div class="row-fluid col-md-12">
+            <h4>
+                <span class="label col-md-3" style="color: black">
+                    Input Type
+               </span>
+            </h4>
+            <div class="col-md-4">
+                <select  ng-model="publishOptions.selectedInputType" ng-change="selectedInputTypeChanged()">
+                    <option value="Kinematics">Kinematics</option>
+                    <option value="Graph">Graph</option>
+                    <option value="Math">Math</option>
+               </select>
+            </div>
+        </div>  
+        
+        <div ng-show="(publishOptions.selectedViewType === 'Graph') || (publishOptions.selectedViewType === 'Both')">
+            
+            <div class="row-fluid col-md-12">
+            <h4>
+                <span class="label col-md-3" style="color: black">
+                    Graph Type
+               </span>
+            </h4>
+            <div class="col-md-1" >
+                <input type="checkbox" value="on" ng-model="publishOptions.type_time_Selected[0]" ng-change="OnProbeChanged()"/>
+            </div>
+            <div class="col-md-2">
+                 x-t
+            </div>
+            <div class="col-md-1" >
+                <input type="checkbox" value="on" ng-model="publishOptions.type_time_Selected[1]" ng-change="OnProbeChanged()"/>
+            </div>
+            <div class="col-md-2">
+                 v-t
+            </div>
+            <div class="col-md-1" >
+                <input type="checkbox" value="on" ng-model="publishOptions.type_time_Selected[2]" ng-change="OnProbeChanged()"/>
+            </div>
+            <div class="col-md-2">
+                 a-t
+            </div>
+        </div>  
+               
+            <div class="row-fluid col-md-12">
+            <h4>
+                <span class="label col-md-3" style="color: black">
+                    Graph Probe
+               </span>
+            </h4>
+            <div class="col-md-1">
+                 Value
+            </div>
+            <div class="col-md-1" >
+                <input type="checkbox" value="on" ng-model="publishOptions.valueProbeSelected" ng-change="OnProbeChanged()"/>
+            </div>
+            <div class="col-md-1">
+                 Tangent
+            </div>
+            <div class="col-md-1" >
+                <input type="checkbox" value="on" ng-model="publishOptions.tangentProbeSelected" ng-change="OnProbeChanged()"/>
+            </div>
+            <div class="col-md-1">
+                 Area
+            </div>
+            <div class="col-md-1" >
+                <input type="checkbox" value="on" ng-model="publishOptions.areaProbeSelected" ng-change="OnProbeChanged()"/>
+            </div>
+            <div class="col-md-1">
+                 Chord
+            </div>
+            <div class="col-md-1" >
+                <input type="checkbox" value="on" ng-model="publishOptions.chordProbeSelected" ng-change="OnProbeChanged()"/>
+            </div>
+        </div>
+        </div> 
+        <div class="col-md-12" style="color: red" ng-show="publishOptions.publishError">
+              <h5>
+                  {{publishOptions.publishErrorMessage}}
+              </h5>
+        </div>    
+      <div class="modal-footer">          
+        <button href="#Labs" ng-disabled="publishOptions.publishError" class="btn btn-primary">
+            <a ng-click="OnPreviewPressed()" style="color: white">Preview</a>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

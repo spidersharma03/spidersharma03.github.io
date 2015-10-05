@@ -23,6 +23,10 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
         templateUrl: 'partials/SimulationPage.html',
         controller: 'SimulationDataLoadController'
       }).
+      when('/Labs', {
+        templateUrl: 'labs/kinematics_1d/preview/previewSimulationPage.html',
+        controller: 'Kinematic1dViewController'
+      }).
       when('/Question/:simulationPageName/:simulationName', {
         templateUrl: 'partials/QuestionPage.html',
         controller: 'QuestionDataLoadController'
@@ -227,7 +231,7 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
         }        
 });
 
-mainApp.controller('TestController', function($scope){
+mainApp.controller('TestController', function($scope,sharedProperties){
     $scope.data = {
        selectedSplineGraphInputType : 0,
        selectedGraphType : 3,
@@ -251,6 +255,41 @@ mainApp.controller('TestController', function($scope){
        positionTextVisibility:true,
        velocityTextVisibility:true,
        accelerationTextVisibility:true
+    };
+    // Publish Options
+    $scope.publishOptions = {
+       publishError:false, 
+       publishErrorMessage:"",
+       splineGraphWidth:0,
+       selectedInputType:"Kinematics",
+       selectedGraphOption:0,
+       selectedViewType:"View3D",
+       type_time_Selected:[true, false, false],
+       pos_time_Selected:true,
+       vel_time_Selected:false,
+       acc_time_Selected:false,
+       valueProbeSelected:true,
+       tangentProbeSelected:false,
+       areaProbeSelected:false,
+       chordProbeSelected:false
+    };
+    sharedProperties.setProperty($scope.publishOptions);
+    
+    $scope.selectedInputTypeChanged = function() {
+        $scope.publishErrorCheck();
+    };
+    
+    $scope.publishErrorCheck = function() {
+        if( $scope.KinematicsTabName !== $scope.publishOptions.selectedInputType) {
+            $scope.publishOptions.publishError = true;
+            $scope.publishOptions.publishErrorMessage = "Mismatch between selected Input Type";
+        } else {
+            $scope.publishOptions.publishError = false;
+        }
+    };
+    
+    $scope.OnProbeChanged = function() {
+        
     };
     
     $scope.positionValueChanged = function() {
@@ -426,6 +465,11 @@ mainApp.controller('TestController', function($scope){
                 lab.setMathInput($scope.mathInput);
             }
         }
+        $scope.publishErrorCheck();
+    };
+    
+    $scope.OnPreviewPressed = function() {
+        $('#PublishOptionsModel').modal('hide');
     };
     
     window.onSimFrameLoad = function()
@@ -435,7 +479,7 @@ mainApp.controller('TestController', function($scope){
       var div = document.getElementById('Kinematics_Input_Graph');
       var splineGraph = new SplineGraph(div); 
       $scope.splineGraph = splineGraph;
-      $scope.mathInput = new MathInput();   
+      $scope.mathInput = new MathInput(); 
     };
     window.onGraphFrameLoad = function()
     {
@@ -446,6 +490,7 @@ mainApp.controller('TestController', function($scope){
             innerDocSim.modelGraph = innerDocGraph.modelGraph;
             $scope.modelGraph = innerDocSim.modelGraph;
     };
+    
 });
 
 mainApp.directive('iframeSetDimentionsOnload', [function(){

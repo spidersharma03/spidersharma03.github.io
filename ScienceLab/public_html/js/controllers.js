@@ -169,3 +169,250 @@ controllers.controller('QuestionDataLoadController', function ($scope, $routePar
             $scope.questionType = $scope.currentQuestion.type;            
     };
 });
+
+controllers.controller('Kinematic1dViewController', function($scope, sharedProperties){
+//    $('#PublishOptionsModel').modal('hide');
+//    $('.modal-backdrop').remove();
+    var options = sharedProperties.getProperty();
+    $scope.publishOptions = options;
+    $scope.publishOptions.graphTypeMultiChoice = false;
+    $scope.data = {
+       selectedSplineGraphInputType : 0,
+       selectedGraphType : 3,
+       selectedProbeType : 0,
+       
+       // Math expression
+       mathExpression:"",
+       mathExpressionSyntaxError:false,
+       // Simulation Data
+       playPauseButtonState:"Play",
+       
+       // Object Data
+       selectedStateType:3,
+       
+       positionValue:0,
+       velocityValue:0,
+       accelerationValue:1,
+       nameTag:"Kinematics Body",
+       accelerationArrowVisibility:false,
+       velocityArrowVisibility:false,
+       positionTextVisibility:true,
+       velocityTextVisibility:true,
+       accelerationTextVisibility:true
+    };
+    
+    $scope.initGUI = function() {
+        $scope.OnKinematicsTabClick($scope.publishOptions.selectedInputType);
+        // Check for graph
+        if($scope.publishOptions.selectedViewType !== "View3D") {
+            var counter = 0;
+            for( var i=0; i<$scope.publishOptions.type_time_Selected.length; i++) {
+                if($scope.publishOptions.type_time_Selected[i] === true)
+                    counter++;
+            }
+            if(counter > 1)
+                $scope.publishOptions.graphTypeMultiChoice = true;
+            else
+                $scope.publishOptions.graphTypeMultiChoice = false;
+            $scope.data.selectedGraphType = 0;
+            $scope.selectedGraphTypeChanged();
+            $scope.$apply();
+        }
+    };
+    
+    $scope.positionValueChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+             var model = iframe.contentWindow.lab.tracks[0].body;
+             model.position.x = Number($scope.data.positionValue);
+             iframe.contentWindow.lab.syncViews();
+        }
+    };
+    
+    $scope.velocityValueChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+             var model = iframe.contentWindow.lab.tracks[0].body;
+             model.velocity.x = Number($scope.data.velocityValue);
+             iframe.contentWindow.lab.syncViews();
+        }
+    };
+    
+    $scope.accelerationValueChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+             var model = iframe.contentWindow.lab.tracks[0].body;
+             model.acceleration.x = Number($scope.data.accelerationValue);
+             iframe.contentWindow.lab.syncViews();
+        }
+    };
+    
+    $scope.selectedStateTypeChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var selectedStateNumber = Number($scope.data.selectedStateType);
+            if(selectedStateNumber === 3) { // User defined
+                $scope.data.positionValue = 0;
+                $scope.data.velocityValue = 1;
+                $scope.data.accelerationValue = 0;
+            }
+            else {
+                var state = iframe.contentWindow.lab.states[selectedStateNumber];
+                iframe.contentWindow.lab.tracks[0].setBodyState(state);
+                $scope.data.positionValue = state.position;
+                $scope.data.velocityValue = state.velocity;
+                $scope.data.accelerationValue = state.acceleration;
+            }
+            iframe.contentWindow.lab.syncViews();
+        }
+    };
+    
+    $scope.OnResetPressed = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            iframe.contentWindow.lab.resetSimulation();
+            $scope.data.playPauseButtonState = "Play";
+        }
+    },
+    
+    $scope.OnPlayPauseButtonPressed = function() {
+        var iframe = document.getElementById('IFrame');
+        if( $scope.data.playPauseButtonState === "Play") {
+            if(iframe.contentWindow.lab !== undefined) {
+                iframe.contentWindow.lab.playSimulation(true);
+            }
+            $scope.data.playPauseButtonState = "Pause";
+        } else {
+            if(iframe.contentWindow.lab !== undefined) {
+                iframe.contentWindow.lab.playSimulation(false);
+            }
+            $scope.data.playPauseButtonState = "Play";
+        }
+    };
+    
+    $scope.OnNameChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            model.updateTag("textTag", "text", $scope.data.nameTag);
+            iframe.contentWindow.lab.syncText2DView();
+        }
+    };
+    
+    $scope.OnAccelerationArrowVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.kinematics3DView.setAccelerationArrowVisibility(model, $scope.data.accelerationArrowVisibility);
+        }
+    };
+    
+    $scope.OnVelocityArrowVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.kinematics3DView.setVelocityArrowVisibility(model, $scope.data.velocityArrowVisibility);
+        }
+    };
+    
+    $scope.OnPositionTextVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.textViewObserver.setVisible(model.id, "positionTag",$scope.data.positionTextVisibility);
+        }
+    };
+    
+    $scope.OnVelocityTextVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.textViewObserver.setVisible(model.id, "velocityTag",$scope.data.velocityTextVisibility);
+        }
+    };
+    
+    $scope.OnAccelerationTextVisibilityChanged = function() {
+        var iframe = document.getElementById('IFrame');
+        if(iframe.contentWindow.lab !== undefined) {
+            var model = iframe.contentWindow.lab.tracks[0].body;
+            iframe.contentWindow.textViewObserver.setVisible(model.id, "accelerationTag",$scope.data.accelerationTextVisibility);
+        }
+    };
+    
+    $scope.selectedSplineGraphInputTypeChanged = function() {
+        $scope.splineGraph.curveType = Number($scope.data.selectedSplineGraphInputType);
+    };
+    
+    $scope.selectedProbeTypeChanged = function(){
+        var selectedProbeType = Number($scope.data.selectedProbeType);
+        $scope.modelGraph.customGraphOperations.changeProbeType(selectedProbeType);
+    };
+    
+    $scope.selectedGraphTypeChanged = function(){
+        var selectedType = Number($scope.data.selectedGraphType);
+        $scope.modelGraph.customGraphOperations.changeGraphType(selectedType);
+        if(selectedType === 3) {
+           for(var i=0; i<$scope.publishOptions.type_time_Selected.length; i++) {
+                $scope.modelGraph.setSeriesVisibility(i, $scope.publishOptions.type_time_Selected[i]);
+            }
+        }
+       else {
+            for(var i=0; i<3; i++) {
+                var bVisible = (i === selectedType) ? true : false;
+                $scope.modelGraph.setSeriesVisibility(i, bVisible);
+            }
+        }
+        $scope.modelGraph.hairlines.type = selectedType;
+    };
+    
+    $scope.OnMathExpressionChanged = function() {
+        $scope.data.mathExpressionSyntaxError = !$scope.mathInput.setExpression($scope.data.mathExpression);
+    };
+    
+    $scope.OnKinematicsTabClick = function(tabName) {
+        $scope.KinematicsTabName = tabName;
+        var iframe = document.getElementById('IFrame');
+        var lab = iframe.contentWindow.lab;
+            
+        if(tabName === "Graph") {
+            var parentdiv = document.getElementById("content");
+            //var w = parentdiv.offsetWidth;
+            $scope.splineGraph.graph.resize(400,200);
+            if(lab !== undefined) {
+                lab.setGraphInput($scope.splineGraph);
+            }
+        }
+        else if( tabName === "Kinematics") {
+            if(lab !== undefined) {
+                lab.setGraphInput(null);
+                lab.setMathInput(null);
+            }
+        }
+        else if( tabName === "Math") {
+            if(lab !== undefined) {
+                lab.setGraphInput(null);
+                lab.setMathInput($scope.mathInput);
+            }
+        }
+    };
+    
+    window.onSimFrameLoad = function()
+    {
+      $scope.KinematicsTabName = "Kinematics";
+      $scope.$apply();
+      var div = document.getElementById('Kinematics_Input_Graph');
+      var splineGraph = new SplineGraph(div); 
+      $scope.splineGraph = splineGraph;
+      $scope.mathInput = new MathInput();  
+      $scope.initGUI();
+    };
+    window.onGraphFrameLoad = function()
+    {
+            var iframe = document.getElementById('IFrameGraph');
+            var innerDocGraph = iframe.contentDocument || iframe.contentWindow.document;
+            var iframe = document.getElementById('IFrame');
+            var innerDocSim = iframe.contentDocument || iframe.contentWindow.document;
+            innerDocSim.modelGraph = innerDocGraph.modelGraph;
+            $scope.modelGraph = innerDocSim.modelGraph;
+    };
+});

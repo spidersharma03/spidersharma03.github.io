@@ -45,6 +45,27 @@ Model_Kinematics1D_Lab.prototype = {
     UniformAccelerationState : {name: "", position:0, velocity:0, acceleration:1},
     UniformDecelerationState : {name: "", position:0, velocity:0, acceleration:-1},
     
+    getAsJSON: function() {
+        function replacer(key, value) {
+            if( key === "mathInput" || key === "state" || key === "graphInput")
+                return undefined;
+            if(key === "tags") {
+                var tagArray = [];
+                for (var tagname in value) {
+                    var tagObject = value[tagname];
+                    tagArray.push(tagObject);
+                }
+                var res = JSON.stringify(tagArray);
+                return JSON.parse(res);
+            }
+            return value;
+        }
+
+        var res = JSON.stringify(this.tracks, replacer);
+        var out = JSON.parse(res);
+        return out;
+    },
+    
     addTrack : function(track) {
         this.tracks.push(track);
         this.bodies.push(track.body);

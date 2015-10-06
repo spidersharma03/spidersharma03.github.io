@@ -14,6 +14,12 @@ function MathInput() {
 MathInput.prototype = {
     constructor : MathInput,
     
+    getPersistentDataAsJSON: function() {
+        var res = JSON.stringify({expression: this.mathExpression, type:this.type});
+        var out = JSON.parse(res);
+        return out;
+    },
+    
     setExpression: function(expression) {
         this.mathExpression = expression;
         try{

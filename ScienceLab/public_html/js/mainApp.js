@@ -69,6 +69,24 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
             if( currentUser ) {
                 $scope.logged_in = true;
                 $scope.currentUserName = "Welcome " + currentUser.get("username");
+                
+                var Simulation = Parse.Object.extend("Simulation");
+                var query = new Parse.Query(Simulation);
+                var currentUserEmail = currentUser.get("email");
+                query.equalTo("UserId", currentUserEmail);
+                query.find({
+                  success: function(results) {
+                    // Do something with the returned Parse.Object values
+                    for (var i = 0; i < results.length; i++) {
+                      var object = results[i];
+                      var userId = object.get("UserId");
+                      var labInfo = object.get("SceneInfo");
+                    }
+                  },
+                  error: function(error) {
+                    alert("Error: " + error.code + " " + error.message);
+                  }
+                });
             }
         }
         $scope.logInPressed = function() {
@@ -470,6 +488,57 @@ mainApp.controller('TestController', function($scope,sharedProperties){
     
     $scope.OnPreviewPressed = function() {
         $('#PublishOptionsModel').modal('hide');
+        var iframe = document.getElementById("IFrameEditor");
+        var html = iframe.contentWindow.Preview.preview.innerHTML;
+        $scope.publishOptions.previewHTML = html;
+    };
+    
+    $scope.OnPublishPressed = function() {
+        $('#PublishOptionsModel').modal('hide');
+        
+        
+        var currentUser = Parse.User.current();
+        if( currentUser ) {
+            var currentUserEmail = currentUser.get("email");
+            var Simulation = Parse.Object.extend("Simulation");
+            var query = new Parse.Query(Simulation);
+            var currentUserEmail = currentUser.get("email");
+            query.equalTo("UserId", currentUserEmail);
+            var numSimsForCurrentUser = 0;
+            query.find({
+              success: function(results) {
+                    numSimsForCurrentUser = results.length;
+                    if( numSimsForCurrentUser > 1) {
+                        alert("You have exceeded the limit to publish more!");
+                        return;
+                    }
+                    $scope.publishSimulation(currentUser);
+              },
+              error: function(error) {
+                alert("Error: " + error.code + " " + error.message);
+              }
+            });
+        }
+    };
+    
+    $scope.publishSimulation = function(currentUser) {
+        var Simulation = Parse.Object.extend("Simulation");
+        var simulation = new Simulation();
+        var currentUserEmail = currentUser.get("email");
+        simulation.set("UserId", currentUserEmail);
+        
+        var iframe = document.getElementById('IFrame');
+        var lab = iframe.contentWindow.lab;
+        var labJson = lab.getAsJSON();
+        simulation.set("LabInfo", labJson);
+        simulation.save(null, {
+            success: function(simulation) {
+              alert('New object created with objectId: ' + simulation.id);
+            },
+            error: function(simulation, error) {
+              alert('Failed to create new object, with error code: ' + error.message);
+            }
+        });
     };
     
     window.onSimFrameLoad = function()
@@ -490,7 +559,6 @@ mainApp.controller('TestController', function($scope,sharedProperties){
             innerDocSim.modelGraph = innerDocGraph.modelGraph;
             $scope.modelGraph = innerDocSim.modelGraph;
     };
-    
 });
 
 mainApp.directive('iframeSetDimentionsOnload', [function(){

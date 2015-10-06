@@ -118,6 +118,12 @@ SplineGraph.X_T = 0;
 SplineGraph.V_T = 1;
 SplineGraph.A_T = 2;
 
+SplineGraph.prototype.getPersistentDataAsJSON = function() {
+    var res = JSON.stringify({points: this.sparsePoints, type:this.curveType});
+    var out = JSON.parse(res);
+    return out;
+};
+
 SplineGraph.prototype.initSplineStuff = function () {
     for (var i = 0; i < this.numSplines; i++) {
         this.splines[i] = new CubicSpline();

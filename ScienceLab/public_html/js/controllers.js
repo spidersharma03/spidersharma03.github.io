@@ -218,6 +218,10 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
             $scope.selectedGraphTypeChanged();
             $scope.$apply();
         }
+        var previewDiv = document.getElementById("PreviewDiv");
+        previewDiv.innerHTML = $scope.publishOptions.previewHTML;
+        $scope.publishOptions.previewText = previewDiv.innerHTML.length > 0;
+        $scope.$apply();
     };
     
     $scope.positionValueChanged = function() {

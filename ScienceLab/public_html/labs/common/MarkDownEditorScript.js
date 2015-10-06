@@ -16,7 +16,7 @@ marked.setOptions({
   smartypants: false
 });
 
-var Preview = {
+var EditorPreview = {
   delay: 50,        // delay after keystroke before updating
 
   preview: null,     // filled in by Init below
@@ -72,7 +72,7 @@ var Preview = {
   //    typesetting.  After it is done, call PreviewDone.
   //  
   CreatePreview: function () {
-    Preview.timeout = null;
+    EditorPreview.timeout = null;
     if (this.mjRunning) return;
     var text = this.textarea.value;
     if (text === this.oldtext) return;
@@ -128,7 +128,7 @@ var Preview = {
 //
 //  Cache a callback to the CreatePreview action
 //
-Preview.callback = MathJax.Callback(["CreatePreview",Preview]);
-Preview.callback.autoReset = true;
+EditorPreview.callback = MathJax.Callback(["CreatePreview",EditorPreview]);
+EditorPreview.callback.autoReset = true;
 
 

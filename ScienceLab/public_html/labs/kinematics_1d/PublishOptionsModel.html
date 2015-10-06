@@ -101,9 +101,14 @@
               </h5>
         </div>    
       <div class="modal-footer">          
-        <button href="#Labs" ng-disabled="publishOptions.publishError" class="btn btn-primary">
-            <a ng-click="OnPreviewPressed()" style="color: white">Preview</a>
-        </button>
+          <a  href="#Labs"><button  ng-click="OnPreviewPressed()"  ng-disabled="publishOptions.publishError" class="btn btn-primary">
+                Preview
+            </button>
+          </a>
+          <a style="cursor: none"><button ng-click="OnPublishPressed()"  ng-disabled="publishOptions.publishError" class="btn btn-success">
+                Publish
+            </button>
+          </a>
       </div>
     </div>
   </div>

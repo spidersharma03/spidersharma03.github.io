@@ -54,6 +54,7 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
  
 //
 mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
+        return;
         $scope.logged_in = false;
         $scope.login_emptyEmail = false;
         $scope.login_emptyPassword = false;

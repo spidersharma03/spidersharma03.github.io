@@ -22,7 +22,20 @@
         <script src="js/lib/angular.js/angular-route.js"></script>
         <script src="js/lib/jquery/jquery.js"></script>
         <script src = "js/controllers.js"></script>
+        <script src = "js/loginPageLoadController.js"></script>
+        <script src = "js/simulationMetaDataLoadController.js"></script>
+        <script src = "labs/kinematics_1d/Kinematics1dLabController.js"></script>
         <script src = "js/ContentLoadingService.js"></script>
+        <script src="js/lib/three.js/three.js"></script>
+        <script src="js/lib/three.js/js/controls/OrbitControls.js"></script>
+        <script src="js/lib/three.js/js/Detector.js"></script>
+        <script src="js/simulate/Arrow3D.js"></script>
+        <script src="js/simulate/Text2D.js"></script>
+        <script src="labs/common/PhysicalBody.js"></script>
+        <script src="labs/common/TextViewObserver.js"></script>
+        <script src="labs/kinematics_1d/model_kinematics1d_lab.js"></script>
+        <script src = "labs/kinematics_1d/Kinematics3DView.js"></script>
+        
         <script src = "js/mainApp.js"></script>
         <script src="js/lib/dyGraph/dygraph-combined-dev.js"></script>
         <script src="js/lib/mathjs/math.min.js"></script>
@@ -66,6 +79,7 @@
                                 </ul>
                             <li><a href="#Mission">Our Mission</a></li>
                             <li><a href="#">About us</a></li>
+                            <li ng-show="logged_in"><a href="#Labs">Labs</a></li>
                             </li>
                         </ul>
                         
@@ -78,6 +92,7 @@
                             <li ng-show="logged_in" class="dropdown">
                                 <a href="#" target="_self" class="btn dropdown-toggle" data-toggle="dropdown" role="button"  aria-expanded="false">{{currentUserName}} <span class="caret"></span></a>
                                 <ul class="dropdown-menu">
+                                    <li><a href="#Profile">Profile</a></li>
                                     <li><a ng-click="logOutPressed()" href="#">LogOut</a></li>
                                 </ul>
                             </li>

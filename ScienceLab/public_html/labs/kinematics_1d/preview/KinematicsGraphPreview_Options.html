@@ -13,7 +13,7 @@
                 show
             </div>
             <div class="col-md-offset-3">
-                <select  ng-model="data.selectedGraphType" ng-change="selectedGraphTypeChanged()">
+                <select  ng-model="uiDataValues.selectedGraphType" ng-change="selectedGraphTypeChanged()">
                     <option ng-show="publishOptions.type_time_Selected[0]" value="0">position-time</option>
                     <option ng-show="publishOptions.type_time_Selected[1]" value="1">velocity-time</option>
                     <option ng-show="publishOptions.type_time_Selected[2]" value="2">acceleration-time</option>
@@ -24,7 +24,7 @@
                 probes
             </div>
             <div class="col-md-offset-3">
-                <select  ng-model="data.selectedProbeType" ng-change="selectedProbeTypeChanged()">
+                <select  ng-model="uiDataValues.selectedProbeType" ng-change="selectedProbeTypeChanged()">
                         <option ng-show="publishOptions.valueProbeSelected" value="0">Value</option>
                         <option ng-show="publishOptions.tangentProbeSelected" value="1">Tangents</option>
                         <option ng-show="publishOptions.areaProbeSelected" value="2">Area</option>

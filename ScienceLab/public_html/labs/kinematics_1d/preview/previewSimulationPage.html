@@ -1,5 +1,5 @@
 
-<div class = "row" ng-controller="Kinematic1dViewController">
+<div ng-if="sceneLoaded" class = "row">
     <div  class="row-fluid col-md-6">
         <div class="panel panel-primary">
             <div class="panel-heading" role="tab" id="headingOne">
@@ -11,26 +11,27 @@
             </div>
              <div id="collapseOne_" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne_">
                  <div class="panel-body">
-                    <button class="btn btn-warning" ng-click="OnPlayPauseButtonPressed()">{{data.playPauseButtonState}}</button>
+                    <button class="btn btn-warning" ng-click="OnPlayPauseButtonPressed()">{{uiDataValues.playPauseButtonState}}</button>
                     <button class="btn btn-warning" ng-click="OnResetPressed()">Reset</button>
                  </div>
             </div>
         </div>
-        <div ng-show="(publishOptions.selectedViewType === 'View3D') || (publishOptions.selectedViewType === 'Both') ">
+        <div ng-show="(publishDataValues.selectedViewType === 'View3D') || (publishDataValues.selectedViewType === 'Both') ">
             <div>
                  <div ng-include="'labs/kinematics_1d/preview/KinematicsLabPreview_Options.html'"></div>
             </div>
-            <div>
-                <iframe iframe-set-dimentions-onload id="IFrame" onload="onSimFrameLoad()" style="border: none; height:450px; width:100%; box-shadow: 3px 3px 5px 3px #888888;" src="labs/kinematics_1d/Scene_KinematicsLab.html"></iframe>
+            <div ng-if="graphFrameLoaded" id="view3d_div" style="position: relative; border: none; height:450px; width:100%; box-shadow: 3px 3px 5px 3px #888888;">
+                <view3d>
+                </view3d>
             </div>
         </div>    
     </div>
     
-    <div ng-show="(publishOptions.selectedViewType === 'Graph') || (publishOptions.selectedViewType === 'Both') " class="row-fluid col-md-6">
+    <div ng-show="(publishDataValues.selectedViewType === 'Graph') || (publishDataValues.selectedViewType === 'Both') " class="row-fluid col-md-6">
         <div >
              <div ng-include="'labs/kinematics_1d/preview/KinematicsGraphPreview_Options.html'"></div>
         </div>
-        <div>
+        <div> 
             <iframe iframe-set-dimentions-onload id="IFrameGraph" onload="onGraphFrameLoad()" style="height:450px;width:100%; border: none; box-shadow: 3px 3px 5px 3px #888888;" src="labs/common/Scene_GraphView.html"></iframe>
         </div>
     </div>

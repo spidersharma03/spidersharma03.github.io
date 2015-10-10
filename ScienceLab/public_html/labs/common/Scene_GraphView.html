@@ -120,6 +120,15 @@ var options = {
     xlabel: 'Time',
     ylabel: 'Position/Velocity/Acceleration',
     legend: 'always',
+    series:{
+        'x' : {
+            strokeWidth: 1.0
+        },
+        'v' : {
+        },
+        'a' : {   
+        }
+    },
 //    animatedZooms: true,
 //    labelsDivWidth: 100,
 //    labelsDivStyles: {
@@ -147,7 +156,8 @@ var options = {
                   hairlines
                 ]
 };
-document.modelGraph = new Model_Graph(document.getElementById("graphDiv"), options, 4);
+var div = document.getElementById("graphDiv");
+document.modelGraph = new Model_Graph(div, options, 4);
 document.modelGraph.hairlines = hairlines;
 document.modelGraph.labelDiv = document.getElementById("labels");
 var customGraphOperations = new CustomKinematicsGraphOperations(document.modelGraph);

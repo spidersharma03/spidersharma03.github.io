@@ -39,8 +39,8 @@
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
         <script src="../../js/lib/dyGraph/super-annotations.js"></script>
         <script src="../../js/lib/mathjs/math.min.js"></script>
+        
         <script>
-            
             var lab, track;
             var kinematics3DView, textViewObserver;
             var container = document.createElement('div');
@@ -76,17 +76,7 @@
                 kinematics3DView.appendToParent(container);
                 lab.addView3dObserver(kinematics3DView);
                 lab.addTextViewObserver(textViewObserver);
-                lab.addGraphObserver(document.modelGraph);
-                var seriesOptions = {
-                    'x' : {
-                        strokeWidth: 1.0
-                    },
-                    'v' : {
-                    },
-                    'a' : {   
-                    }
-                };
-                document.modelGraph.updateOptions({series : seriesOptions});
+                //lab.addGraphObserver(document.modelGraph);
                 track = new Model_Kinematics1D_Lab.StraightTrack();
                 track.setBodyState(lab.UniformAccelerationState);
                 track.body.addTag({name:"textTag", text:"Kinematics Body", offset:{x:0, y:40}, color:"red"});

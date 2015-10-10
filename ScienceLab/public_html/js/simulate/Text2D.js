@@ -5,10 +5,11 @@
  */
 
 
-function Text2D(text, parent) {
-    this.div = parent.createElement('div');
+function Text2D(text) {
+    this.div = document.createElement('div');
     this.div.innerHTML = text;
     this.div.style.position = 'absolute';
+    this.div.style.overflow = 'hidden';
     this.div.style.width = 100;
     this.div.style.height = 100;
     this.setColor("black");

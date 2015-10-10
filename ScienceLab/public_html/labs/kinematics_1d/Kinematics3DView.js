@@ -4,7 +4,8 @@
  * and open the template in the editor.
  */
 
-function Kinematics3DView(kinematics_lab) {
+function Kinematics3DView(parent, kinematics_lab) {
+    this.parent = parent;
     this.kinematics_lab = kinematics_lab;
     this.time_snap_objects = [];
     this.objects_3d = [];
@@ -19,7 +20,7 @@ function Kinematics3DView(kinematics_lab) {
     this.init();
     this.makeBaseGeometry();
     
-    var map = THREE.ImageUtils.loadTexture( "../../img/sprite.png" );
+    var map = THREE.ImageUtils.loadTexture( "img/sprite.png" );
     this.spriteMaterial = new THREE.SpriteMaterial( { map: map, transparent:true } );
     this.lambertMaterial1 = new THREE.MeshLambertMaterial({color:0x111188, ambient: 0xaaaaaa, combine: THREE.MixOperation});
     this.lambertMaterial2 = new THREE.MeshLambertMaterial({color:0x881111, ambient: 0xaaaaaa, combine: THREE.MixOperation});
@@ -201,11 +202,11 @@ Kinematics3DView.prototype = {
     },
     
     init: function() {
-        this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100);
+        this.camera = new THREE.PerspectiveCamera(45, this.parent.offsetWidth / this.parent.offsetHeight, 1, 100);
         this.camera.position.z = 22;
         this.camera.position.y = 4;
-        var controls = new THREE.OrbitControls(this.camera);
-        controls.addEventListener('change', render);
+        var controls = new THREE.OrbitControls(this.camera, this.parent);
+        //controls.addEventListener('change', this.render.bind(this));
 
         // scene
         this.scene = new THREE.Scene();
@@ -233,7 +234,7 @@ Kinematics3DView.prototype = {
             console.log(item, loaded, total);
         };
 
-        var path = "../../img/pisa/";
+        var path = "img/pisa/";
         var format = '.png';
         var urls = [
             path + 'px' + format, path + 'nx' + format,
@@ -243,24 +244,27 @@ Kinematics3DView.prototype = {
 
         var reflectionCube = THREE.ImageUtils.loadTextureCube(urls);
         reflectionCube.format = THREE.RGBFormat;
-        var texture = THREE.ImageUtils.loadTexture("../../img/dark-metal-texture.jpg");
+        var texture = THREE.ImageUtils.loadTexture("img/dark-metal-texture.jpg");
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
-        var sphereTexture = THREE.ImageUtils.loadTexture("../../img/billboard.jpeg");
+        var sphereTexture = THREE.ImageUtils.loadTexture("img/billboard.jpeg");
 
         this.cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine: THREE.MixOperation});
         this.groundMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: texture, color: 0xffffff, specular: 0xffffff, combine: THREE.MixOperation, bumpScale: 0.010, bumpMap: texture, ambient: 0x555555, reflectivity: 0.5, metal: true, shininess: 1000});
         this.sphereMaterial = new THREE.MeshPhongMaterial({envMap: reflectionCube, map: sphereTexture, color: 0xff0000, specular: 0xffffff, combine: THREE.MixOperation, ambient: 0x555555, reflectivity: 0.8, shininess: 10});
 
         this.renderer = new THREE.WebGLRenderer({antialias: true});
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        var w = this.parent.offsetWidth;
+        var h = this.parent.offsetHeight;
+        this.renderer.setSize(w, h);
+        this.parent.appendChild(this.renderer.domElement);
 
-        document.addEventListener('mousemove', onDocumentMouseMove, false);
-        document.addEventListener('mousedown', onDocumentMouseDown, false);
-        document.addEventListener('mouseup', onDocumentMouseUp, false);
-        document.addEventListener('mousewheel', onDocumentMouseWheel, false);
-        window.addEventListener('resize', onWindowResize, false);
+        this.parent.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
+        this.parent.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), false);
+        this.parent.addEventListener('mouseup', this.onDocumentMouseUp.bind(this), false);
+        this.parent.addEventListener('mousewheel', this.onDocumentMouseWheel.bind(this), false);
+        window.addEventListener('resize', this.onWindowResize.bind(this), false);
         //renderer.shadowMapEnabled = true;
         //renderer.shadowMapSoft = true;
     },
@@ -275,13 +279,13 @@ Kinematics3DView.prototype = {
     },
     
     projectToScreenSpace: function(object) {
-        var w = window.innerWidth;
-        var h = window.innerHeight;
+        var w = this.parent.offsetWidth;
+        var h = this.parent.offsetHeight;
         var widthHalf = w / 2, heightHalf = h / 2;
 
         this.projector.projectVector( this.projectedCoords.setFromMatrixPosition( object.matrixWorld ), this.camera );
         this.projectedCoords.x = ( this.projectedCoords.x * widthHalf ) + widthHalf;
-        this.projectedCoords.y = - ( this.projectedCoords.y * heightHalf ) + heightHalf;
+        this.projectedCoords.y = -( this.projectedCoords.y * heightHalf ) + heightHalf;
         return this.projectedCoords;
     },
     
@@ -298,5 +302,32 @@ Kinematics3DView.prototype = {
         spriteObject.scale.x = scale;
         spriteObject.scale.y = scale;
         this.scene.add(spriteObject);
+    },
+    
+    onDocumentMouseMove: function(event)
+    {
+        if(this.kinematics_lab.pauseSimulation)
+            this.kinematics_lab.syncText2DView();
+    },
+
+    onDocumentMouseWheel: function(event)
+    {
+        if(this.kinematics_lab.pauseSimulation)
+            this.kinematics_lab.syncText2DView();
+    },
+
+
+    onDocumentMouseDown: function(e)
+    {
+    },
+
+    onDocumentMouseUp: function (e)
+    {
+    },
+
+    onWindowResize: function() {
+        this.camera.aspect = this.parent.offsetWidth / this.parent.offsetHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(this.parent.offsetWidth, this.parent.offsetHeight);
     }
 };

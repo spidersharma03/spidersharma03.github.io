@@ -13,7 +13,7 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
     $routeProvider.
       when('/Home', {
         templateUrl: 'partials/homePage.html',
-        controller: 'homePageLoadController'
+        controller: 'loginPageLoadController'
       }).
       when('/Mission', {
         templateUrl: 'partials/mission.html',
@@ -24,9 +24,16 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
         controller: 'SimulationDataLoadController'
       }).
       when('/Labs', {
+        templateUrl: 'partials/labPage.html',
+        controller: 'Kinematics1dLabController'
+      }).
+      when('/PublishedView', {
         templateUrl: 'labs/kinematics_1d/preview/previewSimulationPage.html',
         controller: 'Kinematic1dViewController'
-      }).
+      }).  
+      when('/Profile', {
+        templateUrl: 'partials/userProfilePage.html'
+      }).          
       when('/Question/:simulationPageName/:simulationName', {
         templateUrl: 'partials/QuestionPage.html',
         controller: 'QuestionDataLoadController'
@@ -63,6 +70,11 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
         $scope.register_emptyEmail = false;
         $scope.register_emptyPassword = false;
         $scope.register_InvalidEmail = false;
+        
+        $scope.loadSimulationMetaData = function() {
+            
+        };
+        
         if (typeof Parse !== 'undefined') {
              Parse.initialize("PgyTYm43FjxpiZxtN0GrtTxQjH7wCbHkt2ThVOz9", "HFcHZI8e1v62Avmbd4LvpELWDoLL0IecD3ZbvGVB");        
             var currentUser = Parse.User.current();
@@ -80,7 +92,7 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
                     for (var i = 0; i < results.length; i++) {
                       var object = results[i];
                       var userId = object.get("UserId");
-                      var labInfo = object.get("SceneInfo");
+                      var labInfo = object.get("LabInfo");
                     }
                   },
                   error: function(error) {
@@ -246,319 +258,7 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
         };
         
         if($scope.logged_in) {
-        }        
-});
-
-mainApp.controller('TestController', function($scope,sharedProperties){
-    $scope.data = {
-       selectedSplineGraphInputType : 0,
-       selectedGraphType : 3,
-       selectedProbeType : 0,
-       
-       // Math expression
-       mathExpression:"",
-       mathExpressionSyntaxError:false,
-       // Simulation Data
-       playPauseButtonState:"Play",
-       
-       // Object Data
-       selectedStateType:3,
-       
-       positionValue:0,
-       velocityValue:0,
-       accelerationValue:1,
-       nameTag:"Kinematics Body",
-       accelerationArrowVisibility:false,
-       velocityArrowVisibility:false,
-       positionTextVisibility:true,
-       velocityTextVisibility:true,
-       accelerationTextVisibility:true
-    };
-    // Publish Options
-    $scope.publishOptions = {
-       publishError:false, 
-       publishErrorMessage:"",
-       splineGraphWidth:0,
-       selectedInputType:"Kinematics",
-       selectedGraphOption:0,
-       selectedViewType:"View3D",
-       type_time_Selected:[true, false, false],
-       pos_time_Selected:true,
-       vel_time_Selected:false,
-       acc_time_Selected:false,
-       valueProbeSelected:true,
-       tangentProbeSelected:false,
-       areaProbeSelected:false,
-       chordProbeSelected:false
-    };
-    sharedProperties.setProperty($scope.publishOptions);
-    
-    $scope.selectedInputTypeChanged = function() {
-        $scope.publishErrorCheck();
-    };
-    
-    $scope.publishErrorCheck = function() {
-        if( $scope.KinematicsTabName !== $scope.publishOptions.selectedInputType) {
-            $scope.publishOptions.publishError = true;
-            $scope.publishOptions.publishErrorMessage = "Mismatch between selected Input Type";
-        } else {
-            $scope.publishOptions.publishError = false;
-        }
-    };
-    
-    $scope.OnProbeChanged = function() {
-        
-    };
-    
-    $scope.positionValueChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-             var model = iframe.contentWindow.lab.tracks[0].body;
-             model.position.x = Number($scope.data.positionValue);
-             iframe.contentWindow.lab.syncViews();
-        }
-    };
-    
-    $scope.velocityValueChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-             var model = iframe.contentWindow.lab.tracks[0].body;
-             model.velocity.x = Number($scope.data.velocityValue);
-             iframe.contentWindow.lab.syncViews();
-        }
-    };
-    
-    $scope.accelerationValueChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-             var model = iframe.contentWindow.lab.tracks[0].body;
-             model.acceleration.x = Number($scope.data.accelerationValue);
-             iframe.contentWindow.lab.syncViews();
-        }
-    };
-    
-    $scope.selectedStateTypeChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-            var selectedStateNumber = Number($scope.data.selectedStateType);
-            if(selectedStateNumber === 3) { // User defined
-                $scope.data.positionValue = 0;
-                $scope.data.velocityValue = 1;
-                $scope.data.accelerationValue = 0;
-            }
-            else {
-                var state = iframe.contentWindow.lab.states[selectedStateNumber];
-                iframe.contentWindow.lab.tracks[0].setBodyState(state);
-                $scope.data.positionValue = state.position;
-                $scope.data.velocityValue = state.velocity;
-                $scope.data.accelerationValue = state.acceleration;
-            }
-            iframe.contentWindow.lab.syncViews();
-        }
-    };
-    
-    $scope.OnResetPressed = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-            iframe.contentWindow.lab.resetSimulation();
-            $scope.data.playPauseButtonState = "Play";
-        }
-    },
-    
-    $scope.OnPlayPauseButtonPressed = function() {
-        var iframe = document.getElementById('IFrame');
-        if( $scope.data.playPauseButtonState === "Play") {
-            if(iframe.contentWindow.lab !== undefined) {
-                iframe.contentWindow.lab.playSimulation(true);
-            }
-            $scope.data.playPauseButtonState = "Pause";
-        } else {
-            if(iframe.contentWindow.lab !== undefined) {
-                iframe.contentWindow.lab.playSimulation(false);
-            }
-            $scope.data.playPauseButtonState = "Play";
-        }
-    };
-    
-    $scope.OnNameChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-            var model = iframe.contentWindow.lab.tracks[0].body;
-            model.updateTag("textTag", "text", $scope.data.nameTag);
-            iframe.contentWindow.lab.syncText2DView();
-        }
-    };
-    
-    $scope.OnAccelerationArrowVisibilityChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-            var model = iframe.contentWindow.lab.tracks[0].body;
-            iframe.contentWindow.kinematics3DView.setAccelerationArrowVisibility(model, $scope.data.accelerationArrowVisibility);
-        }
-    };
-    
-    $scope.OnVelocityArrowVisibilityChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-            var model = iframe.contentWindow.lab.tracks[0].body;
-            iframe.contentWindow.kinematics3DView.setVelocityArrowVisibility(model, $scope.data.velocityArrowVisibility);
-        }
-    };
-    
-    $scope.OnPositionTextVisibilityChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-            var model = iframe.contentWindow.lab.tracks[0].body;
-            iframe.contentWindow.textViewObserver.setVisible(model.id, "positionTag",$scope.data.positionTextVisibility);
-        }
-    };
-    
-    $scope.OnVelocityTextVisibilityChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-            var model = iframe.contentWindow.lab.tracks[0].body;
-            iframe.contentWindow.textViewObserver.setVisible(model.id, "velocityTag",$scope.data.velocityTextVisibility);
-        }
-    };
-    
-    $scope.OnAccelerationTextVisibilityChanged = function() {
-        var iframe = document.getElementById('IFrame');
-        if(iframe.contentWindow.lab !== undefined) {
-            var model = iframe.contentWindow.lab.tracks[0].body;
-            iframe.contentWindow.textViewObserver.setVisible(model.id, "accelerationTag",$scope.data.accelerationTextVisibility);
-        }
-    };
-    
-    $scope.selectedSplineGraphInputTypeChanged = function() {
-        $scope.splineGraph.curveType = Number($scope.data.selectedSplineGraphInputType);
-    };
-    
-    $scope.selectedProbeTypeChanged = function(){
-        var selectedProbeType = Number($scope.data.selectedProbeType);
-        $scope.modelGraph.customGraphOperations.changeProbeType(selectedProbeType);
-    };
-    
-    $scope.selectedGraphTypeChanged = function(){
-        var selectedType = Number($scope.data.selectedGraphType);
-        $scope.modelGraph.customGraphOperations.changeGraphType(selectedType);
-        if(selectedType === 3) {
-           for(var i=0; i<3; i++) {
-                $scope.modelGraph.setSeriesVisibility(i, true);
-            }
-        }
-       else {
-            for(var i=0; i<3; i++) {
-                var bVisible = (i === selectedType) ? true : false;
-                $scope.modelGraph.setSeriesVisibility(i, bVisible);
-            }
-        }
-        $scope.modelGraph.hairlines.type = selectedType;
-    };
-    
-    $scope.OnMathExpressionChanged = function() {
-        $scope.data.mathExpressionSyntaxError = !$scope.mathInput.setExpression($scope.data.mathExpression);
-    };
-    
-    $scope.OnKinematicsTabClick = function(tabName) {
-        $scope.KinematicsTabName = tabName;
-        var iframe = document.getElementById('IFrame');
-        var lab = iframe.contentWindow.lab;
-            
-        if(tabName === "Graph") {
-            var parentdiv = document.getElementById("content");
-            var w = parentdiv.offsetWidth;
-            $scope.splineGraph.graph.resize(w,200);
-            if(lab !== undefined) {
-                lab.setGraphInput($scope.splineGraph);
-            }
-        }
-        else if( tabName === "Kinematics") {
-            if(lab !== undefined) {
-                lab.setGraphInput(null);
-            }
-        }
-        else if( tabName === "Math") {
-            if(lab !== undefined) {
-                lab.setGraphInput(null);
-                lab.setMathInput($scope.mathInput);
-            }
-        }
-        $scope.publishErrorCheck();
-    };
-    
-    $scope.OnPreviewPressed = function() {
-        $('#PublishOptionsModel').modal('hide');
-        var iframe = document.getElementById("IFrameEditor");
-        var html = iframe.contentWindow.Preview.preview.innerHTML;
-        $scope.publishOptions.previewHTML = html;
-    };
-    
-    $scope.OnPublishPressed = function() {
-        $('#PublishOptionsModel').modal('hide');
-        
-        
-        var currentUser = Parse.User.current();
-        if( currentUser ) {
-            var currentUserEmail = currentUser.get("email");
-            var Simulation = Parse.Object.extend("Simulation");
-            var query = new Parse.Query(Simulation);
-            var currentUserEmail = currentUser.get("email");
-            query.equalTo("UserId", currentUserEmail);
-            var numSimsForCurrentUser = 0;
-            query.find({
-              success: function(results) {
-                    numSimsForCurrentUser = results.length;
-                    if( numSimsForCurrentUser > 1) {
-                        alert("You have exceeded the limit to publish more!");
-                        return;
-                    }
-                    $scope.publishSimulation(currentUser);
-              },
-              error: function(error) {
-                alert("Error: " + error.code + " " + error.message);
-              }
-            });
-        }
-    };
-    
-    $scope.publishSimulation = function(currentUser) {
-        var Simulation = Parse.Object.extend("Simulation");
-        var simulation = new Simulation();
-        var currentUserEmail = currentUser.get("email");
-        simulation.set("UserId", currentUserEmail);
-        
-        var iframe = document.getElementById('IFrame');
-        var lab = iframe.contentWindow.lab;
-        var labJson = lab.getAsJSON();
-        simulation.set("LabInfo", labJson);
-        simulation.save(null, {
-            success: function(simulation) {
-              alert('New object created with objectId: ' + simulation.id);
-            },
-            error: function(simulation, error) {
-              alert('Failed to create new object, with error code: ' + error.message);
-            }
-        });
-    };
-    
-    window.onSimFrameLoad = function()
-    {
-      $scope.KinematicsTabName = "Kinematics";
-      $scope.$apply();
-      var div = document.getElementById('Kinematics_Input_Graph');
-      var splineGraph = new SplineGraph(div); 
-      $scope.splineGraph = splineGraph;
-      $scope.mathInput = new MathInput(); 
-    };
-    window.onGraphFrameLoad = function()
-    {
-            var iframe = document.getElementById('IFrameGraph');
-            var innerDocGraph = iframe.contentDocument || iframe.contentWindow.document;
-            var iframe = document.getElementById('IFrame');
-            var innerDocSim = iframe.contentDocument || iframe.contentWindow.document;
-            innerDocSim.modelGraph = innerDocGraph.modelGraph;
-            $scope.modelGraph = innerDocSim.modelGraph;
-    };
+        }       
 });
 
 mainApp.directive('iframeSetDimentionsOnload', [function(){
@@ -582,10 +282,67 @@ mainApp.directive('graph', function() {
 
     directive.compile = function(element, attributes) {
         // do one-time configuration of element.
-        var linkFunction = function($rootScope, $scope, element, atttributes) {            
+        var linkFunction = function($scope, element, atttributes) {            
             //$scope.$apply();
         };
         return linkFunction;
     };
     return directive;
-}); 
+});
+
+mainApp.directive('view3d', function() {
+    var directive = {};
+    directive.restrict = 'E'; /* restrict this directive to elements */
+
+    directive.compile = function(element, attributes) {
+        // do one-time configuration of element.
+        var linkFunction = function($scope, element, atttributes) {   
+            var div = element[0].parentNode;
+            var lab;
+            var jsonData = $scope.uiDataValues.labJSONData;
+            var kinematics3DView = new Kinematics3DView(div, lab);   
+            $scope.kinematics3DView = kinematics3DView;
+            var textViewObserver = new TextViewObserver(div);
+            $scope.textViewObserver = textViewObserver;
+            
+            if(jsonData !== undefined) {
+                lab = new Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, jsonData);
+                lab.addGraphObserver($scope.modelGraph);
+                $scope.publishDataValues.lab = lab;
+            }
+            else
+                lab = new Model_Kinematics1D_Lab(kinematics3DView, textViewObserver);
+            
+            kinematics3DView.kinematics_lab = lab;
+            
+            var dt = 0.016;
+            var textViewObserver;
+            createModelAndView();
+            animate();
+            
+            function createModelAndView() {
+                $scope.lab = lab;                
+                lab.syncViews(); // first frame sync                
+            }
+            
+            function syncSimulation()
+            {
+                // Update the lab
+                lab.simulate(dt);
+            }
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                //controls.update();
+                syncSimulation();
+                render();
+            }
+
+            function render() {
+                kinematics3DView.render();
+            }  
+        };
+        return linkFunction;
+    };
+    return directive;
+});

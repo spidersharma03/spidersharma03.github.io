@@ -18,7 +18,7 @@ TextViewObserver.prototype = {
         this.textViews[tagid] = textView;
         textView.setPosition(position.x, position.y);
         textView.setColor(color);
-        document.body.appendChild(textView.div);
+        this.parent.appendChild(textView.div);
     },
     
     updateTextView : function(id, name, data, position){

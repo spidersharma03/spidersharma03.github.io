@@ -56,14 +56,20 @@ _contentLoadingService.factory('contentLoadingServiceAPI', function($http) {
   
   angular.module('ContentSharingService', [])
     .service('sharedProperties', function () {
-        var property = 'First';
-
+        var property = '';
+        var propertyName ='';
         return {
             getProperty: function () {
                 return property;
             },
             setProperty: function(value) {
                 property = value;
+            },
+            setPropertyName: function(name) {
+                propertyName = name;
+            },
+            getPropertyName: function(name) {
+                return propertyName;
             }
         };
     });

@@ -14,7 +14,9 @@ Kinematics_Body.prototype.updateTagsOffsets = function() {
     
 };
 
-function Model_Kinematics1D_Lab(labParams) {
+function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
+    this.textViewObserver = textViewObserver;
+    this.view3dObserver = kinematics3DView;
     this.tracks = [];
     this.bodies = [];
     this.timesnap_objects = [];
@@ -34,8 +36,29 @@ function Model_Kinematics1D_Lab(labParams) {
     this.timeSnapPosition = new THREE.Vector3(0,0,0);
     this.pauseSimulation = true;
     this.graphObserver = null;
-    this.textViewObserver = null;
-    this.view3dObserver = null;
+    if( labParams !== undefined) {
+        var trackData = labParams[0];
+        var track = new Model_Kinematics1D_Lab.StraightTrack();
+        var body = track.body;
+        body.position.copy(trackData.body.position);
+        body.velocity.copy(trackData.body.velocity);
+        body.acceleration.copy(trackData.body.acceleration);
+        body.addTag({name:"textTag", text:"Kinematics Body", offset:{x:0, y:40}, color:"red"});
+        body.updateTag("textTag", "color", "green");
+        body.addTag({name:"positionTag", text:"x = ", value:0, attribute:PhysicalBody.POSITION_ATTRIBUTE, offset:{x:15, y:20}});
+        body.addTag({name:"velocityTag", text:"v = ", value:0, attribute:PhysicalBody.VELOCITY_ATTRIBUTE, offset:{x:15, y:10}});
+        body.addTag({name:"accelerationTag", text:"a = ", value:0, attribute:PhysicalBody.ACCELERATION_ATTRIBUTE, offset:{x:15, y:0}});
+        this.addTrack(track);
+    } else {
+        var track = new Model_Kinematics1D_Lab.StraightTrack();
+        track.setBodyState(this.UniformAccelerationState);
+        track.body.addTag({name:"textTag", text:"Kinematics Body", offset:{x:0, y:40}, color:"red"});
+        track.body.updateTag("textTag", "color", "green");
+        track.body.addTag({name:"positionTag", text:"x = ", value:0, attribute:PhysicalBody.POSITION_ATTRIBUTE, offset:{x:15, y:20}});
+        track.body.addTag({name:"velocityTag", text:"v = ", value:0, attribute:PhysicalBody.VELOCITY_ATTRIBUTE, offset:{x:15, y:10}});
+        track.body.addTag({name:"accelerationTag", text:"a = ", value:0, attribute:PhysicalBody.ACCELERATION_ATTRIBUTE, offset:{x:15, y:0}});
+        this.addTrack(track);
+    }
 }
 
 Model_Kinematics1D_Lab.prototype = {
@@ -44,6 +67,12 @@ Model_Kinematics1D_Lab.prototype = {
     UniformVelocityState : {name: "",position:0, velocity:1, acceleration:0},
     UniformAccelerationState : {name: "", position:0, velocity:0, acceleration:1},
     UniformDecelerationState : {name: "", position:0, velocity:0, acceleration:-1},
+    
+    setLabParamsAsJSON: function(jsonData) {
+        for( var i=0; i<jsonData.length; i++) {
+            var track = jsonData[i];
+        }
+    },
     
     getAsJSON: function() {
         function replacer(key, value) {
@@ -114,7 +143,7 @@ Model_Kinematics1D_Lab.prototype = {
         
         this.recordGraphData();
         
-        if(this.timeRecordCounter === 0)
+        if(this.timeRecordCounter === 0  && this.graphObserver !== null)
                 this.updateGraphData();
 
         if(this.timeSnapRecordCounter === 0)
@@ -175,6 +204,7 @@ Model_Kinematics1D_Lab.prototype = {
         if(this.textViewObserver) {
             // Update tags related to all the bodies
             for( var i=0; i<this.tracks.length; i++) {
+                var track = this.tracks[i];
                 var body = this.tracks[i].body;
                 for (var tagname in track.body.tags) {
                     var tagObject = track.body.tags[tagname];
@@ -204,6 +234,8 @@ Model_Kinematics1D_Lab.prototype = {
                         value_ = value_ + track.body.acceleration.x.toPrecision(3);
                         tagObject.dirty = true;
                     }
+                    //projectedPos.x = 0;
+                    //projectedPos.y = 0;
                     this.textViewObserver.updateTextView(body.id, tagname, value_, projectedPos);
                 }
             }

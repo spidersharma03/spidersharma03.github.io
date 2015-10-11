@@ -32,7 +32,8 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
         controller: 'Kinematic1dViewController'
       }).  
       when('/Profile', {
-        templateUrl: 'partials/userProfilePage.html'
+        templateUrl: 'partials/userProfilePage.html',
+        controller: 'userProfilePageLoadController'
       }).          
       when('/Question/:simulationPageName/:simulationName', {
         templateUrl: 'partials/QuestionPage.html',
@@ -85,13 +86,13 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
                 var Simulation = Parse.Object.extend("Simulation");
                 var query = new Parse.Query(Simulation);
                 var currentUserEmail = currentUser.get("email");
-                query.equalTo("UserId", currentUserEmail);
+                query.equalTo("userid", currentUserEmail);
                 query.find({
                   success: function(results) {
                     // Do something with the returned Parse.Object values
                     for (var i = 0; i < results.length; i++) {
                       var object = results[i];
-                      var userId = object.get("UserId");
+                      var userId = object.get("userid");
                       var labInfo = object.get("LabInfo");
                     }
                   },
@@ -301,13 +302,14 @@ mainApp.directive('view3d', function() {
             var lab;
             var jsonData = $scope.uiDataValues.labJSONData;
             var kinematics3DView = new Kinematics3DView(div, lab);   
-            $scope.kinematics3DView = kinematics3DView;
+            $scope.$parent.kinematics3DView = kinematics3DView;
             var textViewObserver = new TextViewObserver(div);
-            $scope.textViewObserver = textViewObserver;
+            $scope.$parent.textViewObserver = textViewObserver;
             
             if(jsonData !== undefined) {
                 lab = new Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, jsonData);
                 lab.addGraphObserver($scope.modelGraph);
+                $scope.$parent.lab = lab;
                 $scope.publishDataValues.lab = lab;
             }
             else
@@ -321,7 +323,7 @@ mainApp.directive('view3d', function() {
             animate();
             
             function createModelAndView() {
-                $scope.lab = lab;                
+                $scope.$parent.lab = lab;
                 lab.syncViews(); // first frame sync                
             }
             

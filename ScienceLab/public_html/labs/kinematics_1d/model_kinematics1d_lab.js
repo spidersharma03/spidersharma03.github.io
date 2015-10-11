@@ -39,6 +39,7 @@ function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
     if( labParams !== undefined) {
         var trackData = labParams[0];
         var track = new Model_Kinematics1D_Lab.StraightTrack();
+        track.setBodyState(trackData.state);
         var body = track.body;
         body.position.copy(trackData.body.position);
         body.velocity.copy(trackData.body.velocity);
@@ -76,7 +77,7 @@ Model_Kinematics1D_Lab.prototype = {
     
     getAsJSON: function() {
         function replacer(key, value) {
-            if( key === "mathInput" || key === "state" || key === "graphInput")
+            if( key === "mathInput" || key === "states" || key === "graphInput")
                 return undefined;
             if(key === "tags") {
                 var tagArray = [];

@@ -5,21 +5,19 @@
  */
 
 controllers.controller('Kinematics1dLabController', function($scope,sharedProperties){
+    $scope.name = "Kinematics1dLabController";
     $scope.KinematicsTabName = 'Kinematics';
     $scope.uiDataValues = {
        selectedSplineGraphInputType : 0,
        selectedGraphType : 3,
        selectedProbeType : 0,
-       
        // Math expression
        mathExpression:"",
        mathExpressionSyntaxError:false,
        // Simulation Data
        playPauseButtonState:"Play",
-       
        // Object Data
        selectedStateType:3,
-       
        positionValue:0,
        velocityValue:0,
        accelerationValue:1,
@@ -31,7 +29,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        accelerationTextVisibility:true
     };
     // Publish Options
-    $scope.publishOptions = {
+    $scope.publishDataValues = {
        publishError:false, 
        publishErrorMessage:"",
        splineGraphWidth:0,
@@ -39,27 +37,57 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        selectedGraphOption:0,
        selectedViewType:"View3D",
        type_time_Selected:[true, false, false],
-       pos_time_Selected:true,
-       vel_time_Selected:false,
-       acc_time_Selected:false,
+       type_probe_Selected:[true, false, false, false],
        valueProbeSelected:true,
        tangentProbeSelected:false,
        areaProbeSelected:false,
        chordProbeSelected:false
     };
-    sharedProperties.setProperty($scope.publishOptions);
-    sharedProperties.setPropertyName('ScenePreview');
+    
+    $scope.loadSimulationDataFromServer = function(userName, simulationName) {
+        var Simulation = Parse.Object.extend("Simulation");
+        var query = new Parse.Query(Simulation);
+        var date = sharedProperties.getPropertyValue("createdAt");
+        var userid = sharedProperties.getPropertyValue("userid");
+        query.greaterThanOrEqualTo("createdAt", date);
+        query.equalTo("userid", userid);
+        query.limit(1);
+        query.find({
+            success: function (results) {
+                if(results.length === 0)
+                    return;
+                $scope.sceneLoaded = true;
+                var result = results[0];
+                var labJSON = result.get("SimulationData");
+                $scope.uiDataValues.labJSONData = labJSON;
+                $scope.$apply();
+            },
+            error: function (error) {
+                alert("Error: " + error.code + " " + error.message);
+            }
+        });
+    };
+    
+    if( sharedProperties.getPropertyName() === "SceneEdit" ) {
+        $scope.sceneLoaded = false;
+        $scope.loadSimulationDataFromServer();
+    }
+    else {
+        $scope.sceneLoaded = true;
+        sharedProperties.setProperty($scope.publishDataValues);
+        sharedProperties.setPropertyName('ScenePreview');
+    }
     
     $scope.selectedInputTypeChanged = function() {
         $scope.publishErrorCheck();
     };
     
     $scope.publishErrorCheck = function() {
-        if( $scope.KinematicsTabName !== $scope.publishOptions.selectedInputType) {
-            $scope.publishOptions.publishError = true;
-            $scope.publishOptions.publishErrorMessage = "Mismatch between selected Input Type";
+        if( $scope.KinematicsTabName !== $scope.publishDataValues.selectedInputType) {
+            $scope.publishDataValues.publishError = true;
+            $scope.publishDataValues.publishErrorMessage = "Mismatch between selected Input Type";
         } else {
-            $scope.publishOptions.publishError = false;
+            $scope.publishDataValues.publishError = false;
         }
     };
     
@@ -237,7 +265,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         $('#PublishOptionsModel').modal('hide');
         var iframe = document.getElementById("IFrameEditor");
         var html = iframe.contentWindow.Preview.preview.innerHTML;
-        $scope.publishOptions.previewHTML = html;
+        $scope.publishDataValues.previewHTML = html;
     };
     
     $scope.OnPublishPressed = function() {
@@ -250,7 +278,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             var Simulation = Parse.Object.extend("Simulation");
             var query = new Parse.Query(Simulation);
             var currentUserEmail = currentUser.get("email");
-            query.equalTo("UserId", currentUserEmail);
+            query.equalTo("userid", currentUserEmail);
             var numSimsForCurrentUser = 0;
             query.find({
               success: function(results) {
@@ -259,7 +287,34 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
                         alert("You have exceeded the limit to publish more!");
                         return;
                     }
-                    $scope.publishSimulation(currentUser);
+                    if( sharedProperties.getPropertyName() === "SceneEdit") {
+                        var Simulation = Parse.Object.extend("Simulation");
+                        var query = new Parse.Query(Simulation);
+                        var date = sharedProperties.getPropertyValue("createdAt");
+                        var userid = sharedProperties.getPropertyValue("userid");
+                        query.greaterThanOrEqualTo("createdAt", date);
+                        query.equalTo("userid", userid);
+                        query.limit(1);
+                        query.find({
+                        success: function (result) {
+                            if(result.length === 0)
+                                return;
+                            var simulation = result[0];
+                            $scope.publishSimulation(currentUser, simulation, true);
+                        },
+                        error: function (error) {
+                            alert("Error: " + error.code + " " + error.message);
+                        }
+                    });
+                    }
+                    else {
+                        var SimulationMetaData = Parse.Object.extend("SimulationMetaData");
+                        var simulationMetaData = new SimulationMetaData();
+                        var Simulation = Parse.Object.extend("Simulation");
+                        var simulation = new Simulation();
+                        $scope.publishSimulationMetaData(currentUser, simulationMetaData, false);
+                        $scope.publishSimulation(currentUser, simulation, false);
+                    }
               },
               error: function(error) {
                 alert("Error: " + error.code + " " + error.message);
@@ -268,37 +323,27 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         }
     };
     
-    $scope.publishSimulation = function(currentUser) {
+    $scope.publishSimulation = function(currentUser, simulation, edited) {
         if(currentUser === undefined)
             return;
         
         var currentUserEmail = currentUser.get("email");
-        var currentUserName = currentUser.get("username");
-        // Save SimulationMetaData
-        var SimulationMetaData = Parse.Object.extend("SimulationMetaData");
-        var simulationMetaData = new SimulationMetaData();
-        simulationMetaData.set("simname", "Kinematics1d");
-        simulationMetaData.set("simtitle", "Introduction to Velocity");
-        simulationMetaData.set("userid", currentUserEmail);
-        simulationMetaData.set("username", currentUserName);
-        simulationMetaData.save(null, {
-            success: function(simulationMetaData) {
-              alert('SimulationMetaData saved: ' + simulationMetaData.id);
-            },
-            error: function(simulationMetaData, error) {
-              alert('error in saving SimulationMetaData: ' + error.message);
-            }
-        });
-
         // Save Lab related Info
-        var Simulation = Parse.Object.extend("Simulation");
-        var simulation = new Simulation();
-        simulation.set("UserId", currentUserEmail);
+        simulation.set("userid", currentUserEmail);
         
-        var iframe = document.getElementById('IFrame');
-        var lab = iframe.contentWindow.lab;
-        var labJson = lab.getAsJSON();
+        var labJson = $scope.lab.getAsJSON();
+        simulation.set("edited", edited);
         simulation.set("SimulationData", labJson);
+        var publishOptions = {
+            selectedInputType:$scope.publishDataValues.selectedInputType,
+            selectedGraphOption:$scope.publishDataValues.selectedGraphOption,
+            selectedViewType:$scope.publishDataValues.selectedViewType,
+            type_time_Selected:$scope.publishDataValues.type_time_Selected,
+            type_probe_Selected:$scope.publishDataValues.type_probe_Selected
+        };
+        var string = JSON.stringify(publishOptions);
+        var publishOptionsJSON = JSON.parse(string);
+        simulation.set("PublishOptions", publishOptionsJSON);
         
         simulation.save(null, {
             success: function(simulation) {
@@ -309,7 +354,28 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             }
         });
     };
-    
+
+    $scope.publishSimulationMetaData = function(currentUser, simulationMetaData, edited) {
+        if(currentUser === undefined)
+            return;
+        var currentUserEmail = currentUser.get("email");
+        var currentUserName = currentUser.get("username");
+        // Save SimulationMetaData
+        simulationMetaData.set("simname", "Kinematics1d");
+        simulationMetaData.set("simtitle", "Introduction to Velocity");
+        simulationMetaData.set("userid", currentUserEmail);
+        simulationMetaData.set("username", currentUserName);
+        simulationMetaData.set("edited", edited);
+        simulationMetaData.save(null, {
+            success: function(simulationMetaData) {
+              alert('SimulationMetaData saved: ' + simulationMetaData.id);
+            },
+            error: function(simulationMetaData, error) {
+              alert('error in saving SimulationMetaData: ' + error.message);
+            }
+        });
+    };
+
     window.onSimFrameLoad = function()
     {
       $scope.KinematicsTabName = "Kinematics";

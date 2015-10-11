@@ -1,12 +1,18 @@
+<div class="col-md-8">
 <div class="panel panel-default" style="font-family: serif">
   <!-- Default panel contents -->
    <div class="panel-heading">
-       <h1 class="panel-title" style="font-size: 20px;"><b>Recent Contribution</b></h1>
+       <h1 class="panel-title" style="font-size: 20px;"><b>Your Contribution</b></h1>
   </div>
   <!-- List group -->
-  <div>
-<!--    <ul class="list-group" ng-repeat="data in recentActivity">
-        <li  class="list-group-item"><a href=""><b style=" color: #330099">{{data.username}}</b></a><b> Created </b><a href="#PublishedView" ng-click="OnSimulationClicked($index)"><b style=" color: #330099"> {{data.simtitle}}</b></a> in <a href="#Labs">{{data.simname}}</a> on {{data.createdAt.toDateString()}}</li>
-    </ul>-->
-  </div>    
+  <div class="">
+    <ul class="list-group" ng-repeat="data in recentActivity">
+        <li  class="list-group-item"><b> {{data.createdOrEdited}} </b><b style=" color: #330099"> {{data.simtitle}}</b> in {{data.simname}} on {{data.createdAt.toDateString()}} <a href="#Labs"><i title="Edit" class="fa fa-pencil-square-o fa-fw" ng-click="OnEditPressed($index)"></i></a><a  ng-click="OnDeletePressed()"><i title="Delete" class="fa fa-trash-o fa-fw"></i></a></li>
+    </ul>
+  </div> 
+      
+</div>
+</div>   
+<div class="col-md-offset-2">
+    <a href="#Labs"><button  class="btn btn-success btn-lg"><i class="fa fa-plus-circle"></i>  New</button></a>
 </div>

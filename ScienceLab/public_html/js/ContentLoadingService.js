@@ -58,12 +58,19 @@ _contentLoadingService.factory('contentLoadingServiceAPI', function($http) {
     .service('sharedProperties', function () {
         var property = '';
         var propertyName ='';
+        var propertyKeyMap = [];
         return {
             getProperty: function () {
                 return property;
             },
             setProperty: function(value) {
                 property = value;
+            },
+            addPropertyValue: function(key, value) {
+                propertyKeyMap[key] = value;
+            },
+            getPropertyValue: function(key) {
+                return propertyKeyMap[key];
             },
             setPropertyName: function(name) {
                 propertyName = name;

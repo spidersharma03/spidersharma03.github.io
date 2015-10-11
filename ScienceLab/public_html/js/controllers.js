@@ -204,11 +204,11 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
     $scope.loadSimulationDataFromServer = function(userName, simulationName) {
         var Simulation = Parse.Object.extend("Simulation");
         var query = new Parse.Query(Simulation);
-        var date = sharedProperties.getProperty();
+        var date = sharedProperties.getPropertyValue("createdAt");
+        var userid = sharedProperties.getPropertyValue("userid");
         query.greaterThanOrEqualTo("createdAt", date);
-        var newDate = new Date(date);
-        newDate.setSeconds(newDate.getSeconds() + 1);
-        query.lessThanOrEqualTo("createdAt", newDate);
+        query.equalTo("userid", userid);
+        query.limit(1);
         query.find({
             success: function (results) {
                 if(results.length === 0)

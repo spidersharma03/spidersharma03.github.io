@@ -9,6 +9,7 @@ controllers.controller('simulationMetaDataLoadController', function ($scope, $ht
     $scope.loadSimulationMetaData = function () {
         var SimulationMetaData = Parse.Object.extend("SimulationMetaData");
         var query = new Parse.Query(SimulationMetaData);
+        query.descending("updatedAt");
         query.limit(10);
         //query.equalTo("UserId", currentUserEmail);
         query.find({

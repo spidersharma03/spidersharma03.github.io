@@ -12,6 +12,7 @@ controllers.controller('userProfilePageLoadController', function ($scope, $http,
         var currentUserEmail = currentUser.get("email");
         var query = new Parse.Query(SimulationMetaData);
         query.equalTo("userid", currentUserEmail);
+        query.descending("updatedAt");
         query.limit(10);
         query.find({
             success: function (results) {

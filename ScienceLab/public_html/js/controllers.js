@@ -216,6 +216,8 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
                 $scope.sceneLoaded = true;
                 var result = results[0];
                 var labJSON = result.get("SimulationData");
+                var publishedOptions = result.get("PublishOptions");
+                $scope.publishDataValues = publishedOptions;
                 $scope.uiDataValues.labJSONData = labJSON;
                 $scope.$apply();
             },
@@ -232,9 +234,11 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
         $scope.publishDataValues.selectedInputType = 'Kinematics';
         $scope.loadSimulationDataFromServer();
     }
-    else if(sharedProperties.getPropertyName() === 'ScenePreview') {
+    else {
        $scope.publishDataValues = sharedProperties.getProperty();
        $scope.publishDataValues.graphTypeMultiChoice = false;
+       //$scope.initGUI();
+       $scope.sceneLoaded = true;
     }
     
     $scope.initGUI = function() {

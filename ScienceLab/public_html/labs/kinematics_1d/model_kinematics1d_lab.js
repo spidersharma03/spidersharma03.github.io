@@ -36,7 +36,7 @@ function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
     this.timeSnapPosition = new THREE.Vector3(0,0,0);
     this.pauseSimulation = true;
     this.graphObserver = null;
-    if( labParams !== undefined) {
+    if( labParams !== undefined && labParams !== null) {
         var trackData = labParams[0];
         var track = new Model_Kinematics1D_Lab.StraightTrack();
         track.setBodyState(trackData.state);

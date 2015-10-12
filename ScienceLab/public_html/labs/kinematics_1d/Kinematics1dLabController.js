@@ -67,14 +67,13 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             }
         });
     };
-    
+    sharedProperties.setProperty($scope.publishDataValues);
     if( sharedProperties.getPropertyName() === "SceneEdit" ) {
         $scope.sceneLoaded = false;
         $scope.loadSimulationDataFromServer();
     }
     else {
         $scope.sceneLoaded = true;
-        sharedProperties.setProperty($scope.publishDataValues);
         sharedProperties.setPropertyName('ScenePreview');
     }
     

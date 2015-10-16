@@ -5,12 +5,19 @@
  */
 
 function SplineGraph(div) {
+    this.testPoints = [[1,1], [2,2], [3,3], [4,2], [5,1]]
+    this.testSpline = new BSpline(this.testPoints, 3, true);
+    var n = 100;
+    for( var i=0; i<n; i++) {
+        var t = i/(n-1);
+        var interpolatedVal = this.testSpline.calcAt(t);
+        console.log("x = " + interpolatedVal[0] + "  y = " + interpolatedVal[1])
+    }
+    
     this.data = [];
-    this.numPoints = 10;
+    this.numPoints = 5;
     this.bSpline = null;
-    this.numSplines = this.numPoints - 1;
     this.numDivisionsbetweenPoints = 10;
-    this.splines = [];
     this.sparsePoints = [];
     this.v4Active = false;
     this.clickedPoint = null;
@@ -29,8 +36,7 @@ function SplineGraph(div) {
             var newvals = g.toDataCoords(canvasx, canvasy);
             vals[1] = newvals[1];
             var index = Math.floor(this.clickedPoint / this.numDivisionsbetweenPoints);
-            this.sparsePoints[index] = newvals[1];
-            this.CalculateCubicSplineData(this.sparsePoints);
+            this.sparsePoints[index][1] = newvals[1];
             this.updateDensePointsInGraphData();
             g.updateOptions({'file': this.data});
         }
@@ -126,57 +132,33 @@ SplineGraph.prototype.getPersistentDataAsJSON = function() {
 };
 
 SplineGraph.prototype.initSplineStuff = function () {
-    for (var i = 0; i < this.numSplines; i++) {
-        this.splines[i] = new CubicSpline();
-    }
-    var numTotalPoints = this.numDivisionsbetweenPoints * this.numSplines;
-    this.sparsePoints.push(0.0);
+    var numTotalPoints = this.numDivisionsbetweenPoints * (this.numPoints-1);
+    this.sparsePoints.push([0.0,0.0]);
     this.data.push([0.0, 0.0, 0.0]);
+    var count = 1;
     for (var i = 1; i <= numTotalPoints; i++) {
         var t = i / (numTotalPoints);
         var rand = t*t;
         var val = (i % this.numDivisionsbetweenPoints) === 0 ? rand : null;
         if (val !== null) {
-            this.sparsePoints.push(val);
+            this.sparsePoints.push([t,val]);
         }
         this.data.push([t, val, 0.5]);
     }
-    this.bSpline = new BSpline(this.sparsePoints, 3);
-    this.CalculateCubicSplineData(this.sparsePoints);
+    this.bSpline = new BSpline(this.sparsePoints, 3, true);
     this.updateDensePointsInGraphData();
 };
 
-SplineGraph.prototype.CalculateCubicSplineData = function (data) {
-    var D = [], y = [], rhs = [];
-    for (var i = 0; i < data.length; i++) {
-        y[i] = data[i];
-    }
-    for (var i = 1; i < data.length - 1; i++) {
-        rhs[i] = 3 * (y[i + 1] - y[i - 1]);
-    }
-    rhs[0] = 3 * (y[1] - y[0]);
-    rhs[data.length - 1] = 3 * (y[data.length - 1] - y[data.length - 2]);
-
-    CubicSplineInterpolator.tridia_sl(rhs, D);
-    CubicSplineInterpolator.findSplineCoeff(this.splines, D, y);
-};
-
 SplineGraph.prototype.updateDensePointsInGraphData = function () {
-    var count = 0;
-    for (var i = 0; i < this.splines.length; i++) {
-        var currentSpline = this.splines[i];
-//        var p1 = this.sparsePoints[i];
-//        var p2 = this.sparsePoints[i+1];
-        var n = this.numDivisionsbetweenPoints;
-        if (i === this.splines.length - 1)
-            n = this.numDivisionsbetweenPoints + 1;
-        for (var j = 0; j < n; j++) {
-            var t = j / this.numDivisionsbetweenPoints;
-            var interpolatedVal = currentSpline.Value(t);
-//            var interpolatedVal = p1 * (1-t) + p2 * t;
-            var vals = this.data[count++];
-            vals[2] = interpolatedVal;
-        }
+    var nPoints = (this.numPoints-1) * this.numDivisionsbetweenPoints;
+    var dt = 1/nPoints;
+    var t = 0;
+    for (var i = 0; i <= nPoints; i++) {
+        var interpolatedVal = this.bSpline.calcAt(t);
+        var vals = this.data[i];
+        //vals[0] = interpolatedVal[0];
+        vals[2] = interpolatedVal[1];
+        t += dt;
     }
 };
 
@@ -186,22 +168,10 @@ SplineGraph.prototype.setType = function(type) {
 
 SplineGraph.prototype.Value = function(t) {
     if(t > this.timeWindow)
-        return 0;
+        return 1;
     // Find the spline index
-    var deltaT = this.timeWindow/this.numSplines;
-    var tval = t/deltaT;
-    var index = Math.floor(tval);
-//    var p1 = this.sparsePoints[index];
-//    var p2 = this.sparsePoints[index+1];
-    var spline = this.splines[index];
-    if(spline) {
-        var t_ = tval - index;
-       var val = spline.Value(tval - index) * this.scaleFactor;
-//       var val = (p1*(1-t_) + p2*t_) * this.scaleFactor;
-       return val;
-    } else {
-        return 0;
-    }
+    var t_ = t/this.timeWindow;
+    return this.bSpline.calcAt(t_);
 };
 
 SplineGraph.prototype.Velocity = function(t) {

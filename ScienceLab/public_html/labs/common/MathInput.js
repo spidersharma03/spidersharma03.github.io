@@ -4,11 +4,16 @@
  * and open the template in the editor.
  */
 
-function MathInput() {
+function MathInput(mathInputData) {
     this.mathExpression = null;
     this.code = null;
     this.scope = {t:0};
     this.type = 0; // x-t/v-t/a-t
+    if(mathInputData !== undefined) {
+        this.mathExpression = mathInputData.expression;
+        this.setExpression(this.mathExpression);
+        this.type = mathInputData.type;
+    }
 }
 
 MathInput.prototype = {
@@ -39,6 +44,22 @@ MathInput.prototype = {
             return result;
        else
             return 0;
+    },
+    
+    FirstDerivative: function(t) {
+        var epsilon = 0.01;
+        var t2 = t + epsilon;
+        var t1 = t - epsilon;
+        var d = this.Value(t2) - this.Value(t1);
+        return d/epsilon * 0.5;
+    },
+    
+    SecondDerivative: function(t) {
+        var epsilon = 0.01;
+        var t2 = t + epsilon;
+        var t1 = t - epsilon;
+        var d = this.Value(t2) + this.Value(t1) - 2*this.Value(t);
+        return d/(epsilon * epsilon);
     },
     
     setType: function(type) {

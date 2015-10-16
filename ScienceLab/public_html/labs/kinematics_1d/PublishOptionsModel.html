@@ -96,9 +96,10 @@
         </div>
         </div> 
         <div class="col-md-12" style="color: red" ng-show="publishDataValues.publishError">
-              <h5>
+            <hr>
+            <h4><i class="fa fa-warning"></i>
                   {{publishDataValues.publishErrorMessage}}
-              </h5>
+              </h4>
         </div>    
       <div class="modal-footer">          
           <a  href="#PublishedView"><button  ng-click="OnPreviewPressed()"  ng-disabled="publishDataValues.publishError" class="btn btn-primary">

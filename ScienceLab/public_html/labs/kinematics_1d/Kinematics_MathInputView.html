@@ -1,14 +1,48 @@
 <div>
-    Type
-    <select  ng-model="data.selectedSplineGraphInputType" ng-change="selectedSplineGraphInputTypeChanged()">
-        <option value="0">position-time</option>
-        <option value="1">velocity-time</option>
-        <option value="2">acceleration-time</option>
-    </select>
-    <div>
-        Math Input<input type="text" ng-model="data.mathExpression" ng-change="OnMathExpressionChanged()"/>        
+    <div class="row">
+        <div class="col-md-3">
+            Type
+        </div>
+        <div class="col-md-3">
+            <select  ng-model="uiDataValues.selectedMathInputType" ng-change="selectedMathInputTypeChanged()">
+                <option value="0">position-time</option>
+                <option value="1">velocity-time</option>
+                <option value="2">acceleration-time</option>
+            </select>
+        </div>
+     </div>   
+    <div class="row" ng-show="(uiDataValues.selectedMathInputType == 1) || (uiDataValues.selectedMathInputType == 2)">
+        <div class="col-md-3">
+            Initial Position
+        </div>
+        <div class="col-md-4">
+            <input type="range" value="0" min="-10" max="10" step="0.1" ng-model="uiDataValues.positionValue" ng-change="positionValueChanged()"/>        
+        </div>
+        <div class="col-md-1">
+            <input disabled="disabled" ng-model="uiDataValues.positionValue" type="text" />
+        </div>
     </div>
-    <div ng-show="data.mathExpressionSyntaxError === true" style="color: red">
+    <div class="row" ng-show="(uiDataValues.selectedMathInputType == 2)">
+        <div class="col-md-3">
+            Initial Velocity
+        </div>
+        <div class="col-md-4">
+            <input type="range" value="0" min="-2" max="2" step="0.1" ng-model="uiDataValues.velocityValue" ng-change="velocityValueChanged()"/>        
+        </div>
+        <div class="col-md-1 pull-left">
+            <input disabled="disabled" ng-model="uiDataValues.velocityValue"  type="text" />
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-3">
+          Math Input
+        </div>
+        <div class="col-md-2">
+            <input type="text" ng-model="uiDataValues.mathExpression" ng-change="OnMathExpressionChanged()"/>        
+        </div>
+    </div>
+    <div ng-show="uiDataValues.mathExpressionSyntaxError === true" style="color: red">
         Syntax Error
     </div>
 </div>

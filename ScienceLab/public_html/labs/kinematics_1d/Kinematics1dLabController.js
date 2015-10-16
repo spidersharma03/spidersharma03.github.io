@@ -12,8 +12,9 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        selectedGraphType : 3,
        selectedProbeType : 0,
        // Math expression
-       mathExpression:"",
+       mathExpression:"t^2",
        mathExpressionSyntaxError:false,
+       selectedMathInputType: 2,
        // Simulation Data
        playPauseButtonState:"Play",
        // Object Data
@@ -26,7 +27,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        velocityArrowVisibility:false,
        positionTextVisibility:true,
        velocityTextVisibility:true,
-       accelerationTextVisibility:true
+       accelerationTextVisibility:true       
     };
     // Publish Options
     $scope.publishDataValues = {
@@ -67,6 +68,8 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             }
         });
     };
+    
+    sharedProperties.addPropertyValue("uiDataValues", $scope.uiDataValues);
     sharedProperties.setProperty($scope.publishDataValues);
     if( sharedProperties.getPropertyName() === "SceneEdit" ) {
         $scope.sceneLoaded = false;
@@ -87,6 +90,12 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             $scope.publishDataValues.publishErrorMessage = "Mismatch between selected Input Type";
         } else {
             $scope.publishDataValues.publishError = false;
+        }
+        if($scope.KinematicsTabName === "Math") {
+            if($scope.uiDataValues.mathExpressionSyntaxError) {
+                $scope.publishDataValues.publishError = true;
+                $scope.publishDataValues.publishErrorMessage = "Correct your Math Input";
+            }
         }
     };
     
@@ -135,6 +144,10 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             }
             $scope.lab.syncViews();
         }
+    };
+    
+    $scope.OnPublishOptionPressed = function() {
+        $scope.publishErrorCheck();
     };
     
     $scope.OnResetPressed = function() {
@@ -232,6 +245,10 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         $scope.uiDataValues.mathExpressionSyntaxError = !$scope.mathInput.setExpression($scope.uiDataValues.mathExpression);
     };
     
+    $scope.selectedMathInputTypeChanged = function() {
+        $scope.mathInput.type  = Number($scope.uiDataValues.selectedMathInputType);
+    };
+    
     $scope.OnKinematicsTabClick = function(tabName) {
         $scope.KinematicsTabName = tabName;
         var lab = $scope.lab;
@@ -269,8 +286,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     
     $scope.OnPublishPressed = function() {
         $('#PublishOptionsModel').modal('hide');
-        
-        
+                
         var currentUser = Parse.User.current();
         if( currentUser ) {
             var currentUserEmail = currentUser.get("email");
@@ -343,6 +359,16 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         var string = JSON.stringify(publishOptions);
         var publishOptionsJSON = JSON.parse(string);
         simulation.set("PublishOptions", publishOptionsJSON);
+        var mathInputJsonData;
+        if($scope.KinematicsTabName === "Math")
+               mathInputJsonData = $scope.mathInput.getPersistentDataAsJSON();
+        var graphInputJsonData;   
+        if($scope.KinematicsTabName === "Graph")
+               graphInputJsonData = $scope.splineGraph.getPersistentDataAsJSON();
+        if(mathInputJsonData !== undefined)   
+            simulation.set("MathInputJsonData", mathInputJsonData);
+        if(graphInputJsonData !== undefined)
+            simulation.set("GraphInputJsonData", graphInputJsonData);
         
         simulation.save(null, {
             success: function(simulation) {
@@ -393,6 +419,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         var splineGraph = new SplineGraph(div); 
         $scope.splineGraph = splineGraph;
         $scope.mathInput = new MathInput(); 
+        $scope.mathInput.setExpression($scope.uiDataValues.mathExpression);
         var iframe = document.getElementById('IFrameGraph');
         var innerDocGraph = iframe.contentDocument || iframe.contentWindow.document;
         $scope.modelGraph = innerDocGraph.modelGraph;

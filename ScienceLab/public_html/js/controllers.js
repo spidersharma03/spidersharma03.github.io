@@ -201,6 +201,11 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
        labJSONData:null
     };
     
+    $scope.onLabInitialized = function() {
+        $scope.mathInput = new MathInput($scope.mathInputData);
+        $scope.initGUI();
+    };
+    
     $scope.loadSimulationDataFromServer = function(userName, simulationName) {
         var Simulation = Parse.Object.extend("Simulation");
         var query = new Parse.Query(Simulation);
@@ -219,6 +224,14 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
                 var publishedOptions = result.get("PublishOptions");
                 $scope.publishDataValues = publishedOptions;
                 $scope.uiDataValues.labJSONData = labJSON;
+                var mathInputData = result.get("MathInputJsonData");
+                var graphInputData = result.get("GraphInputJsonData");
+                if(mathInputData !== undefined) {
+                    $scope.mathInputData = mathInputData;
+                }
+                if(graphInputData !== undefined) {
+                    $scope.graphInputData = graphInputData;
+                }
                 $scope.$apply();
             },
             error: function (error) {
@@ -239,9 +252,14 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
        $scope.publishDataValues.graphTypeMultiChoice = false;
        //$scope.initGUI();
        $scope.sceneLoaded = true;
+       $scope.uiDataValues = sharedProperties.getPropertyValue("uiDataValues");
     }
     
     $scope.initGUI = function() {
+        if($scope.publishDataValues.selectedInputType === "Math") {
+            if($scope.mathInputData !== undefined)
+                $scope.uiDataValues.mathExpression = $scope.mathInputData.expression;
+        }
         $scope.OnKinematicsTabClick($scope.publishDataValues.selectedInputType);
         // Check for graph
         if($scope.publishDataValues.selectedViewType !== "View3D") {
@@ -261,7 +279,7 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
         var previewDiv = document.getElementById("PreviewDiv");
         previewDiv.innerHTML = $scope.publishDataValues.previewHTML;
         $scope.publishDataValues.previewText = previewDiv.innerHTML.length > 0;
-        $scope.$apply();
+        //$scope.$apply();
     };
     
     $scope.positionValueChanged = function() {
@@ -321,6 +339,7 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
     
     $scope.OnPlayPauseButtonPressed = function() {
         var lab = $scope.publishDataValues.lab;
+        //var lab = $scope.lab;
         if( $scope.uiDataValues.playPauseButtonState === "Play") {
             if(lab !== undefined) {
                 lab.playSimulation(true);
@@ -415,27 +434,24 @@ controllers.controller('Kinematic1dViewController', function($scope, sharedPrope
     
     $scope.OnKinematicsTabClick = function(tabName) {
         $scope.KinematicsTabName = tabName;
-        var iframe = document.getElementById('IFrame');
-        var lab = iframe.contentWindow.lab;
             
         if(tabName === "Graph") {
-            var parentdiv = document.getElementById("content");
             //var w = parentdiv.offsetWidth;
             $scope.splineGraph.graph.resize(400,200);
-            if(lab !== undefined) {
-                lab.setGraphInput($scope.splineGraph);
+            if($scope.publishDataValues.lab !== undefined) {
+                $scope.publishDataValues.lab.setGraphInput($scope.splineGraph);
             }
         }
         else if( tabName === "Kinematics") {
-            if(lab !== undefined) {
-                lab.setGraphInput(null);
-                lab.setMathInput(null);
+            if($scope.publishDataValues.lab !== undefined) {
+                $scope.publishDataValues.lab.setGraphInput(null);
+                $scope.publishDataValues.lab.setMathInput(null);
             }
         }
         else if( tabName === "Math") {
-            if(lab !== undefined) {
-                lab.setGraphInput(null);
-                lab.setMathInput($scope.mathInput);
+            if($scope.publishDataValues.lab !== undefined) {
+                $scope.publishDataValues.lab.setGraphInput(null);
+                $scope.publishDataValues.lab.setMathInput($scope.mathInput);
             }
         }
     };

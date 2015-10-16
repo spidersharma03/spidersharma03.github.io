@@ -50,6 +50,57 @@ controllers.controller('userProfilePageLoadController', function ($scope, $http,
     };
     
     $scope.OnDeletePressed = function(index) {
+        var Simulation = Parse.Object.extend("Simulation");
+        var query = new Parse.Query(Simulation);
+        var date = $scope.recentActivity[index].createdAt;
+        var userid = $scope.recentActivity[index].userid;
+        query.greaterThanOrEqualTo("createdAt", date);
+        query.equalTo("userid", userid);
+        query.limit(1);
+        query.find({
+            success: function (results) {
+                if(results.length === 0)
+                    return;
+                results[0].destroy({
+                    success: function(myObject) {
+                        alert("Deleted Scene");
+                    },
+                    error: function(myObject, error) {
+                        alert("Deletion Failed");
+                    }
+              });
+            },
+            error: function (error) {
+                alert("Error: " + error.code + " " + error.message);
+            }
+        });
+        
+        var SimulationMetaData = Parse.Object.extend("SimulationMetaData");
+        var query = new Parse.Query(SimulationMetaData);
+        var date = $scope.recentActivity[index].createdAt;
+        var userid = $scope.recentActivity[index].userid;
+        query.greaterThanOrEqualTo("createdAt", date);
+        query.equalTo("userid", userid);
+        query.limit(1);
+        query.find({
+            success: function (results) {
+                if(results.length === 0)
+                    return;
+                results[0].destroy({
+                    success: function(myObject) {
+                        alert("Deleted Scene MetaData");
+                        $route.reload();
+                    },
+                    error: function(myObject, error) {
+                        alert("Deletion Failed");
+                    }
+              });
+                $scope.$apply();
+            },
+            error: function (error) {
+                alert("Error: " + error.code + " " + error.message);
+            }
+        });
     };
     
     $scope.loadSimulationMetaData();

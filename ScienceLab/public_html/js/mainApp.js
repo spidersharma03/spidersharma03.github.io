@@ -320,9 +320,13 @@ mainApp.directive('view3d', function() {
             var dt = 0.016;
             var textViewObserver;
             createModelAndView();
+            if($scope.$parent.onLabInitialized) {
+                $scope.$parent.onLabInitialized();
+            }
             animate();
             
             function createModelAndView() {
+                $scope.publishDataValues.lab = lab;
                 $scope.$parent.lab = lab;
                 lab.syncViews(); // first frame sync                
             }

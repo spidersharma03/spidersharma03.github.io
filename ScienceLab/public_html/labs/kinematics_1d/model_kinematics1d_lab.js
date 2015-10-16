@@ -131,6 +131,9 @@ Model_Kinematics1D_Lab.prototype = {
     
     playSimulation: function(bPlay) {
         this.pauseSimulation = !bPlay;
+        if(this.time === 0) {
+            this.tracks[0].initializeState();
+        }
     },
     
     simulate : function(dt) {
@@ -332,6 +335,16 @@ Model_Kinematics1D_Lab.StraightTrack.CURVED_TRACK = 2;
 Model_Kinematics1D_Lab.StraightTrack.prototype = {
     constructor : Model_Kinematics1D_Lab.Track,
     
+    initializeState: function(time) {
+        if(time === undefined)
+            time = 0;
+        // Initialize state from corresponding input
+        if(this.mathInput !== null) {
+            //this.body.velocity.x = -2;
+            //var a = this.mathInput.Value(time);
+        }
+    },
+    
     resetState: function() {
         this.setBodyState(this.state);
     },
@@ -352,14 +365,42 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
     advanceBody : function(time, dt) {
         // Check If the acceleration is governed by a spline or math equation
         if(this.mathInput) {
-            this.body.acceleration.x = this.mathInput.Value(time);
+            if(this.mathInput.type === 2) { // acceleration-time
+                this.body.acceleration.x = this.mathInput.Value(time);
+                this.body.velocity.x += this.body.acceleration.x * dt;
+                this.body.position.x += this.body.velocity.x * dt;
+            }
+            else if(this.mathInput.type === 1) { // velocity-time
+                this.body.acceleration.x = this.mathInput.FirstDerivative(time);
+                this.body.velocity.x = this.mathInput.Value(time);
+                this.body.position.x += this.body.velocity.x * dt;
+            } else {
+                this.body.acceleration.x = this.mathInput.SecondDerivative(time);
+                this.body.velocity.x = this.mathInput.FirstDerivative(time);;
+                this.body.position.x = this.mathInput.Value(time);;
+            }
         }
-        if(this.graphInput) {
-            this.body.acceleration.x = this.graphInput.Value(time);
+        else if(this.graphInput) {
+            if(this.graphInput.curveType === 2) { // acceleration-time
+                this.body.acceleration.x = this.graphInput.Value(time);
+                this.body.velocity.x += this.body.acceleration.x * dt;
+                this.body.position.x += this.body.velocity.x * dt;
+            }
+            else if(this.graphInput.curveType === 1) { // velocity-time
+                this.body.acceleration.x = this.graphInput.Velocity(time);
+                this.body.velocity.x = this.graphInput.Value(time);
+                this.body.position.x += this.body.velocity.x * dt;
+            } else {
+                this.body.acceleration.x = this.graphInput.Acceleration(time);
+                this.body.velocity.x = this.graphInput.Velocity(time);;
+                this.body.position.x = this.graphInput.Value(time);;
+            }
+        }
+        else {
+            this.body.velocity.x += this.body.acceleration.x * dt;
+            this.body.position.x += this.body.velocity.x * dt;
         }
         // Update 
-        this.body.velocity.x += this.body.acceleration.x * dt;
-        this.body.position.x += this.body.velocity.x * dt;
         // Handle collision at end points for a finite track
         if( this.isFinite ) {
             var size = this.body.size;

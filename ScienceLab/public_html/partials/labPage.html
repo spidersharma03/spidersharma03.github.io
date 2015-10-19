@@ -1,26 +1,52 @@
 
-<div ng-if="sceneLoaded" class = "row">
-    <div class="row-fluid col-md-6">
-        <div id="view3d_div" style="position: relative; border: none; height:450px; width:100%; box-shadow: 3px 3px 5px 3px #888888;">
-            <view3d>
-            </view3d>
+<div ng-if="sceneLoaded" class = "row-fluid">
+    <div class="col-md-12" style="" >
+        <div class="col-md-1">
+            <div id ="PlayPauseButton" ng-click="OnPlayPauseButtonPressed()" class="btn btn-info btn-xs fa fa-play fa-lg" style="position: relative; border: solid 1px #888888; color: rgba(0, 100, 100,0.1)'">        
+            </div>
+            <div ng-click="OnResetPressed()" class="btn btn-info btn-xs fa fa-backward fa-lg" style="position: relative; border: solid 1px #888888; color: rgba(0, 100, 100,0.1)'">        
+            </div>
+        </div>
+        <div class="col-md-2">
+            <input ng-model="uiDataValues.timeWindow" ng-change="timeWindowChanged()" style="margin-left: -35px; margin-top: 5px" type="range"  min="0" max="10" step="1"/>
+        </div>
+        <div class="col-md-1">
+            <input style="margin-left: -50px; width: 30px;" value="{{uiDataValues.timeWindow}}" type="text" disabled="disabled" />
+        </div>
+        
+        <div class="col-md-7">
+            
+        </div>
+        <div class="col-md-1">
+            <button ng-show="mode !== 'Preview'" class="btn btn-warning fa fa-upload" ng-click="OnPublishOptionPressed()" target="_self" data-toggle="modal"  data-target="#PublishOptionsModel"><a style="color: white" href="">Publish</a></button>
+        </div>
+    </div>
+    <div class="row col-md-12" >
+        <div class="col-md-6">
+            <div class="progress" style="height: 20px; margin-top: 0px">
+                <div id="TimeProgressBar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style=" width: 0%; margin-top: 0px">
+                  <span class="sr-only">60% Complete</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12" style="height: 0px"></div>
+    
+    <div class="col-md-6">
+     <div  ng-show="(publishDataValues.selectedViewType === 'View3D') || (publishDataValues.selectedViewType === 'Both')" class="row-fluid">
+         <div class="row-fluid" id="view3d_div" style="position: relative; border: solid 1px lightgray; height:450px; box-shadow: 2px 0px 0px 2px #dddddd;">
+                <view3d>
+                </view3d>
         </div>
         <div>
              <div ng-include="'labs/kinematics_1d/KinematicsLab_Options.html'"></div>
         </div>
-        
-<!--        <div>
-            <iframe iframe-set-dimentions-onload id="IFrame" onload="onSimFrameLoad()" style="border: none; height:450px; width:100%; box-shadow: 3px 3px 5px 3px #888888;" src="labs/kinematics_1d/Scene_KinematicsLab.html"></iframe>
-        </div>-->
+    </div>
     </div>
     
-    <div class="row-fluid col-md-6">
-        <div>
-            <iframe iframe-set-dimentions-onload id="IFrameGraph" onload="onGraphFrameLoad()" style="height:450px;width:100%; border: none; box-shadow: 3px 3px 5px 3px #888888;" src="labs/common/Scene_GraphView.html"></iframe>
-        </div>
-        <div >
-             <div ng-include="'labs/kinematics_1d/KinematicsGraph_Options.html'"></div>
-        </div>
+    <div class="row-fluid col-md-6" ng-show="(publishDataValues.selectedViewType === 'Graph') || (publishDataValues.selectedViewType === 'Both') "  class="row-fluid col-md-6">
+        <graph>
+        </graph>
     </div>
     
     <div class="row-fluid col-md-12">

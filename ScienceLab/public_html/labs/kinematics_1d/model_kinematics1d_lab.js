@@ -36,6 +36,8 @@ function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
     this.timeSnapPosition = new THREE.Vector3(0,0,0);
     this.pauseSimulation = true;
     this.graphObserver = null;
+    this.timeWindow = 5;
+    
     if( labParams !== undefined && labParams !== null) {
         var trackData = labParams[0];
         var track = new Model_Kinematics1D_Lab.StraightTrack();
@@ -96,6 +98,12 @@ Model_Kinematics1D_Lab.prototype = {
         return out;
     },
     
+    setTimeWindow: function(timeWindow) {
+        this.timeWindow = timeWindow;
+        if(this.graphObserver !== null ) {
+            this.graphObserver.updateOptions({dateWindow:[0,this.timeWindow]});
+        }
+    },
     addTrack : function(track) {
         this.tracks.push(track);
         this.bodies.push(track.body);
@@ -137,7 +145,7 @@ Model_Kinematics1D_Lab.prototype = {
     },
     
     simulate : function(dt) {
-        if(this.pauseSimulation)
+        if(this.pauseSimulation || this.time > this.timeWindow)
             return;
         
         for( var i=0; i<this.tracks.length; i++) {
@@ -177,7 +185,7 @@ Model_Kinematics1D_Lab.prototype = {
             this.annotations.push( {
                 series: 'v',
                 x: this.time,
-                icon: '../../img/sprite.png',
+                icon: 'img/sprite.png',
                 width: 15,
                 height: 15,
                 tickHeight: 14,
@@ -271,14 +279,14 @@ Model_Kinematics1D_Lab.prototype = {
     },
     
     updateGraphData: function() {
-        if(this.time > 5)
-            return;
+//        if(this.time > 5)
+//            return;
         this.graphObserver.updateData();
     },
     
     recordGraphData : function() {
-        if(this.time > 5)
-            return;
+//        if(this.time > 5)
+//            return;
         if( this.bRecordGraphData ) {
             for( var i=0; i<this.tracks.length; i++) {
                 var body = this.tracks[i].body;
@@ -402,7 +410,7 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
         }
         // Update 
         // Handle collision at end points for a finite track
-        if( this.isFinite ) {
+        if( false ) {
             var size = this.body.size;
             if(this.body.position.x + size/2 > this.length/2) {
                 if( this.isElasticAtEndPoints ) {

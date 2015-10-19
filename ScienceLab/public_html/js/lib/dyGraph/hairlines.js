@@ -112,7 +112,7 @@ hairlines.prototype.createHairline = function(props) {
       'position': 'absolute'
     })
     .show();
-
+    
   // Surely there's a more jQuery-ish way to do this!
   $([$infoDiv.get(0), $lineContainerDiv.get(0)])
     .draggable({

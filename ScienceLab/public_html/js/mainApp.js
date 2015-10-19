@@ -28,8 +28,8 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
         controller: 'Kinematics1dLabController'
       }).
       when('/PublishedView', {
-        templateUrl: 'labs/kinematics_1d/preview/previewSimulationPage.html',
-        controller: 'Kinematic1dViewController'
+        templateUrl: 'labs/kinematics_1d/preview/labPage.html'
+        //controller: 'Kinematics1dLabController'
       }).  
       when('/Profile', {
         templateUrl: 'partials/userProfilePage.html',
@@ -277,15 +277,129 @@ return {
     }
 };}]);
 
-mainApp.directive('graph', function() {
+
+mainApp.directive('splinegraph', function () {
     var directive = {};
     directive.restrict = 'E'; /* restrict this directive to elements */
-
-    directive.compile = function(element, attributes) {
+//    directive.templateUrl = "labs/common/Scene_GraphView.html";
+    directive.compile = function (element, attributes) {
         // do one-time configuration of element.
-        var linkFunction = function($scope, element, atttributes) {            
+        var linkFunction = function ($scope, element, atttributes) {
+            var div = document.getElementById('Kinematics_Input_Graph');
+            var splineGraph = new SplineGraph(div, $scope.uiDataValues.graphInputData); 
+            $scope.setSplineGraph(splineGraph);
+            if($scope.publishDataValues.selectedInputType === "Graph") {
+                $scope.lab.setGraphInput(splineGraph);
+                $scope.$parent.splineGraph.graph.resize(400,200);
+            }
+        }  
+            
+        return linkFunction;
+    };
+    return directive;
+});
+
+
+mainApp.directive('graph', function () {
+    var directive = {};
+    directive.restrict = 'E'; /* restrict this directive to elements */
+    directive.templateUrl = "labs/common/Scene_GraphView.html";
+    directive.compile = function (element, attributes) {
+        // do one-time configuration of element.
+        var linkFunction = function ($scope, element, atttributes) {
             //$scope.$apply();
-        };
+            var hairlines = new Dygraph.Plugins.Hairlines({
+                divFiller: function (div, data) {
+                    if(data.points.length === 0)
+                        return;
+                    var time = data.points[0].xval;
+                    $('.hairline-legend', div).html("<span>t = " + time.toFixed(3) + "</span>")
+                    return;
+                    if (hairlines.type > 1) {
+                        return;
+                    }
+                    var newpoints = [];
+                    if (hairlines.type !== 3) {
+                        newpoints.push(data.points[hairlines.type]);
+                    }
+                    else {
+                        newpoints = data.points;
+                    }
+                    var html = Dygraph.Plugins.Legend.generateLegendHTML(
+                            data.dygraph, data.hairline.xval, newpoints, 10);
+                    $('.hairline-legend', div).html(html);
+                    $(div).data({xval: data.hairline.xval});
+                }
+            });
+
+            hairlines.type = 3;
+
+            var options = {
+                labels: ['t', 'x', 'v', 'a'],
+                xlabel: 'Time',
+                dateWindow:[0,5],
+//                valueRange:[0,15],
+                ylabel: '  Position/Velocity/Acceleration',
+                legend: 'follow',
+                series: {
+                    'x': {
+                        strokeWidth: 1.0
+                    },
+                    'v': {
+                    },
+                    'a': {
+                    }
+                },
+                yAxisLabelWidth: 20,
+                axes: {
+                    x: {
+                        valueFormatter: function (val) {
+                            return val.toFixed(3);
+                        },
+                        pixelsPerLabel:25,
+                        gridLinePattern: [4,4]
+                    },
+                    y: {
+                        pixelsPerLabel: 25,
+                        gridLinePattern: [4,4]
+                    }
+                },
+                title: 'Kinematics',
+                // Set the plug-ins in the options.
+                plugins: [
+                    hairlines
+                ]
+            };
+
+            var div = document.getElementById("graphDiv");
+            var modelGraph = new Model_Graph(div, options, 4);
+            $scope.$parent.modelGraph = modelGraph;
+            $scope.lab.addGraphObserver(modelGraph);
+            modelGraph.hairlines = hairlines;
+            modelGraph.labelDiv = document.getElementById("labels");
+            var customGraphOperations = new CustomKinematicsGraphOperations(modelGraph);
+            customGraphOperations.changeProbeType(0);
+            modelGraph.customGraphOperations = customGraphOperations;
+
+            $(hairlines).on('hairlineCreated', function (e) {
+                var hl = this.get();
+                if (hl.length > 2) {
+                    hl.pop();
+                    this.set(hl);
+                }
+            });
+
+//            $(hairlines).on('hairlineMoved', customGraphOperations.hairlineProbeChanges);
+            $(hairlines).on('hairlineMoved', function(){
+                var hairlines = this.get();
+                if ($scope.modelGraph.customGraphOperations.probeType === 2)
+                    $scope.modelGraph.customGraphOperations.calculateAreas(hairlines);
+                if ($scope.modelGraph.customGraphOperations.probeType === 3)
+                    $scope.modelGraph.customGraphOperations.calculateAverageValues(hairlines);
+                }
+             );
+        };    
+            
         return linkFunction;
     };
     return directive;
@@ -317,14 +431,19 @@ mainApp.directive('view3d', function() {
             
             kinematics3DView.kinematics_lab = lab;
             
+            var requestAnimationFramecallBackId;
             var dt = 0.016;
             var textViewObserver;
             createModelAndView();
             if($scope.$parent.onLabInitialized) {
                 $scope.$parent.onLabInitialized();
             }
-            animate();
             
+            $scope.$on('$destroy', function() {
+                cancelAnimationFrame(requestAnimationFramecallBackId);
+            });
+            
+            animate();            
             function createModelAndView() {
                 $scope.publishDataValues.lab = lab;
                 $scope.$parent.lab = lab;
@@ -335,10 +454,17 @@ mainApp.directive('view3d', function() {
             {
                 // Update the lab
                 lab.simulate(dt);
+                updateTimeProgress();
+            }
+            
+            function updateTimeProgress() {
+                var timePrecent = lab.time/lab.timeWindow * 100;
+                var timePercentString = timePrecent.toString() + "%";
+                $("#TimeProgressBar").css("width", timePercentString);
             }
             
             function animate() {
-                requestAnimationFrame(animate);
+                requestAnimationFramecallBackId =  requestAnimationFrame(animate);
                 //controls.update();
                 syncSimulation();
                 render();

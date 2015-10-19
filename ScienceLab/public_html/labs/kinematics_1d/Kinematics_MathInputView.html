@@ -4,14 +4,14 @@
             Type
         </div>
         <div class="col-md-3">
-            <select  ng-model="uiDataValues.selectedMathInputType" ng-change="selectedMathInputTypeChanged()">
+            <select  ng-model="uiDataValues.mathInputData.type" ng-change="selectedMathInputTypeChanged()">
                 <option value="0">position-time</option>
                 <option value="1">velocity-time</option>
                 <option value="2">acceleration-time</option>
             </select>
         </div>
      </div>   
-    <div class="row" ng-show="(uiDataValues.selectedMathInputType == 1) || (uiDataValues.selectedMathInputType == 2)">
+    <div class="row" ng-show="(uiDataValues.mathInputData.type == 1) || (uiDataValues.mathInputData.type == 2)">
         <div class="col-md-3">
             Initial Position
         </div>
@@ -22,7 +22,7 @@
             <input disabled="disabled" ng-model="uiDataValues.positionValue" type="text" />
         </div>
     </div>
-    <div class="row" ng-show="(uiDataValues.selectedMathInputType == 2)">
+    <div class="row" ng-show="(uiDataValues.mathInputData.type == 2)">
         <div class="col-md-3">
             Initial Velocity
         </div>
@@ -39,7 +39,7 @@
           Math Input
         </div>
         <div class="col-md-2">
-            <input type="text" ng-model="uiDataValues.mathExpression" ng-change="OnMathExpressionChanged()"/>        
+            <input type="text" ng-model="uiDataValues.mathInputData.expression" ng-change="OnMathExpressionChanged()"/>        
         </div>
     </div>
     <div ng-show="uiDataValues.mathExpressionSyntaxError === true" style="color: red">

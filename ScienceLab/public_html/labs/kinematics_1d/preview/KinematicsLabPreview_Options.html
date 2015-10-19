@@ -9,13 +9,13 @@
 
     <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
         <div id="content">
-                <div ng-show="publishDataValues.selectedInputType === 'Kinematics'">
+                <div ng-show="(publishDataValues.selectedInputType === 'Kinematics') || (publishDataValues.selectedInputType === 'All')">
                       <div ng-include="'labs/kinematics_1d/preview/Kinematics_PropertiesInputView.html'" ></div>
                 </div> 
-                <div ng-show="publishDataValues.selectedInputType === 'Graph'">
+                <div ng-show="(publishDataValues.selectedInputType === 'Graph') || (publishDataValues.selectedInputType === 'All')">
                       <div ng-include="'labs/kinematics_1d/Kinematics_GraphInputView.html'" ></div>
                 </div>
-                <div ng-show="publishDataValues.selectedInputType === 'Math'">
+                <div ng-show="(publishDataValues.selectedInputType === 'Math') || (publishDataValues.selectedInputType === 'All')">
                       <div ng-include="'labs/kinematics_1d/Kinematics_MathInputView.html'" ></div>
                 </div>
         </div>

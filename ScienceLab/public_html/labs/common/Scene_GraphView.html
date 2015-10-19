@@ -15,6 +15,8 @@
         <script src="../../js/lib/dyGraph/super-annotations.js"></script>
         <script src="../../js/lib/dyGraph/hairlines.js"></script>
         <script src="../../labs/kinematics_1d/CustomKinematicsGraphOperations.js"></script>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/bootstrap-theme.min.css">
         <style>
             .hairline-info {
                 border: 1px solid black;
@@ -63,117 +65,60 @@
             .dygraph-annotation-line {
                 box-shadow: 0 0 4px gray;
             }
+            
+            .dygraph-ylabel {
+                font-size: 15px;
+                margin-top: -20px;
+                font-weight: bold
+            }
+            .dygraph-xlabel {
+                font-size: 15px;
+                margin-top: 0px;
+                font-weight: bold
+            }
         </style>  
     </head>
     <body>
         
-        <div id="hairline-template" class="hairline-info" style="display:none; background-color : rgba(100, 100, 255, 0.4);;">
-            <!--<button class='hairline-kill-button'>Kill</button>-->
-            <div class='hairline-legend'></div>
+        <div class="row container-fluid" style="border: solid 1px lightgray;">
+            <div class="col-md-2 hairline-info" id="hairline-template"  style="display:none; background-color : rgba(100, 100, 255, 0.4);;">
+                <!--<button class='hairline-kill-button'>Kill</button>-->
+                <div class='hairline-legend'></div>
+            </div>
+        
+            <div class="row-fluid col-md-10">
+                <div class="col-md-11" >
+                    <div id="graphDiv"  style=" border: solid 1px white;"></div>                    
+                </div>
+                <div class="btn col-md-1" id="labels" style=""></div>
+            </div>
+            <div class="col-md-12">
+                <hr>
+            </div>
+            <div class="row col-md-12">
+                <div class="col-md-1">
+                    show
+                </div>
+                <div class="col-md-3">
+                    <select  ng-model="uiDataValues.selectedGraphType" ng-change="selectedGraphTypeChanged()">
+                        <option ng-show="publishDataValues.type_time_Selected[0]" value="0">position-time</option>
+                        <option ng-show="publishDataValues.type_time_Selected[1]" value="1">velocity-time</option>
+                        <option ng-show="publishDataValues.type_time_Selected[2]" value="2">acceleration-time</option>
+                        <option ng-show="publishDataValues.graphTypeMultiChoice" value="3">all</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    probes
+                </div>
+                <div class="col-md-3">
+                <select  ng-model="uiDataValues.selectedProbeType" ng-change="selectedProbeTypeChanged()">
+                        <option ng-show="publishDataValues.type_probe_Selected[0]" value="0">Value</option>
+                        <option ng-show="publishDataValues.type_probe_Selected[1]" value="1">Tangents</option>
+                        <option ng-show="publishDataValues.type_probe_Selected[2]" value="2">Area</option>
+                        <option ng-show="publishDataValues.type_probe_Selected[3]" value="3">Chord</option>
+                </select>
+            </div>
+            </div>   
         </div>
-        <div id="annotation-template" class="annotation-info" style="display:none">
-            <div>{{text}}</div>
-            <div>{{x}}, {{series}}: {{y}}</div>
-        </div>
-        <div id="annotation-editable-template" class="annotation-info" style="display:none">
-            <button class='annotation-kill-button'>Delete</button>
-            <button class='annotation-update'>Change</button>
-            <button class='annotation-cancel'>Cancel</button><br/>
-            <input dg-ann-field='text' type='text' size=20 value='{{text}}' />
-            <div>{{x}}, {{series}}: {{y}}</div>
-        </div>
-
-        <div>
-            <div id="graphDiv" style="float: left; border: solid 1px lightskyblue"></div>
-            <div id="labels" style="float: contour;"></div>
-        </div>
-        <script src="../../labs/common/model_graph.js"></script>
-        <script>
-    var hairlines = new Dygraph.Plugins.Hairlines({
-    divFiller: function (div, data) {
-        return;
-        if(hairlines.type > 1) {
-            return;
-        }
-        var newpoints = [];
-        if(hairlines.type !== 3) {
-            newpoints.push(data.points[hairlines.type]);
-        }
-        else {
-            newpoints = data.points;
-        }
-        var html = Dygraph.Plugins.Legend.generateLegendHTML(
-                data.dygraph, data.hairline.xval, newpoints, 10);
-        $('.hairline-legend', div).html(html);
-        $(div).data({xval: data.hairline.xval});
-    }
-});
-hairlines.type = 3;
-annotations = new Dygraph.Plugins.SuperAnnotations({
-    defaultAnnotationProperties: {
-        'text': 'Annotation Description'
-    }
-});
-var options = {
-    labels: ['t', 'x', 'v', 'a'],
-//    labelsDiv: document.getElementById("labels"),
-    xlabel: 'Time',
-    ylabel: 'Position/Velocity/Acceleration',
-    legend: 'always',
-    series:{
-        'x' : {
-            strokeWidth: 1.0
-        },
-        'v' : {
-        },
-        'a' : {   
-        }
-    },
-//    animatedZooms: true,
-//    labelsDivWidth: 100,
-//    labelsDivStyles: {
-//      'backgroundColor': 'rgba(200, 200, 255, 0.1)',
-//      'padding': '4px',
-//      'border': '1px solid black',
-//      'borderRadius': '10px',
-//      'boxShadow': '4px 4px 4px #888'
-//    },
-//    labelsSeparateLines: true,
-    yAxisLabelWidth: 20,
-    axes: {
-                  x: {
-                    valueFormatter: function(val) {
-                      return val.toFixed(3);
-                    }
-                  },
-                  y: {
-                      pixelsPerLabel: 50
-                  }
-                },
-    title: 'Kinematics',
-    // Set the plug-ins in the options.
-                plugins : [
-                  hairlines
-                ]
-};
-var div = document.getElementById("graphDiv");
-document.modelGraph = new Model_Graph(div, options, 4);
-document.modelGraph.hairlines = hairlines;
-document.modelGraph.labelDiv = document.getElementById("labels");
-var customGraphOperations = new CustomKinematicsGraphOperations(document.modelGraph);
-customGraphOperations.changeProbeType(0);
-document.modelGraph.customGraphOperations = customGraphOperations;
-            
-$(hairlines).on('hairlineCreated', function(e) {
-        var hl = this.get();
-        if(hl.length > 2) {
-            hl.pop();
-            this.set(hl);
-        }
-      });
-
-     $(hairlines).on('hairlineMoved', customGraphOperations.hairlineProbeChanges);
- 
-        </script>
     </body>
 </html>

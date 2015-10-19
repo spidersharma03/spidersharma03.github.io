@@ -1,22 +1,6 @@
 <div class="container">
         <div ng-include="'labs/kinematics_1d/PublishOptionsModel.html'"></div>
 </div>
-<div class="panel panel-primary">
-    <div class="panel-heading" role="tab" id="headingOne">
-        <h4 class="panel-title">
-            <a target=_self role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne_" aria-expanded="true" aria-controls="collapseOne_">
-                Simulation Properties
-            </a>
-        </h4>
-    </div>
-     <div id="collapseOne_" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne_">
-         <div class="panel-body">
-            <button class="btn btn-warning" ng-click="OnPlayPauseButtonPressed()">{{uiDataValues.playPauseButtonState}}</button>
-            <button class="btn btn-warning" ng-click="OnResetPressed()">Reset</button>
-            <button class="btn btn-warning" ng-click="OnPublishOptionPressed()" target="_self" data-toggle="modal"  data-target="#PublishOptionsModel"><a style="color: white" href="">Publish</a></button>
-         </div>
-    </div>
-</div>
 
 <div class="panel panel-primary">
     <div class="panel-heading" role="tab" id="headingOne">
@@ -29,19 +13,19 @@
 
     <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
         <div id="content">
-            <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-                <li  class="active" id ="tab-input-props"><a ng-click="OnKinematicsTabClick('Kinematics')" data-toggle="tab">Kinematic Input</a></li>
-                <li  id ="tab-input-graph" ><a ng-click="OnKinematicsTabClick('Graph')"  data-toggle="tab">Graph Input</a></li>
-                <li  id ="tab-input-math" ><a ng-click="OnKinematicsTabClick('Math')"  data-toggle="tab">Math Input</a></li>
+            <ul ng-show="mode === 'Edit'" id="tabs" class="nav nav-tabs" data-tabs="tabs">
+                <li class="active" id ="tab-input-props"><a ng-click="OnKinematicsTabClick('Kinematics')" data-toggle="tab">Kinematic Input</a></li>
+                <li id ="tab-input-graph" ><a ng-click="OnKinematicsTabClick('Graph')"  data-toggle="tab">Graph Input</a></li>
+                <li id ="tab-input-math" ><a ng-click="OnKinematicsTabClick('Math')"  data-toggle="tab">Math Input</a></li>
             </ul>
             <div>
-                <div ng-show="KinematicsTabName === 'Kinematics'">
+                <div ng-show="publishDataValues.selectedInputType === 'Kinematics'">
                       <div ng-include="'labs/kinematics_1d/Kinematics_PropertiesInputView.html'" ></div>
                 </div> 
-                <div ng-show="KinematicsTabName === 'Graph'">
+                <div ng-show="publishDataValues.selectedInputType === 'Graph'">
                       <div ng-include="'labs/kinematics_1d/Kinematics_GraphInputView.html'" ></div>
                 </div>
-                <div ng-show="KinematicsTabName === 'Math'">
+                <div ng-show="publishDataValues.selectedInputType === 'Math'">
                       <div ng-include="'labs/kinematics_1d/Kinematics_MathInputView.html'" ></div>
                 </div>
              </div>   

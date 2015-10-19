@@ -306,13 +306,13 @@ Kinematics3DView.prototype = {
     
     onDocumentMouseMove: function(event)
     {
-        if(this.kinematics_lab.pauseSimulation)
+        if(this.kinematics_lab.pauseSimulation || this.kinematics_lab.time > this.kinematics_lab.timeWindow)
             this.kinematics_lab.syncText2DView();
     },
 
     onDocumentMouseWheel: function(event)
     {
-        if(this.kinematics_lab.pauseSimulation)
+        if(this.kinematics_lab.pauseSimulation || this.kinematics_lab.time > this.kinematics_lab.timeWindow)
             this.kinematics_lab.syncText2DView();
     },
 

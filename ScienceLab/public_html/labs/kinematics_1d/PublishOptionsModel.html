@@ -12,7 +12,7 @@
                </span>
             </h4>
             <div class="col-md-4">
-                <select  ng-model="publishDataValues.selectedViewType" ng-change="selectedViewTypeChanged()">
+                <select  ng-model="uiDataValues.selectedViewType" ng-change="selectedViewTypeChanged()">
                     <option value="View3D">View3D</option>
                     <option value="Graph">Graph</option>
                     <option value="Both">Both</option>
@@ -27,7 +27,7 @@
                </span>
             </h4>
             <div class="col-md-4">
-                <select  ng-model="publishDataValues.selectedInputType" ng-change="selectedInputTypeChanged()">
+                <select  ng-model="uiDataValues.selectedInputType" ng-change="selectedInputTypeChanged()">
                     <option value="Kinematics">Kinematics</option>
                     <option value="Graph">Graph</option>
                     <option value="Math">Math</option>
@@ -35,7 +35,7 @@
             </div>
         </div>  
         
-        <div ng-show="(publishDataValues.selectedViewType === 'Graph') || (publishDataValues.selectedViewType === 'Both')">
+        <div ng-show="(uiDataValues.selectedViewType === 'Graph') || (uiDataValues.selectedViewType === 'Both')">
             
             <div class="row-fluid col-md-12">
             <h4>
@@ -44,19 +44,19 @@
                </span>
             </h4>
             <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="publishDataValues.type_time_Selected[0]" ng-change="OnProbeChanged()"/>
+                <input type="checkbox" value="on" ng-model="uiDataValues.type_time_Selected[0]" ng-change="OnProbeChanged()"/>
             </div>
             <div class="col-md-2">
                  x-t
             </div>
             <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="publishDataValues.type_time_Selected[1]" ng-change="OnProbeChanged()"/>
+                <input type="checkbox" value="on" ng-model="uiDataValues.type_time_Selected[1]" ng-change="OnProbeChanged()"/>
             </div>
             <div class="col-md-2">
                  v-t
             </div>
             <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="publishDataValues.type_time_Selected[2]" ng-change="OnProbeChanged()"/>
+                <input type="checkbox" value="on" ng-model="uiDataValues.type_time_Selected[2]" ng-change="OnProbeChanged()"/>
             </div>
             <div class="col-md-2">
                  a-t
@@ -73,40 +73,40 @@
                  Value
             </div>
             <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="publishDataValues.type_probe_Selected[0]" ng-change="OnProbeChanged()"/>
+                <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[0]" ng-change="OnProbeChanged()"/>
             </div>
             <div class="col-md-1">
                  Tangent
             </div>
             <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="publishDataValues.type_probe_Selected[1]" ng-change="OnProbeChanged()"/>
+                <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[1]" ng-change="OnProbeChanged()"/>
             </div>
             <div class="col-md-1">
                  Area
             </div>
             <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="publishDataValues.type_probe_Selected[2]" ng-change="OnProbeChanged()"/>
+                <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[2]" ng-change="OnProbeChanged()"/>
             </div>
             <div class="col-md-1">
                  Chord
             </div>
             <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="publishDataValues.type_probe_Selected[3]" ng-change="OnProbeChanged()"/>
+                <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[3]" ng-change="OnProbeChanged()"/>
             </div>
         </div>
         </div> 
-        <div class="col-md-12" style="color: red" ng-show="publishDataValues.publishError">
+        <div class="col-md-12" style="color: red" ng-show="uiDataValues.publishError">
             <hr>
             <h4><i class="fa fa-warning"></i>
-                  {{publishDataValues.publishErrorMessage}}
+                  {{uiDataValues.publishErrorMessage}}
               </h4>
         </div>    
       <div class="modal-footer">          
-          <a  href="#PublishedView"><button  ng-click="OnPreviewPressed()"  ng-disabled="publishDataValues.publishError" class="btn btn-primary">
+          <a  href=""><button  ng-click="OnPreviewPressed()"  ng-disabled="uiDataValues.publishError" class="btn btn-primary">
                 Preview
             </button>
           </a>
-          <a style="cursor: none"><button ng-click="OnPublishPressed()"  ng-disabled="publishDataValues.publishError" class="btn btn-success">
+          <a style="cursor: none"><button ng-click="OnPublishPressed()"  ng-disabled="uiDataValues.publishError" class="btn btn-success">
                 Publish
             </button>
           </a>

@@ -135,17 +135,17 @@ CustomKinematicsGraphOperations.prototype.highlightCallback = function (event, x
 
 CustomKinematicsGraphOperations.prototype.showValues = function (event, x, points, row, seriesName) {
     var ctx = this.canvas;
-    var time = x.toFixed(2), pos, vel, acc;
+    var time = x.toFixed(3), pos, vel, acc;
     for (var i = 0; i < this.graphTypeArray.length; i++) {
         var seriesIndex = this.graphTypeArray[i];
         var x_ = this.dygraph.toDomCoords(x, points[i].yval)[0];
         var y_ = this.dygraph.toDomCoords(x, points[i].yval)[1];
         if (seriesIndex === 0)
-            pos = points[i].yval.toFixed(2);
+            pos = points[i].yval.toFixed(3);
         if (seriesIndex === 1)
-            vel = points[i].yval.toFixed(2);
+            vel = points[i].yval.toFixed(3);
         if (seriesIndex === 2)
-            acc = points[i].yval.toFixed(2);
+            acc = points[i].yval.toFixed(3);
 
         var c = Dygraph.toRGB_(this.dygraph.getColors()[seriesIndex]);
 //        c.r = Math.floor(255 - 0.5 * (255 - c.r));
@@ -173,7 +173,7 @@ CustomKinematicsGraphOperations.prototype.calculateTangents = function (event, x
     var nRows = this.dygraph.numRows();
     var lowerIndex = row === 0 ? row : row - 1;
     var upperIndex = row === (nRows - 1) ? row : row + 1;
-    var time = x.toFixed(2), dxdt, dvdt, dadt;
+    var time = x.toFixed(3), dxdt, dvdt, dadt;
     for (var i = 0; i < this.graphTypeArray.length; i++) {
         var seriesIndex = this.graphTypeArray[i];
         var val1 = this.dygraph.getValue(lowerIndex, seriesIndex+1);
@@ -185,11 +185,11 @@ CustomKinematicsGraphOperations.prototype.calculateTangents = function (event, x
         //var slope = this.dygraph.getValue(row, 2);
         var slope = (val2 - val1) / (t2 - t1);
         if (seriesIndex === 0)
-            dxdt = slope.toFixed(2);
+            dxdt = slope.toFixed(3);
         if (seriesIndex === 1)
-            dvdt = slope.toFixed(2);
+            dvdt = slope.toFixed(3);
         if (seriesIndex === 2)
-            dadt = slope.toFixed(2);
+            dadt = slope.toFixed(3);
         var c = points[i].yval - slope * x;
         var x1 = x + 100;
         var x2 = x - 100;
@@ -250,18 +250,18 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
             start = end;
             end = temp;
         }
-        var nRows = document.modelGraph._graph.numRows();
+        var nRows = this.graph._graph.numRows();
         for (var i = 0; i < nRows - 1; i++) {
-            var t1 = document.modelGraph._graph.getValue(i, 0);
+            var t1 = this.graph._graph.getValue(i, 0);
             if (t1 < start)
                 continue;
-            var t2 = document.modelGraph._graph.getValue(i + 1, 0);
+            var t2 = this.graph._graph.getValue(i + 1, 0);
             if (t2 > end)
                 continue;
             for(var j=0; j<this.graphTypeArray.length; j++) {
                 var seriesIndex = this.graphTypeArray[j];
-                var val1 = document.modelGraph._graph.getValue(i, seriesIndex+1);
-                var val2 = document.modelGraph._graph.getValue(i + 1, seriesIndex+1);
+                var val1 = this.graph._graph.getValue(i, seriesIndex+1);
+                var val2 = this.graph._graph.getValue(i + 1, seriesIndex+1);
                 var avg = (val1 + val2) * 0.5;
                 area[seriesIndex] += avg * (t2 - t1);
                 //sum_lower += val1 * (t2 - t1);
@@ -273,12 +273,13 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
     }
     this.labelHtml ="";
     if(area[0] > 0)
-        this.labelHtml += "<span>Ax = " + area[0].toFixed(2) + "</span><br>";
+        this.labelHtml += "<span>Ax = " + area[0].toFixed(3) + "</span><br>";
     if(area[1] > 0)
-        this.labelHtml += "<span>Av = " + area[1].toFixed(2) + "</span><br>";
+        this.labelHtml += "<span>Av = " + area[1].toFixed(3) + "</span><br>";
     if(area[2] > 0)
-        this.labelHtml += "<span>Aa = " + area[2].toFixed(2) + "</span><br>";
+        this.labelHtml += "<span>Aa = " + area[2].toFixed(3) + "</span><br>";
     this.graph.labelDiv.innerHTML = this.labelHtml;
+    this.graph.updateOptions({});
 };
 
 CustomKinematicsGraphOperations.prototype.calculateAverageValues = function(hl) {
@@ -327,13 +328,13 @@ CustomKinematicsGraphOperations.prototype.calculateAverageValues = function(hl) 
 //        c.b = Math.floor(255 - 0.5 * (255 - c.b));
 //        var color = 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
     }
-    this.labelHtml = "<span>delt = " + deltat.toFixed(2) + "</span><br>";
+    this.labelHtml = "<span>delt = " + deltat.toFixed(3) + "</span><br>";
     if(deltax > 0)
-        this.labelHtml += "<span>delx ~ " + deltax.toFixed(2) + "</span><br>";
+        this.labelHtml += "<span>delx ~ " + deltax.toFixed(3) + "</span><br>";
     if(deltav > 0)
-        this.labelHtml += "<span>delv ~ " + deltav.toFixed(2) + "</span><br>";
+        this.labelHtml += "<span>delv ~ " + deltav.toFixed(3) + "</span><br>";
     if(deltaa > 0)
-        this.labelHtml += "<span>dela ~ " + deltaa.toFixed(2) + "</span><br>";
+        this.labelHtml += "<span>dela ~ " + deltaa.toFixed(3) + "</span><br>";
     this.graph.labelDiv.innerHTML = this.labelHtml;
     this.graph.updateOptions({});
 };

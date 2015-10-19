@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-function SplineGraph(div) {
+function SplineGraph(div, graphInputData) {
     this.data = [];
     this.numPoints = 10;
     this.bSpline = null;
@@ -18,6 +18,17 @@ function SplineGraph(div) {
     this.timeWindow = 7;
     this.curveType = SplineGraph.X_T;
     this.scaleFactor = 5.0;
+    this.linearInterpolation = false;
+    if(graphInputData !== undefined) {
+        for(var i=0; i<graphInputData.points.length; i++) {
+            this.sparsePoints.push(graphInputData.points[i]);
+        }
+        this.numPoints = this.sparsePoints.length;
+        this.timeWindow = 7;
+        this.curveType = graphInputData.type;
+        this.scaleFactor = 5.0;
+        this.numSplines = this.numPoints - 1;
+    }
     
     this.initSplineStuff();
     function mouseMotion_(event, g, context) {
@@ -119,6 +130,10 @@ SplineGraph.X_T = 0;
 SplineGraph.V_T = 1;
 SplineGraph.A_T = 2;
 
+SplineGraph.prototype.setLinearInterpolation = function(bLinear) {
+    this.linearInterpolation = bLinear;
+};
+
 SplineGraph.prototype.getPersistentDataAsJSON = function() {
     var res = JSON.stringify({points: this.sparsePoints, type:this.curveType});
     var out = JSON.parse(res);
@@ -130,18 +145,17 @@ SplineGraph.prototype.initSplineStuff = function () {
         this.splines[i] = new CubicSpline();
     }
     var numTotalPoints = this.numDivisionsbetweenPoints * this.numSplines;
-    this.sparsePoints.push(0.0);
-    this.data.push([0.0, 0.0, 0.0]);
-    for (var i = 1; i <= numTotalPoints; i++) {
+    var count = 0;
+    for (var i = 0; i <= numTotalPoints; i++) {
         var t = i / (numTotalPoints);
-        var rand = t*t;
-        var val = (i % this.numDivisionsbetweenPoints) === 0 ? rand : null;
-        if (val !== null) {
-            this.sparsePoints.push(val);
+        var val;
+        if((i % this.numDivisionsbetweenPoints) === 0) {
+            val = this.sparsePoints[count++];
+        }else{
+            val = null;
         }
         this.data.push([t, val, 0.5]);
     }
-    this.bSpline = new BSpline(this.sparsePoints, 3);
     this.CalculateCubicSplineData(this.sparsePoints);
     this.updateDensePointsInGraphData();
 };

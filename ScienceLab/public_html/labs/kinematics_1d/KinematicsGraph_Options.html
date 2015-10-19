@@ -14,21 +14,21 @@
             </div>
             <div class="col-md-offset-3">
                 <select  ng-model="uiDataValues.selectedGraphType" ng-change="selectedGraphTypeChanged()">
-                    <option value="0">position-time</option>
-                    <option value="1">velocity-time</option>
-                    <option value="2">acceleration-time</option>
-                    <option value="3">all</option>
-               </select>
+                    <option ng-show="publishDataValues.type_time_Selected[0]" value="0">position-time</option>
+                    <option ng-show="publishDataValues.type_time_Selected[1]" value="1">velocity-time</option>
+                    <option ng-show="publishDataValues.type_time_Selected[2]" value="2">acceleration-time</option>
+                    <option ng-show="publishDataValues.graphTypeMultiChoice" value="3">all</option>
+                </select>
             </div>
             <div class="col-md-1">
                 probes
             </div>
             <div class="col-md-offset-3">
                 <select  ng-model="uiDataValues.selectedProbeType" ng-change="selectedProbeTypeChanged()">
-                        <option value="0">Value</option>
-                        <option value="1">Tangents</option>
-                        <option value="2">Area</option>
-                        <option value="3">Chord</option>
+                        <option ng-show="publishDataValues.type_probe_Selected[0]" value="0">Value</option>
+                        <option ng-show="publishDataValues.type_probe_Selected[1]" value="1">Tangents</option>
+                        <option ng-show="publishDataValues.type_probe_Selected[2]" value="2">Area</option>
+                        <option ng-show="publishDataValues.type_probe_Selected[3]" value="3">Chord</option>
                 </select>
             </div>
         </div>

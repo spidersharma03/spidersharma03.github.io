@@ -28,7 +28,7 @@ function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
     
     this.bRecordGraphData = true;
     this.bRecordGraphDataEveryFrame = true;
-    this.NumFramesToSkipForDataRecord = 1;
+    this.NumFramesToSkipForDataRecord = 60;
     this.NumFramesToSkipForTimeSnap = 60;
     this.time = 0;
     this.timeRecordCounter = 0;
@@ -123,6 +123,8 @@ Model_Kinematics1D_Lab.prototype = {
     resetSimulation: function(time) {
         this.pauseSimulation = true;
         this.time = 0;
+        this.timeRecordCounter = 0;
+        this.timeSnapRecordCounter = 0;
         for(var i=0; i<this.timesnap_objects.length; i++) {
             this.view3dObserver.removeObject3D(this.timesnap_objects[i]);
         }

@@ -15,6 +15,7 @@ var controllers = angular.module('DataLoadControllers', []);
 // Loads the data for a given subject( physics, computer science, etc...)
 controllers.controller('SubjectsLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
     $scope.subjectID = $routeParams.subjectID;
+    alert($scope.subjectID);
     contentLoadingServiceAPI.getSubCategories($scope.subjectID.toLowerCase()).success(function(data) {
     $scope.subjectData = data;
   });

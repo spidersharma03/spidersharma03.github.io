@@ -27,6 +27,9 @@ controllers.controller('TopicsLoadController', function ($scope, $routeParams, c
     alert($scope.subjectID + " " + $scope.subjectCategory);
     contentLoadingServiceAPI.getTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase()).success(function(data) {
     $scope.subjectCategoryData = data;
+    for(var i=0; i<data.sub_categories.length; i++) {
+        alert(data.sub_categories[i].name);
+    }
   });
 });
 

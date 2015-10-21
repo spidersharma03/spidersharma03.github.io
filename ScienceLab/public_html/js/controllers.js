@@ -24,6 +24,7 @@ controllers.controller('SubjectsLoadController', function ($scope, $routeParams,
 controllers.controller('TopicsLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
     $scope.subjectID = $routeParams.subjectID;
     $scope.subjectCategory = $routeParams.subjectCategory;
+    alert($scope.subjectID + " " + $scope.subjectCategory);
     contentLoadingServiceAPI.getTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase()).success(function(data) {
     $scope.subjectCategoryData = data;
   });

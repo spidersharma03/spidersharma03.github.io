@@ -15,7 +15,6 @@ var controllers = angular.module('DataLoadControllers', []);
 // Loads the data for a given subject( physics, computer science, etc...)
 controllers.controller('SubjectsLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
     $scope.subjectID = $routeParams.subjectID;
-    alert($scope.subjectID);
     contentLoadingServiceAPI.getSubCategories($scope.subjectID.toLowerCase()).success(function(data) {
     $scope.subjectData = data;
   });
@@ -25,12 +24,8 @@ controllers.controller('SubjectsLoadController', function ($scope, $routeParams,
 controllers.controller('TopicsLoadController', function ($scope, $routeParams, contentLoadingServiceAPI) {
     $scope.subjectID = $routeParams.subjectID;
     $scope.subjectCategory = $routeParams.subjectCategory;
-    alert($scope.subjectID + " " + $scope.subjectCategory);
     contentLoadingServiceAPI.getTopics($scope.subjectID.toLowerCase(), $scope.subjectCategory.toLowerCase()).success(function(data) {
     $scope.subjectCategoryData = data;
-    for(var i=0; i<data.sub_categories.length; i++) {
-        alert(data.sub_categories[i].name);
-    }
   });
 });
 

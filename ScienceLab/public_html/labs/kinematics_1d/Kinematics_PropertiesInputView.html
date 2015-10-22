@@ -1,4 +1,83 @@
-<div id="collapseExample" class="row panel-body">
+<!--<div id="collapseExample" class="row panel-body">
+    <div class="row-fluid col-md-12">
+        <div class="col-md-2">
+            Name
+        </div>
+        <div class="col-md-4">
+            <input type="text" ng-model="uiDataValues.nameTag" ng-change="OnNameChanged()"/>
+        </div>
+        <div class="col-md-2">
+            State
+        </div>
+        <div class="col-md-4">
+            <select  ng-model="uiDataValues.selectedStateType" ng-change="selectedStateTypeChanged()">
+                <option value="3">User Defined</option>
+                <option value="0">Uniform Velocity</option>
+                <option value="1">Uniform Acceleration</option>
+                <option value="2">Uniform Deceleration</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="row-fluid col-md-12">
+        <div class="col-md-2">
+            Position
+        </div>
+        <div class="col-md-6">
+            <input id="sliderPosition" type ="range" min ="-10" max="10" step ="0.1" value ="0" ng-model="uiDataValues.positionValue" ng-change="positionValueChanged()"/>
+        </div> 
+        <div class="col-md-2">
+            Text
+        </div>
+        <div class="col-md-1" >
+            <input type="checkbox" value="on" ng-model="uiDataValues.positionTextVisibility" ng-change="OnPositionTextVisibilityChanged()"/>
+        </div>
+    </div>
+
+    <div class="row-fluid col-md-12">
+        <div class="col-md-2">
+            Velocity
+        </div>
+        <div class="col-md-6">
+            <input id="sliderVelocity"  type ="range" min ="-2" max="2" step ="0.1" value ="0" ng-model="uiDataValues.velocityValue" ng-change="velocityValueChanged()"/>
+        </div> 
+        <div class="col-md-1">
+            Text
+        </div>
+        <div class="col-md-1">
+            <input type="checkbox" value="on" ng-model="uiDataValues.velocityTextVisibility" ng-change="OnVelocityTextVisibilityChanged()"/>
+        </div>
+        <div class="col-md-1">
+            Arrow
+        </div>
+        <div class="col-md-1">
+            <input type="checkbox" value="on" ng-model="uiDataValues.velocityArrowVisibility" ng-change="OnVelocityArrowVisibilityChanged()"/>
+        </div>
+    </div>
+
+    <div class="row-fluid col-md-12">
+        <div class="col-md-2">
+            Acceleration
+        </div>
+        <div class="col-md-6">
+            <input id="sliderAcceleration" type ="range" min ="-2" max="2" step ="0.1" value ="0" ng-model="uiDataValues.accelerationValue" ng-change="accelerationValueChanged()"/>
+        </div> 
+        <div class="col-md-1">
+            Text
+        </div>
+        <div class="col-md-1">
+            <input type="checkbox" value="on" ng-model="uiDataValues.accelerationTextVisibility" ng-change="OnAccelerationTextVisibilityChanged()"/>
+        </div>
+        <div class="col-md-1">
+            Arrow
+        </div>
+        <div class="col-md-1">
+            <input type="checkbox" value="on" ng-model="uiDataValues.accelerationArrowVisibility" ng-change="OnAccelerationArrowVisibilityChanged()"/>
+        </div>
+    </div>
+</div>-->
+
+<div id="KinematicsInputDiv" class="row container col-md-5" style="display: none; border: solid 1px #888888; box-shadow: 1px 1px 1px 1px #888888">
     <div class="row-fluid col-md-12">
         <div class="col-md-2">
             Name

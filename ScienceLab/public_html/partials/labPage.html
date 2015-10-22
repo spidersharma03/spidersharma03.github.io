@@ -1,3 +1,7 @@
+<div ng-include="'labs/kinematics_1d/Kinematics_PropertiesInputView.html'"></div>
+<div ng-include="'labs/kinematics_1d/Kinematics_MathInputView.html'"></div>
+<div ng-include="'labs/kinematics_1d/Kinematics_GraphInputView.html'"></div>
+<div ng-include="'labs/kinematics_1d/PublishOptionsModel.html'"></div>
 
 <div ng-if="sceneLoaded" class = "row-fluid">
     <div class="col-md-12" style="" >
@@ -13,9 +17,25 @@
         <div class="col-md-1">
             <input style="margin-left: -50px; width: 30px;" value="{{uiDataValues.timeWindow}}" type="text" disabled="disabled" />
         </div>
-        
-        <div class="col-md-7">
+        <div class="col-md-1">
+<!--            <button id="PopOverButton"  style="margin-left: -100px" type="button" class="btn btn-xs btn-danger" data-toggle="button" aria-pressed="false" ng-click="OnPopOverClick()">Toggle
+            <span class="caret"></span>
+            </button>-->
+            <div id="PopOverButton" class="btn-group" style="margin-left: -100px">
+                <button type="button" data-toggle="button" ng-click="OnPopOverClick()" class="btn btn-primary btn-xs">{{uiDataValues.selectedInputType}}</button>
+                <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown">
+                  <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a target='_self' ng-click='OnInputTypeChanged("Kinematics")' href="">Kinematics</a></li>
+                  <li><a target='_self' ng-click='OnInputTypeChanged("Math")' href="">Math</a></li>
+                  <li><a target='_self' ng-click='OnInputTypeChanged("Graph")' href="">Graph</a></li>
+                </ul>
+            </div>
             
+        </div>
+        
+        <div class="col-md-6">
         </div>
         <div class="col-md-1">
             <button ng-show="mode !== 'Preview'" class="btn btn-warning fa fa-upload" ng-click="OnPublishOptionPressed()" target="_self" data-toggle="modal"  data-target="#PublishOptionsModel"><a style="color: white" href="">Publish</a></button>
@@ -38,9 +58,9 @@
                 <view3d>
                 </view3d>
         </div>
-        <div>
+<!--        <div>
              <div ng-include="'labs/kinematics_1d/KinematicsLab_Options.html'"></div>
-        </div>
+        </div>-->
     </div>
     </div>
     

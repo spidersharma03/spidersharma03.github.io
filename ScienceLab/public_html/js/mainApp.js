@@ -478,3 +478,36 @@ mainApp.directive('view3d', function() {
     };
     return directive;
 });
+
+
+mainApp.directive('popover', function() {
+    var directive = {};
+    directive.restrict = 'E'; /* restrict this directive to elements */
+
+    directive.compile = function(element, attributes) {
+        // do one-time configuration of element.
+        var linkFunction = function($scope, $compile, element, atttributes) {   
+            //$scope.uiDataValues.InputTypeButtonState = !$scope.uiDataValues.InputTypeButtonState;
+            var button = document.getElementById("PopOverButton");
+            var newdiv = document.getElementById("MathInputDiv");
+            //$scope.splineGraph.graph.resize(400,200);
+            newdiv.style.zIndex = "1000";
+            newdiv.style.visibility = 'visible';
+            newdiv.style.position = 'absolute';
+            newdiv.style.overflow = 'hidden';
+            function getPos(el) {
+                for (var lx=0, ly=0;
+                     el !== null;
+                     lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent);
+                return {x: lx,y: ly};
+            }
+            newdiv.style.left = getPos(button).x - 200 + 'px';
+            newdiv.style.top = getPos(button).y + button.offsetHeight*2 + 'px';
+            newdiv.style.display = 'inline';
+            newdiv.style.backgroundColor = 'rgba(255,255,255,0.5)';
+            newdiv.style.borderRadius = '10px';
+        };
+        return linkFunction;
+    };
+    return directive;
+});

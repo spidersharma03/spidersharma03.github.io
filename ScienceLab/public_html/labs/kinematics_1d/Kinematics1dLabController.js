@@ -8,10 +8,13 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     $scope.name = "Kinematics1dLabController";
     $scope.KinematicsTabName = 'Kinematics';
     $scope.mode = 'Edit';
+    
     $scope.uiDataValues = {
        selectedSplineGraphInputType : 0,
        selectedGraphType : 3,
        selectedProbeType : 0,
+       
+       InputTypeButtonState: false,
        // Math Data
        mathExpressionSyntaxError:false,
        mathInputData:{type:0, expression:"t^2 + t"},
@@ -58,6 +61,82 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        mathPublishOptions:{ },
        
        // Graph Publish Options
+    };
+    
+    $scope.OnInputTypeChanged = function(type) {
+        $scope.uiDataValues.selectedInputType = type;
+        if($scope.uiDataValues.selectedInputType === "Kinematics") {
+              var kinematicsdiv  = document.getElementById("KinematicsInputDiv");
+              var mathdiv  = document.getElementById("MathInputDiv");
+              var graphdiv  = document.getElementById("GraphInputDiv");
+              mathdiv.style.visibility = 'hidden';
+              graphdiv.style.visibility = 'hidden';
+              kinematicsdiv.style.visibility = 'visible';
+        }
+        if($scope.uiDataValues.selectedInputType === "Math") {
+              var mathdiv  = document.getElementById("MathInputDiv");
+              var kinematicsdiv  = document.getElementById("KinematicsInputDiv");
+              var graphdiv  = document.getElementById("GraphInputDiv");
+              kinematicsdiv.style.visibility = 'hidden';
+              graphdiv.style.visibility = 'hidden';
+              mathdiv.style.visibility = 'visible';
+        }
+        if($scope.uiDataValues.selectedInputType === "Graph") {
+              var graphdiv  = document.getElementById("GraphInputDiv");
+              var mathdiv  = document.getElementById("MathInputDiv");
+              var kinematicsdiv  = document.getElementById("KinematicsInputDiv");
+              mathdiv.style.visibility = 'hidden';
+              kinematicsdiv.style.visibility = 'hidden';
+              graphdiv.style.visibility = 'visible';
+          }
+    };
+    
+    $scope.OnPopOverClick = function() {
+        $scope.uiDataValues.InputTypeButtonState = !$scope.uiDataValues.InputTypeButtonState;
+        var button = document.getElementById("PopOverButton");
+        var newdiv;
+        if($scope.uiDataValues.selectedInputType === "Kinematics") {
+              newdiv  = document.getElementById("KinematicsInputDiv");
+              var mathdiv  = document.getElementById("MathInputDiv");
+              var graphdiv  = document.getElementById("GraphInputDiv");
+              mathdiv.style.visibility = 'hidden';
+              graphdiv.style.visibility = 'hidden';
+        }
+        if($scope.uiDataValues.selectedInputType === "Math") {
+              newdiv  = document.getElementById("MathInputDiv");
+              var kinematicsdiv  = document.getElementById("KinematicsInputDiv");
+              var graphdiv  = document.getElementById("GraphInputDiv");
+              kinematicsdiv.style.visibility = 'hidden';
+              graphdiv.style.visibility = 'hidden';
+        }
+        if($scope.uiDataValues.selectedInputType === "Graph") {
+              newdiv  = document.getElementById("GraphInputDiv");
+              var mathdiv  = document.getElementById("MathInputDiv");
+              var graphdiv  = document.getElementById("GraphInputDiv");
+              mathdiv.style.visibility = 'hidden';
+              graphdiv.style.visibility = 'hidden';
+          }
+        $scope.splineGraph.graph.resize(400,200);
+        
+        if(!$scope.uiDataValues.InputTypeButtonState) {
+            newdiv.style.visibility = 'hidden';
+            return; 
+        }
+        newdiv.style.zIndex = "1000";
+        newdiv.style.visibility = 'visible';
+        newdiv.style.position = 'absolute';
+        newdiv.style.overflow = 'hidden';
+        function getPos(el) {
+            for (var lx=0, ly=0;
+                 el !== null;
+                 lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent);
+            return {x: lx,y: ly};
+        }
+        newdiv.style.left = getPos(button).x - 200 + 'px';
+        newdiv.style.top = getPos(button).y + button.offsetHeight*2 + 'px';
+        newdiv.style.display = 'inline';
+        newdiv.style.backgroundColor = 'rgba(255,255,255,0.5)';
+        newdiv.style.borderRadius = '10px';
     };
     
     $scope.timeWindowChanged = function() {

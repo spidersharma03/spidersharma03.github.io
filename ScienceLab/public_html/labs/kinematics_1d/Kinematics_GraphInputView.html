@@ -1,44 +1,48 @@
-<div class="row">
-    <div class="col-md-3">
-        Type
-    </div>
-    <div class="col-md-3">
-        <select  ng-model="uiDataValues.selectedSplineGraphInputType" ng-change="selectedSplineGraphInputTypeChanged()">
-        <option value="0">position-time</option>
-        <option value="1">velocity-time</option>
-        <option value="2">acceleration-time</option>
-    </select>
-    </div>
-    <div class="col-md-3">
-        Linear Interpolation
-    </div>
-    <div class="col-md-3">
-        <input type="checkbox" value="off" ng-model="uiDataValues.graphInputData.linearInterpolation" ng-change="InterpolationTypeChanged()"/>        
-    </div>
-</div>    
-<div class="row" ng-show="(uiDataValues.selectedSplineGraphInputType == 1) || (uiDataValues.selectedSplineGraphInputType == 2)">
+<div id='GraphInputDiv' class="row col-md-6" style="display: none; border: solid 1px #888888; box-shadow: 1px 1px 1px 1px #888888">
+
+    <div class="row">
         <div class="col-md-3">
-            Initial Position
+            Type
         </div>
-        <div class="col-md-4">
-            <input type="range" value="0" min="-10" max="10" step="0.1" ng-model="uiDataValues.positionValue" ng-change="positionValueChanged()"/>        
+        <div class="col-md-3">
+            <select  ng-model="uiDataValues.selectedSplineGraphInputType" ng-change="selectedSplineGraphInputTypeChanged()">
+            <option value="0">position-time</option>
+            <option value="1">velocity-time</option>
+            <option value="2">acceleration-time</option>
+        </select>
         </div>
-        <div class="col-md-1">
-            <input disabled="disabled" ng-model="uiDataValues.positionValue" type="text" />
+        <div class="col-md-3">
+            Linear Interpolation
         </div>
-    </div>
+        <div class="col-md-3">
+            <input type="checkbox" value="off" ng-model="uiDataValues.graphInputData.linearInterpolation" ng-change="InterpolationTypeChanged()"/>        
+        </div>
+    </div>    
+    <div class="row" ng-show="(uiDataValues.selectedSplineGraphInputType == 1) || (uiDataValues.selectedSplineGraphInputType == 2)">
+            <div class="col-md-3">
+                Initial Position
+            </div>
+            <div class="col-md-4">
+                <input type="range" value="0" min="-10" max="10" step="0.1" ng-model="uiDataValues.positionValue" ng-change="positionValueChanged()"/>        
+            </div>
+            <div class="col-md-1">
+                <input disabled="disabled" ng-model="uiDataValues.positionValue" type="text" />
+            </div>
+        </div>
     <div class="row" ng-show="(uiDataValues.selectedSplineGraphInputType == 2)">
-        <div class="col-md-3">
-            Initial Velocity
+            <div class="col-md-3">
+                Initial Velocity
+            </div>
+            <div class="col-md-4">
+                <input type="range" value="0" min="-2" max="2" step="0.1" ng-model="uiDataValues.velocityValue" ng-change="velocityValueChanged()"/>        
+            </div>
+            <div class="col-md-1 pull-left">
+                <input disabled="disabled" ng-model="uiDataValues.velocityValue"  type="text" />
+            </div>
         </div>
-        <div class="col-md-4">
-            <input type="range" value="0" min="-2" max="2" step="0.1" ng-model="uiDataValues.velocityValue" ng-change="velocityValueChanged()"/>        
-        </div>
-        <div class="col-md-1 pull-left">
-            <input disabled="disabled" ng-model="uiDataValues.velocityValue"  type="text" />
-        </div>
+    <div id="Kinematics_Input_Graph" style="width: 100%; height: 40; border: 1px solid #005580; box-shadow: 3px 3px 5px #888888;"> 
+        <splinegraph>
+        </splinegraph>
     </div>
-<div id="Kinematics_Input_Graph" style="width: 100%; height: 40; border: 1px solid #005580; box-shadow: 3px 3px 5px #888888;"> 
-    <splinegraph>
-    </splinegraph>
+    
 </div>

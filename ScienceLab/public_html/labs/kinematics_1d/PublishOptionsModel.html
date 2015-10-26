@@ -1,116 +1,200 @@
 <div class="modal fade" id="PublishOptionsModel" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>        
-            <h4 class="btn btn-warning modal-title" id="myModalLabel">Publish Options</h4>
-      </div>
-       <div class="row-fluid col-md-12">
-            <h4>
-                <span class="label col-md-3" style="color: black">
-                View Type
-               </span>
-            </h4>
-            <div class="col-md-4">
-                <select  ng-model="uiDataValues.selectedViewType" ng-change="selectedViewTypeChanged()">
-                    <option value="View3D">View3D</option>
-                    <option value="Graph">Graph</option>
-                    <option value="Both">Both</option>
-               </select>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>        
+                <h4 class="btn btn-warning modal-title" id="myModalLabel">Publish Options</h4>
             </div>
-        </div> 
-        
-      <div class="row-fluid col-md-12">
-            <h4>
-                <span class="label col-md-3" style="color: black">
-                    Input Type
-               </span>
-            </h4>
-            <div class="col-md-4">
-                <select  ng-model="uiDataValues.selectedInputType" ng-change="selectedInputTypeChanged()">
-                    <option value="Kinematics">Kinematics</option>
-                    <option value="Graph">Graph</option>
-                    <option value="Math">Math</option>
-               </select>
+            <div class="row-fluid col-md-6">
+                <h4>
+                    <span class="label col-md-3" style="color: black">
+                        View Type
+                    </span>
+                </h4>
+                <div class="col-md-4">
+                    <select  ng-model="uiDataValues.selectedViewType" ng-change="selectedViewTypeChanged()">
+                        <option value="View3D">View3D</option>
+                        <option value="Graph">Graph</option>
+                        <option value="Both">Both</option>
+                    </select>
+                </div>
+            </div> 
+            <div class="row-fluid col-md-6">
+                <h4>
+                    <span class="label col-md-3" style="color: black">
+                        Input Type
+                    </span>
+                </h4>
+                <div class="col-md-3">
+                    <span>{{uiDataValues.selectedInputType}}</span>
+                </div>
+            </div>  
+            <div class="col-md-12">
+                <hr>
             </div>
-        </div>  
-        
-        <div ng-show="(uiDataValues.selectedViewType === 'Graph') || (uiDataValues.selectedViewType === 'Both')">
-            
-            <div class="row-fluid col-md-12">
-            <h4>
-                <span class="label col-md-3" style="color: black">
-                    Graph Type
-               </span>
-            </h4>
-            <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="uiDataValues.type_time_Selected[0]" ng-change="OnProbeChanged()"/>
+            <div class="" role="tabpanel" aria-labelledby="headingOne">
+                <div>
+                    <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+                        <li ng-show="(uiDataValues.selectedViewType ==='View3D') || (uiDataValues.selectedViewType ==='Both')" class="active" id ="tab-input-props"><a ng-click="OnPublishOptionsTabClick('View3D')" data-toggle="tab">View3D</a></li>
+                        <li ng-show="(uiDataValues.selectedViewType ==='Graph') || (uiDataValues.selectedViewType ==='Both')" id ="tab-input-graph" ><a ng-click="OnPublishOptionsTabClick('Graph')"  data-toggle="tab">Graph</a></li>
+                        <li id ="tab-input-math" ><a ng-click="OnPublishOptionsTabClick('Input')"  data-toggle="tab">Input</a></li>
+                    </ul>
+                    <div>
+                        <div ng-show="uiDataValues.selectedPublishOptionTabType === 'View3D'">
+                            Hello
+                        </div> 
+                        <div ng-show="uiDataValues.selectedPublishOptionTabType === 'Graph'">
+                            <div ng-show="(uiDataValues.selectedViewType === 'Graph') || (uiDataValues.selectedViewType === 'Both')">
+
+                                <div class="row-fluid col-md-12">
+                                    <h4>
+                                        <span class="label col-md-3" style="color: black">
+                                            Graph Type
+                                        </span>
+                                    </h4>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="uiDataValues.type_time_Selected[0]" ng-change="OnProbeChanged()"/>
+                                    </div>
+                                    <div class="col-md-2">
+                                        x-t
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="uiDataValues.type_time_Selected[1]" ng-change="OnProbeChanged()"/>
+                                    </div>
+                                    <div class="col-md-2">
+                                        v-t
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="uiDataValues.type_time_Selected[2]" ng-change="OnProbeChanged()"/>
+                                    </div>
+                                    <div class="col-md-2">
+                                        a-t
+                                    </div>
+                                </div>  
+
+                                <div class="row-fluid col-md-12">
+                                    <h4>
+                                        <span class="label col-md-3" style="color: black">
+                                            Graph Probe
+                                        </span>
+                                    </h4>
+                                    <div class="col-md-1">
+                                        Value
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[0]" ng-change="OnProbeChanged()"/>
+                                    </div>
+                                    <div class="col-md-1">
+                                        Tangent
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[1]" ng-change="OnProbeChanged()"/>
+                                    </div>
+                                    <div class="col-md-1">
+                                        Area
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[2]" ng-change="OnProbeChanged()"/>
+                                    </div>
+                                    <div class="col-md-1">
+                                        Chord
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[3]" ng-change="OnProbeChanged()"/>
+                                    </div>
+                                </div>
+                            </div> 
+                        </div>
+                        <div ng-show="uiDataValues.selectedPublishOptionTabType === 'Input'">
+                            <div ng-if="uiDataValues.selectedInputType === 'Kinematics'">
+                                <div class="col-md-3">
+                                    Enable edit
+                                </div>
+                                <div class="col-md-1">
+                                    <input type="checkbox" style="margin-left: -50px" value="on" ng-model="uiDataValues.type_probe_Selected[3]" ng-change="OnProbeChanged()"/>
+                                </div>
+                            </div>
+                            <div ng-if="uiDataValues.selectedInputType === 'Graph'">
+                                <div class="row-fluid col-md-9">
+                                    <h4>
+                                        <span class="label col-md-3" style="color: black">
+                                            Type
+                                        </span>
+                                    </h4>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="publishDataValues.graphPublishOptions.type_time_Selected[0]" ng-change="OnGraphTypeTimeChanged()"/>
+                                    </div>
+                                    <div class="col-md-2">
+                                        x-t
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="publishDataValues.graphPublishOptions.type_time_Selected[1]" ng-change="OnGraphTypeTimeChanged()"/>
+                                    </div>
+                                    <div class="col-md-2">
+                                        v-t
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="publishDataValues.graphPublishOptions.type_time_Selected[2]" ng-change="OnGraphTypeTimeChanged()"/>
+                                    </div>
+                                    <div class="col-md-2">
+                                        a-t
+                                    </div>
+                                </div> 
+                            </div>
+                            <div ng-if="uiDataValues.selectedInputType === 'Math'">
+                                <div class="row-fluid col-md-9">
+                                    <h4>
+                                        <span class="label col-md-3" style="color: black">
+                                            Type
+                                        </span>
+                                    </h4>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="publishDataValues.mathPublishOptions.type_time_Selected[0]" ng-change="OnMathTypeTimeChanged()"/>
+                                    </div>
+                                    <div class="col-md-2">
+                                        x-t
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="publishDataValues.mathPublishOptions.type_time_Selected[1]" ng-change="OnMathTypeTimeChanged()"/>
+                                    </div>
+                                    <div class="col-md-2">
+                                        v-t
+                                    </div>
+                                    <div class="col-md-1" >
+                                        <input type="checkbox" value="on" ng-model="publishDataValues.mathPublishOptions.type_time_Selected[2]" ng-change="OnMathTypeTimeChanged()"/>
+                                    </div>
+                                    <div class="col-md-2">
+                                        a-t
+                                    </div>
+                                </div> 
+                            </div>
+                        </div>
+                    </div>   
+                </div>
+
             </div>
-            <div class="col-md-2">
-                 x-t
+
+            <div class="col-md-12" style="color: red" ng-show="uiDataValues.publishError">
+                <h4><i class="fa fa-warning"></i>
+                    {{uiDataValues.publishErrorMessage}}
+                </h4>
+            </div>    
+            <div class="col-md-12">
+                <hr>
             </div>
-            <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="uiDataValues.type_time_Selected[1]" ng-change="OnProbeChanged()"/>
-            </div>
-            <div class="col-md-2">
-                 v-t
-            </div>
-            <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="uiDataValues.type_time_Selected[2]" ng-change="OnProbeChanged()"/>
-            </div>
-            <div class="col-md-2">
-                 a-t
-            </div>
-        </div>  
-               
-            <div class="row-fluid col-md-12">
-            <h4>
-                <span class="label col-md-3" style="color: black">
-                    Graph Probe
-               </span>
-            </h4>
-            <div class="col-md-1">
-                 Value
-            </div>
-            <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[0]" ng-change="OnProbeChanged()"/>
-            </div>
-            <div class="col-md-1">
-                 Tangent
-            </div>
-            <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[1]" ng-change="OnProbeChanged()"/>
-            </div>
-            <div class="col-md-1">
-                 Area
-            </div>
-            <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[2]" ng-change="OnProbeChanged()"/>
-            </div>
-            <div class="col-md-1">
-                 Chord
-            </div>
-            <div class="col-md-1" >
-                <input type="checkbox" value="on" ng-model="uiDataValues.type_probe_Selected[3]" ng-change="OnProbeChanged()"/>
+            <div class="modal-footer">   
+                <div class="col-md-12">
+                   <a  href=""><button  ng-click="OnPreviewPressed()"  ng-disabled="uiDataValues.publishError" class="btn btn-primary">
+                        Preview
+                    </button>
+                    </a>
+                    <a style="cursor: none"><button ng-click="OnPublishPressed()"  ng-disabled="uiDataValues.publishError" class="btn btn-success">
+                            Publish
+                        </button>
+                    </a> 
+                </div>
+                
             </div>
         </div>
-        </div> 
-        <div class="col-md-12" style="color: red" ng-show="uiDataValues.publishError">
-            <hr>
-            <h4><i class="fa fa-warning"></i>
-                  {{uiDataValues.publishErrorMessage}}
-              </h4>
-        </div>    
-      <div class="modal-footer">          
-          <a  href=""><button  ng-click="OnPreviewPressed()"  ng-disabled="uiDataValues.publishError" class="btn btn-primary">
-                Preview
-            </button>
-          </a>
-          <a style="cursor: none"><button ng-click="OnPublishPressed()"  ng-disabled="uiDataValues.publishError" class="btn btn-success">
-                Publish
-            </button>
-          </a>
-      </div>
     </div>
-  </div>
 </div>

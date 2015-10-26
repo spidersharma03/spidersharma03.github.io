@@ -127,7 +127,6 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
         };
         
         $scope.registerEvent = function() {
-            return;
             var nameField = document.getElementById("register_name").value;
             var emailField = document.getElementById("register_email").value;
             var pwField = document.getElementById("register_password").value;
@@ -380,7 +379,9 @@ mainApp.directive('graph', function () {
             var customGraphOperations = new CustomKinematicsGraphOperations(modelGraph);
             customGraphOperations.changeProbeType(0);
             modelGraph.customGraphOperations = customGraphOperations;
-
+             if($scope.$parent.onGraphInitialized) {
+                $scope.$parent.onGraphInitialized();
+             }
             $(hairlines).on('hairlineCreated', function (e) {
                 var hl = this.get();
                 if (hl.length > 2) {

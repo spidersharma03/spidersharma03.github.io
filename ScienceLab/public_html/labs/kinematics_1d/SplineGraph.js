@@ -24,7 +24,7 @@ function SplineGraph(div, graphInputData) {
             this.sparsePoints.push(graphInputData.points[i]);
         }
         this.numPoints = this.sparsePoints.length;
-        this.timeWindow = 7;
+        this.timeWindow = graphInputData.timeWindow;
         this.curveType = graphInputData.type;
         this.scaleFactor = 5.0;
         this.numSplines = this.numPoints - 1;

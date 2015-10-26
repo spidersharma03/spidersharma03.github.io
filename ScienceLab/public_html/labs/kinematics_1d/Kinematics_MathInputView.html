@@ -11,7 +11,7 @@
             </select>
         </div>
      </div>   
-    <div class="row" ng-show="(uiDataValues.mathInputData.type == 1) || (uiDataValues.mathInputData.type == 2)">
+    <div class="row" ng-show="(uiDataValues.mathInputData.type == '1') || (uiDataValues.mathInputData.type == '2')">
         <div class="col-md-3">
             Initial Position
         </div>
@@ -22,7 +22,7 @@
             <input disabled="disabled" ng-model="uiDataValues.positionValue" type="text" />
         </div>
     </div>
-    <div class="row" ng-show="(uiDataValues.mathInputData.type == 2)">
+    <div class="row" ng-show="(uiDataValues.mathInputData.type == '2')">
         <div class="col-md-3">
             Initial Velocity
         </div>

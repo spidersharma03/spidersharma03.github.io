@@ -12,7 +12,7 @@ function MathInput(mathInputData) {
     if(mathInputData !== undefined) {
         this.mathExpression = mathInputData.expression;
         this.setExpression(this.mathExpression);
-        this.type = mathInputData.type;
+        this.type = Number(mathInputData.type);
     }
 }
 
@@ -47,7 +47,7 @@ MathInput.prototype = {
     },
     
     FirstDerivative: function(t) {
-        var epsilon = 0.01;
+        var epsilon = 0.001;
         var t2 = t + epsilon;
         var t1 = t - epsilon;
         var d = this.Value(t2) - this.Value(t1);
@@ -55,7 +55,7 @@ MathInput.prototype = {
     },
     
     SecondDerivative: function(t) {
-        var epsilon = 0.01;
+        var epsilon = 0.001;
         var t2 = t + epsilon;
         var t1 = t - epsilon;
         var d = this.Value(t2) + this.Value(t1) - 2*this.Value(t);

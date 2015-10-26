@@ -33,19 +33,19 @@ Kinematics3DView.prototype = {
     constructor : Kinematics3DView,
     
     getObject3D: function(modelObject) {
-        return this.objects_3d[modelObject.id];
+        return this.objects_3d[modelObject.id.toString()];
     },
     
     setObjectVisibility: function(modelObject, bVisible){
-        this.objects_3d[modelObject.id].visible = bVisible;
+        this.objects_3d[modelObject.id.toString()].visible = bVisible;
     },
     
     setVelocityArrowVisibility: function(modelObject, bVisible){
-        this.objects_3d[modelObject.id].velocityArrow.getRootNode().visible = bVisible;
+        this.objects_3d[modelObject.id.toString()].velocityArrow.getRootNode().visible = bVisible;
     },
     
     setAccelerationArrowVisibility: function(modelObject, bVisible){
-        this.objects_3d[modelObject.id].accelerationArrow.getRootNode().visible = bVisible;
+        this.objects_3d[modelObject.id.toString()].accelerationArrow.getRootNode().visible = bVisible;
     },
     
     removeObject3D: function(modelObject) {
@@ -57,6 +57,12 @@ Kinematics3DView.prototype = {
 //                    break;
 //                }
 //            }
+            var object = this.objects_3d[modelObject.id.toString()];
+            if(object !== undefined) {
+                this.scene.remove(object);
+            }
+            delete this.objects_3d[modelObject.id.toString()];
+            return;
             var object3d = this.objects_3d[modelObject.id];
             if(object3d !== undefined) {
                 this.scene.remove(object3d);
@@ -68,16 +74,18 @@ Kinematics3DView.prototype = {
     addObject3D : function(modelObject, position, scale) {
         if(modelObject.type === "SIMULATIONBODY") {
             var sprite = this.createSpriteObject();
+            sprite.uid = modelObject.id.toString();
             sprite.position.copy(position);
             sprite.scale.x = scale;
             sprite.scale.y = scale;            
-            this.objects_3d[modelObject.id] = sprite;
+            this.objects_3d[modelObject.id.toString()] = sprite;
             this.scene.add(sprite);
             return sprite;
         }
         if(modelObject.type === "PHYSICALBODY") {
             var bodyOnTrack = this.createMassGeometryStraightTrack(1,1, this.sphereMaterial);
-            this.objects_3d[modelObject.id] = bodyOnTrack;
+            bodyOnTrack.uid = modelObject.id.toString();
+            this.objects_3d[modelObject.id.toString()] = bodyOnTrack;
             bodyOnTrack.position.y = 0.05;
             this.scene.add(bodyOnTrack);
             // Add 3d arrows for velocity and acceleration
@@ -94,7 +102,7 @@ Kinematics3DView.prototype = {
     },
     
     updateObject3D: function(modelObject) {
-        var object3d = this.objects_3d[modelObject.id];
+        var object3d = this.objects_3d[modelObject.id.toString()];
         if(object3d) {
             var position = modelObject.position.x;
             var velocity = modelObject.velocity.x;

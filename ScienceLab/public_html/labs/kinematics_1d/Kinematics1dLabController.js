@@ -487,6 +487,9 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     
     $scope.OnMathExpressionChanged = function() {
         $scope.uiDataValues.mathExpressionSyntaxError = !$scope.mathInput.setExpression($scope.uiDataValues.mathInputData.expression);
+        if(!$scope.uiDataValues.mathExpressionSyntaxError) {
+            
+        }
     };
     
     $scope.selectedMathInputTypeChanged = function() {
@@ -531,9 +534,9 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     
     $scope.OnPreviewPressed = function() {
         $('#PublishOptionsModel').modal('hide');
-        var iframe = document.getElementById("IFrameEditor");
-        var html = iframe.contentWindow.Preview.preview.innerHTML;
-        $scope.publishDataValues.previewHTML = html;
+        //var iframe = document.getElementById("IFrameEditor");
+        //var html = iframe.contentWindow.Preview.preview.innerHTML;
+        $scope.publishDataValues.previewHTML = $scope.inputText;
         $scope.applyPublishOptions();
         $scope.mode = "Preview";
     };

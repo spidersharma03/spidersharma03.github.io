@@ -1,4 +1,4 @@
-<div id='MathInputDiv' class="col-md-4" style="display: none; border: solid 1px #888888; box-shadow: 1px 1px 1px 1px #888888">
+<div id='MathInputDiv' class="col-md-5" style="display: none; border: solid 1px #888888; box-shadow: 1px 1px 1px 1px #888888">
     <div class="row">
         <div class="col-md-3">
             Type
@@ -42,6 +42,17 @@
             <input type="text" ng-model="uiDataValues.mathInputData.expression" ng-change="OnMathExpressionChanged()"/>        
         </div>
     </div>
+<!--    <div class="row">
+        <div class="col-md-3">
+            Time Record
+        </div>
+        <div class="col-md-4">
+            <input type="range" value="10" min="0" max="10" step="1" ng-model="uiDataValues.timeRecordValue" ng-change="timeRecordChanged()"/>        
+        </div>
+        <div class="col-md-2">
+            <input type="text" disabled="disabled" ng-model="uiDataValues.mathInputData.expression"/>        
+        </div>
+    </div>-->
     <div ng-show="uiDataValues.mathExpressionSyntaxError === true" style="color: red">
         Syntax Error
     </div>

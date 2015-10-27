@@ -43,7 +43,7 @@ textarea {
 
 <body>
 
-    <textarea id="marked-mathjax-input" style="" class="col-md-6" ng-model="inputText" ng-change="OnMarkDownEditorKeyUp()">
+    <textarea ng-if="mode === 'Edit'" id="marked-mathjax-input" style="" class="col-md-6" ng-model="uiDataValues.inputText" ng-change="OnMarkDownEditorKeyUp()">
     </textarea>
 
     

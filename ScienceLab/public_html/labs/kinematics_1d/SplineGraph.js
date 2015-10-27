@@ -135,7 +135,7 @@ SplineGraph.prototype.setLinearInterpolation = function(bLinear) {
 };
 
 SplineGraph.prototype.getPersistentDataAsJSON = function() {
-    var res = JSON.stringify({points: this.sparsePoints, type:this.curveType});
+    var res = JSON.stringify({points: this.sparsePoints, type:this.curveType, timeWindow:this.timeWindow});
     var out = JSON.parse(res);
     return out;
 };

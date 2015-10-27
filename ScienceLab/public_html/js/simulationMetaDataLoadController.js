@@ -11,7 +11,6 @@ controllers.controller('simulationMetaDataLoadController', function ($scope, $ht
         var query = new Parse.Query(SimulationMetaData);
         query.descending("updatedAt");
         query.limit(10);
-        //query.equalTo("UserId", currentUserEmail);
         query.find({
             success: function (results) {
                 // Do something with the returned Parse.Object values
@@ -23,8 +22,9 @@ controllers.controller('simulationMetaDataLoadController', function ($scope, $ht
                     var simtitle = object.get("simtitle");
                     var createdAt = object.get("createdAt");
                     var edited = object.get("edited");
+                    var simKey = object.get("simkey");
                     var createdOrEdited = (edited === true) ? "Edited" : "Created";
-                    $scope.recentActivity.push({createdOrEdited:createdOrEdited, userid:userid, username:username, simtitle:simtitle, simname:simname, createdAt:createdAt});
+                    $scope.recentActivity.push({simKey:simKey,createdOrEdited:createdOrEdited, userid:userid, username:username, simtitle:simtitle, simname:simname, createdAt:createdAt});
                 }
                 $scope.$apply();
             },
@@ -39,6 +39,8 @@ controllers.controller('simulationMetaDataLoadController', function ($scope, $ht
         sharedProperties.addPropertyValue("createdAt", $scope.recentActivity[index].createdAt);
         sharedProperties.addPropertyValue("userid", $scope.recentActivity[index].userid);
         sharedProperties.setPropertyName('SceneLoadFromServer');
+        sharedProperties.addPropertyValue("simKey", $scope.recentActivity[index].simKey);
+        sharedProperties.addPropertyValue('SceneLoadType', 'SceneLoadFromServer');
     };
     
     $scope.loadSimulationMetaData();

@@ -61,7 +61,7 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
     }]);
 
 //
-mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
+mainApp.controller('homePageLoadController', function ($scope, $http, $route, sharedProperties) {
     $scope.logged_in = false;
     $scope.login_emptyEmail = false;
     $scope.login_emptyPassword = false;
@@ -76,6 +76,10 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route) {
 
     };
 
+    $scope.OnLabMenuPressed = function () {
+        sharedProperties.addPropertyValue('SceneLoadType', 'SceneLoadNew');
+    };
+    
     if (typeof Parse !== 'undefined') {
         Parse.initialize("PgyTYm43FjxpiZxtN0GrtTxQjH7wCbHkt2ThVOz9", "HFcHZI8e1v62Avmbd4LvpELWDoLL0IecD3ZbvGVB");
         var currentUser = Parse.User.current();
@@ -344,6 +348,18 @@ mainApp.directive('markdowneditor', function () {
                     this.preview = document.getElementById("marked-mathjax-preview");
                     this.buffer = document.getElementById("marked-mathjax-preview-buffer");
                     this.textarea = document.getElementById("marked-mathjax-input");
+                    if( $scope.mode === 'Edit') {
+                        $('#marked-mathjax-preview').removeClass('col-md-12');
+                        $('#marked-mathjax-preview').addClass('col-md-6');
+                        $('#marked-mathjax-preview-buffer').removeClass('col-md-12');
+                        $('#marked-mathjax-preview-buffer').addClass('col-md-6');
+                    }
+                    else {
+                        $('#marked-mathjax-preview').removeClass('col-md-6');
+                        $('#marked-mathjax-preview').addClass('col-md-12');
+                        $('#marked-mathjax-preview-buffer').removeClass('col-md-6');
+                        $('#marked-mathjax-preview-buffer').addClass('col-md-12');
+                    }
                 },
                 //
                 //  Switch the buffer and preview, and display the right one.
@@ -385,7 +401,7 @@ mainApp.directive('markdowneditor', function () {
                     Preview.timeout = null;
                     if (this.mjRunning)
                         return;
-                    var text = $scope.inputText;
+                    var text = $scope.uiDataValues.inputText;
                     if (text === this.oldtext)
                         return;
                     text = this.Escape(text);                       //Escape tags before doing stuff
@@ -439,7 +455,6 @@ mainApp.directive('markdowneditor', function () {
 //
             Preview.callback = MathJax.Callback(["CreatePreview", Preview]);
             Preview.callback.autoReset = true;  // make sure it can run more than once
-            $scope.inputText = "$v$ = $u$ + $a$$t$";
             $scope.OnMarkDownEditorKeyUp = function () {
                 Preview.Update();
             };
@@ -612,6 +627,10 @@ mainApp.directive('view3d', function () {
                 // Update the lab
                 lab.simulate(dt);
                 updateTimeProgress();
+                if(lab.isSimulationOver()) {
+                    $('#PlayPauseButton').removeClass('fa-pause');
+                    $('#PlayPauseButton').addClass('fa-play');
+                }
             }
 
             function updateTimeProgress() {

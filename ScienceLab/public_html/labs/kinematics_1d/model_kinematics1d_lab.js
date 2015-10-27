@@ -17,6 +17,7 @@ Kinematics_Body.prototype.updateTagsOffsets = function() {
 function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
     this.textViewObserver = textViewObserver;
     this.view3dObserver = kinematics3DView;
+    this.prevStartTime = 0;
     this.tracks = [];
     this.bodies = [];
     this.timesnap_objects = [];
@@ -25,6 +26,9 @@ function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
     this.states.push(this.UniformVelocityState);
     this.states.push(this.UniformAccelerationState);
     this.states.push(this.UniformDecelerationState);
+    
+    this.IntervalDataRecord = [];
+    this.currentInterval = {start:0, end:0};
     
     this.bRecordGraphData = true;
     this.bRecordGraphDataEveryFrame = true;
@@ -125,6 +129,8 @@ Model_Kinematics1D_Lab.prototype = {
         this.time = 0;
         this.timeRecordCounter = 0;
         this.timeSnapRecordCounter = 0;
+        this.prevStartTime = 0;
+        this.IntervalDataRecord = [];
         for(var i=0; i<this.timesnap_objects.length; i++) {
             this.view3dObserver.removeObject3D(this.timesnap_objects[i]);
         }
@@ -139,17 +145,45 @@ Model_Kinematics1D_Lab.prototype = {
         this.syncViews();
     },
     
+    isSimulationOver: function() {
+        return this.time >= this.timeWindow;
+    },
+    
+    isPaused: function() {
+        return this.pauseSimulation;
+    },
+    
     playSimulation: function(bPlay) {
         this.pauseSimulation = !bPlay;
         if(this.time === 0) {
             this.tracks[0].initializeState();
         }
+        //this.manageTimeIntervalRecords(this.pauseSimulation);
+    },
+    
+    manageTimeIntervalRecords: function(pauseSimulation) {
+        // If played, create a new interval
+        if(!this.pauseSimulation) {
+            var newInterval = {start:this.time, end:this.time};
+            this.prevStartTime = this.time;
+            this.currentInterval = newInterval;
+        } // Else push the previous interval 
+        else {
+            // check if the currentinterval should be pushed on top or not
+            for(var i=0; i<this.IntervalDataRecord.length; i++) {
+                var interval = this.IntervalDataRecord[i];
+                
+            }
+            this.IntervalDataRecord.push(this.currentInterval);
+        }
     },
     
     simulate : function(dt) {
-        if(this.pauseSimulation || this.time > this.timeWindow)
+        if(this.pauseSimulation)
             return;
-        
+        if(this.time > this.timeWindow) {
+            this.playSimulation(false);
+        }        
         for( var i=0; i<this.tracks.length; i++) {
             this.tracks[i].advanceBody(this.time, dt);
         }
@@ -163,7 +197,8 @@ Model_Kinematics1D_Lab.prototype = {
         if(this.timeSnapRecordCounter === 0)
             this.timeSnap();
         
-        this.time += dt;        
+        this.time += dt;  
+        this.currentInterval.end = this.time;
         this.timeRecordCounter++;
         this.timeSnapRecordCounter++;
         if(this.timeRecordCounter > this.NumFramesToSkipForDataRecord)

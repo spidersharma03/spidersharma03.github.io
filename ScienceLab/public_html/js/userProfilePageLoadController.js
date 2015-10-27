@@ -25,8 +25,9 @@ controllers.controller('userProfilePageLoadController', function ($scope, $http,
                     var simtitle = object.get("simtitle");
                     var createdAt = object.get("createdAt");
                     var edited = object.get("edited");
+                    var simKey = object.get("simkey");
                     var createdOrEdited = (edited === true) ? "Edited" : "Created";
-                    $scope.recentActivity.push({createdOrEdited: createdOrEdited,userid:userid, username:username, simtitle:simtitle, simname:simname, createdAt:createdAt});
+                    $scope.recentActivity.push({simKey:simKey,createdOrEdited: createdOrEdited,userid:userid, username:username, simtitle:simtitle, simname:simname, createdAt:createdAt});
                 }
                 $scope.$apply();
             },
@@ -39,6 +40,7 @@ controllers.controller('userProfilePageLoadController', function ($scope, $http,
     $scope.OnSimulationClicked = function(index) {
         sharedProperties.setProperty($scope.recentActivity[index].createdAt);
         sharedProperties.addPropertyValue("createdAt", $scope.recentActivity[index].createdAt);
+        sharedProperties.addPropertyValue("simKey", $scope.recentActivity[index].simKey);
         sharedProperties.addPropertyValue("userid", $scope.recentActivity[index].userid);
         sharedProperties.setPropertyName('SceneLoadFromServer');
     };

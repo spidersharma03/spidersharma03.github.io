@@ -8,12 +8,14 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     $scope.name = "Kinematics1dLabController";
     $scope.KinematicsTabName = 'Kinematics';
     $scope.mode = 'Edit';
-    
+
     $scope.uiDataValues = {
+       inputText : "$v$ = $u$ + $a$$t$",
        selectedSplineGraphInputType : "0",
        selectedGraphType : "3",
        selectedProbeType : "0",
        timeWindow: 5,
+       timeRecordValue:10,
        InputTypeButtonState: false,
        // Math Data
        mathExpressionSyntaxError:false,
@@ -75,6 +77,14 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             initialPositionValue:0,
             initialVelocityValue:0
        }
+    };
+    $scope.timeRecordChanged = function() {
+        if($scope.mathInput !== undefined) {
+            $scope.mathInput.addTimeRecord($scope.uiDataValues.timeRecordValue);
+            var record = $scope.mathInput.getTimeRecord($scope.uiDataValues.timeRecordValue);
+//            if(record !== undefined)
+//                $scope.uiDataValues.mathInputData.expression = record.expression;
+        }
     };
     
     $scope.OnMathTypeTimeChanged = function() {
@@ -204,6 +214,16 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         if($scope.publishDataValues.selectedInputType === "Math") {
             $scope.lab.setMathInput($scope.mathInput);
         }
+        if($scope.publishDataValues.selectedViewType === 'Graph') 
+        {
+            $('#View3dDiv').removeClass('col-md-pull-6');
+            $('#View3dDiv').addClass('col-md-push-6');
+        }
+        else 
+        {
+            $('#View3dDiv').removeClass('col-md-push-6');
+            //$('#View3dDiv').addClass('col-md-pull-6');
+        }
     };
     
     $scope.onGraphInitialized = function() {
@@ -220,15 +240,24 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
                     $scope.uiDataValues.selectedGraphType = "0";
                     $scope.selectedGraphTypeChanged();
             }
+        if($scope.publishDataValues.selectedViewType === 'Graph') 
+        {
+            $('#GraphDiv').removeClass('col-md-push-6');
+            $('#GraphDiv').addClass('col-md-pull-6');
+        }
+        else {
+            $('#GraphDiv').removeClass('col-md-pull-6');
+            //$('#GraphDiv').addClass('col-md-push-6');
+        }
     };
     
     $scope.loadSimulationDataFromServer = function(userName, simulationName) {
         var Simulation = Parse.Object.extend("Simulation");
         var query = new Parse.Query(Simulation);
-        var date = sharedProperties.getPropertyValue("createdAt");
         var userid = sharedProperties.getPropertyValue("userid");
-        query.greaterThanOrEqualTo("createdAt", date);
         query.equalTo("userid", userid);
+        var key = sharedProperties.getPropertyValue("simKey");
+        query.equalTo("simkey", key);
         query.limit(1);
         query.find({
             success: function (results) {
@@ -243,7 +272,10 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
                 $scope.uiDataValues.graphInputData = graphInputData;
                 
                 var publishOptions = result.get("PublishOptions");
+                var simText = result.get("SimulationText");
+                $scope.inputText = simText;
                 $scope.uiDataValues.labJSONData = labJSON;
+                $scope.uiDataValues.inputText = simText;
                 $scope.publishDataValues = publishOptions;
                 $scope.$apply();
             },
@@ -255,12 +287,12 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     
     sharedProperties.addPropertyValue("uiDataValues", $scope.uiDataValues);
     sharedProperties.setProperty($scope.publishDataValues);
-    if( sharedProperties.getPropertyName() === "SceneLoadFromServer"  || sharedProperties.getPropertyName() === "SceneEdit") {
+    var sceneLoadType = sharedProperties.getPropertyValue("SceneLoadType");
+    if( sceneLoadType === "SceneLoadFromServer"  || sceneLoadType === "SceneEdit") {
         $scope.sceneLoaded = false;
-        var name = sharedProperties.getPropertyName();
-        if(name === 'SceneLoadFromServer')
+        if(sceneLoadType === 'SceneLoadFromServer')
             $scope.mode = 'View';
-        if(name === 'SceneEdit')
+        if(sceneLoadType === 'SceneEdit')
             $scope.mode = 'Edit';
         $scope.loadSimulationDataFromServer();
     }
@@ -268,7 +300,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         $scope.sceneLoaded = true;
         sharedProperties.setPropertyName('ScenePreview');
     }
-    
+            
     $scope.initGUI = function() {
        $scope.uiDataValues.selectedGraphType = $scope.publishDataValues.selectedGraphType;
        $scope.uiDataValues.selectedProbeType = "0";
@@ -279,14 +311,6 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             $scope.uiDataValues.mathPublishOptions = {};
             $scope.uiDataValues.mathExpressionSyntaxError = false;
             $scope.uiDataValues.mathInputData = {type:$scope.mathInput.type.toString(), expression:$scope.mathInput.mathExpression};
-        }
-       // Graph Data
-       if( $scope.splineGraph !== undefined ) {
-            $scope.uiDataValues.selectedSplineGraphInputType = $scope.publishDataValues.selectedSplineGraphInputType;
-            $scope.uiDataValues.graphInputData = {type:$scope.splineGraph.curveType, points:$scope.splineGraph.sparsePoints,
-                linearInterpolation:false,
-                timeWindow:$scope.publishDataValues.timeWindow
-            };
         }
        // Simulation Data
        $scope.uiDataValues.playPauseButtonState = "Play";
@@ -406,6 +430,10 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             $('#PlayPauseButton').removeClass('fa-play');
             $('#PlayPauseButton').addClass('fa-pause');
             $scope.uiDataValues.playPauseButtonState = "Pause";
+            // Create a new Current interval
+            if( $scope.mathInput !== undefined) {
+                var currentInterval = {start:0, end:0};
+            }
         } else {
             if( lab !== undefined) {
                 lab.playSimulation(false);
@@ -498,6 +526,17 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     
     $scope.setSplineGraph = function(splineGraph) {
         $scope.splineGraph = splineGraph;
+        if($scope.publishDataValues.selectedInputType === "Graph") {
+            $scope.lab.setGraphInput($scope.splineGraph);
+            // Graph Data
+           if( $scope.splineGraph !== undefined ) {
+                $scope.uiDataValues.selectedSplineGraphInputType = $scope.publishDataValues.selectedSplineGraphInputType;
+                $scope.uiDataValues.graphInputData = {type:$scope.splineGraph.curveType, points:$scope.splineGraph.sparsePoints,
+                    linearInterpolation:false,
+                    timeWindow:$scope.publishDataValues.timeWindow
+            };
+        }   
+        }    
     };
     
     $scope.OnKinematicsTabClick = function(tabName) {
@@ -595,8 +634,10 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
                         var simulationMetaData = new SimulationMetaData();
                         var Simulation = Parse.Object.extend("Simulation");
                         var simulation = new Simulation();
-                        $scope.publishSimulationMetaData(currentUser, simulationMetaData, false);
-                        $scope.publishSimulation(currentUser, simulation, false);
+                        var date = new Date();
+                        var dateKey = date.toISOString();
+                        $scope.publishSimulationMetaData(currentUser, simulationMetaData, false, dateKey);
+                        $scope.publishSimulation(currentUser, simulation, false, dateKey);
                     }
               },
               error: function(error) {
@@ -606,26 +647,26 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         }
     };
     
-    $scope.publishSimulation = function(currentUser, simulation, edited) {
+    $scope.publishSimulation = function(currentUser, simulation, edited, key) {
         if(currentUser === undefined)
             return;
         
         var currentUserEmail = currentUser.get("email");
         // Save Lab related Info
         simulation.set("userid", currentUserEmail);
-        
+        simulation.set("simkey", key);
         var labJson = $scope.lab.getAsJSON();
         simulation.set("edited", edited);
         simulation.set("SimulationData", labJson);
         var publishOptions = {
-            timeWindow:$scope.publishDataValues.timeWindow,
-            selectedInputType:$scope.publishDataValues.selectedInputType,
-            selectedGraphOption:$scope.publishDataValues.selectedGraphOption,
-            selectedViewType:$scope.publishDataValues.selectedViewType,
-            type_time_Selected:$scope.publishDataValues.type_time_Selected,
-            type_probe_Selected:$scope.publishDataValues.type_probe_Selected,
-            selectedSplineGraphInputType: $scope.publishDataValues.selectedSplineGraphInputType,
-            selectedGraphType : $scope.publishDataValues.selectedGraphType,
+            timeWindow:$scope.uiDataValues.timeWindow,
+            selectedInputType:$scope.uiDataValues.selectedInputType,
+            selectedGraphOption:$scope.uiDataValues.selectedGraphOption,
+            selectedViewType:$scope.uiDataValues.selectedViewType,
+            type_time_Selected:$scope.uiDataValues.type_time_Selected,
+            type_probe_Selected:$scope.uiDataValues.type_probe_Selected,
+            selectedSplineGraphInputType: $scope.uiDataValues.selectedSplineGraphInputType,
+            selectedGraphType : $scope.uiDataValues.selectedGraphType,
             mathPublishOptions:$scope.publishDataValues.mathPublishOptions,
             graphPublishOptions:$scope.publishDataValues.graphPublishOptions
         };
@@ -633,15 +674,16 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         var publishOptionsJSON = JSON.parse(string);
         simulation.set("PublishOptions", publishOptionsJSON);
         var mathInputJsonData;
-        if($scope.KinematicsTabName === "Math")
+        if($scope.uiDataValues.selectedInputType === "Math")
                mathInputJsonData = $scope.mathInput.getPersistentDataAsJSON();
         var graphInputJsonData;   
-        if($scope.KinematicsTabName === "Graph")
+        if($scope.uiDataValues.selectedInputType === "Graph")
                graphInputJsonData = $scope.splineGraph.getPersistentDataAsJSON();
         if(mathInputJsonData !== undefined)   
             simulation.set("MathInputJsonData", mathInputJsonData);
         if(graphInputJsonData !== undefined)
             simulation.set("GraphInputJsonData", graphInputJsonData);
+        simulation.set("SimulationText", $scope.uiDataValues.inputText);
         
         simulation.save(null, {
             success: function(simulation) {
@@ -653,7 +695,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         });
     };
 
-    $scope.publishSimulationMetaData = function(currentUser, simulationMetaData, edited) {
+    $scope.publishSimulationMetaData = function(currentUser, simulationMetaData, edited, key) {
         if(currentUser === undefined)
             return;
         var currentUserEmail = currentUser.get("email");
@@ -664,6 +706,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         simulationMetaData.set("userid", currentUserEmail);
         simulationMetaData.set("username", currentUserName);
         simulationMetaData.set("edited", edited);
+        simulationMetaData.set("simkey", key);
         simulationMetaData.save(null, {
             success: function(simulationMetaData) {
               alert('SimulationMetaData saved: ' + simulationMetaData.id);

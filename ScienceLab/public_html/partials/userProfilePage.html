@@ -7,7 +7,7 @@
   <!-- List group -->
   <div class="">
     <ul class="list-group" ng-repeat="data in recentActivity">
-        <li  class="list-group-item"><b> {{data.createdOrEdited}} </b><b style=" color: #330099"> {{data.simtitle}}</b> in {{data.simname}} on {{data.createdAt.toDateString()}} <a href="#Labs"><i title="Edit" class="fa fa-pencil-square-o fa-fw" ng-click="OnEditPressed($index)"></i></a><a  ng-click="OnDeletePressed($index)"><i title="Delete" class="fa fa-trash-o fa-fw"></i></a></li>
+        <li  class="list-group-item"><b> {{data.createdOrEdited}} </b><b style=" color: #330099"> {{data.simtitle}}</b> in {{data.simname}} on {{data.createdAt.toDateString()}} <a class="btn btn-xs btn-success" href="#Labs"><i title="Edit" class="fa fa-pencil-square-o fa-lg" ng-click="OnEditPressed($index)"></i></a><a class="btn btn-xs btn-warning"  ng-click="OnDeletePressed($index)"><i title="Delete" class="fa fa-trash-o fa-lg"></i></a></li>
     </ul>
   </div> 
       

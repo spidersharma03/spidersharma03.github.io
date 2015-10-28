@@ -348,6 +348,7 @@ mainApp.directive('markdowneditor', function () {
                     this.preview = document.getElementById("marked-mathjax-preview");
                     this.buffer = document.getElementById("marked-mathjax-preview-buffer");
                     this.textarea = document.getElementById("marked-mathjax-input");
+
                     if( $scope.mode === 'Edit') {
                         $('#marked-mathjax-preview').removeClass('col-md-12');
                         $('#marked-mathjax-preview').addClass('col-md-6');

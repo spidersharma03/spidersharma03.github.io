@@ -16,7 +16,6 @@ controllers.controller('userProfilePageLoadController', function ($scope, $http,
         query.limit(10);
         query.find({
             success: function (results) {
-                // Do something with the returned Parse.Object values
                 for (var i = 0; i < results.length; i++) {
                     var object = results[i];
                     var username = object.get("username");
@@ -48,17 +47,22 @@ controllers.controller('userProfilePageLoadController', function ($scope, $http,
     $scope.OnEditPressed = function(index) {
         sharedProperties.setPropertyName("SceneEdit");
         sharedProperties.addPropertyValue("createdAt", $scope.recentActivity[index].createdAt);
+        sharedProperties.addPropertyValue("simKey", $scope.recentActivity[index].simKey);
         sharedProperties.addPropertyValue("userid", $scope.recentActivity[index].userid);
+        sharedProperties.addPropertyValue('SceneLoadType', 'SceneEdit');
     };
     
     $scope.OnDeletePressed = function(index) {
+        var r = confirm("Are you sure, you want to delete the scene?");
+        if (r === false) {
+            return;
+        } 
         var Simulation = Parse.Object.extend("Simulation");
         var query = new Parse.Query(Simulation);
-        var date = $scope.recentActivity[index].createdAt;
+        var simKey = $scope.recentActivity[index].simKey;
         var userid = $scope.recentActivity[index].userid;
-        query.greaterThanOrEqualTo("createdAt", date);
         query.equalTo("userid", userid);
-        query.limit(1);
+        query.equalTo("simkey", simKey);
         query.find({
             success: function (results) {
                 if(results.length === 0)

@@ -604,30 +604,46 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             var numSimsForCurrentUser = 0;
             query.find({
               success: function(results) {
+                    var sceneLoadType = sharedProperties.getPropertyValue('SceneLoadType');
                     numSimsForCurrentUser = results.length;
-                    if( numSimsForCurrentUser > 1) {
+                    if( numSimsForCurrentUser > 1 && sceneLoadType !== 'SceneEdit') {
                         alert("You have exceeded the limit to publish more!");
                         return;
                     }
-                    if( sharedProperties.getPropertyName() === "SceneEdit") {
+                    if( sceneLoadType === 'SceneEdit' ) {
                         var Simulation = Parse.Object.extend("Simulation");
                         var query = new Parse.Query(Simulation);
-                        var date = sharedProperties.getPropertyValue("createdAt");
+                        var simKey = sharedProperties.getPropertyValue("simKey");
                         var userid = sharedProperties.getPropertyValue("userid");
-                        query.greaterThanOrEqualTo("createdAt", date);
                         query.equalTo("userid", userid);
-                        query.limit(1);
+                        query.equalTo("simkey", simKey);
                         query.find({
-                        success: function (result) {
-                            if(result.length === 0)
-                                return;
-                            var simulation = result[0];
-                            $scope.publishSimulation(currentUser, simulation, true);
-                        },
-                        error: function (error) {
-                            alert("Error: " + error.code + " " + error.message);
-                        }
-                    });
+                            success: function (result) {
+                                if(result.length === 0)
+                                    return;
+                                var simulation = result[0];
+                                $scope.publishSimulation(currentUser, simulation, true);
+                            },
+                            error: function (error) {
+                                alert("Error: " + error.code + " " + error.message);
+                            }
+                        });
+                        var SimulationMetaData = Parse.Object.extend("SimulationMetaData");
+                        var simulationMetaData = new SimulationMetaData()
+;                       var query = new Parse.Query(SimulationMetaData);
+                        query.equalTo("userid", userid);
+                        query.equalTo("simkey", simKey);
+                        query.find({
+                            success: function (result) {
+                                if(result.length === 0)
+                                    return;
+                                var simulationMetaData = result[0];
+                                $scope.publishSimulationMetaData(currentUser, simulationMetaData, true);
+                            },
+                            error: function (error) {
+                                alert("Error: " + error.code + " " + error.message);
+                            }
+                        });
                     }
                     else {
                         var SimulationMetaData = Parse.Object.extend("SimulationMetaData");
@@ -654,7 +670,8 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         var currentUserEmail = currentUser.get("email");
         // Save Lab related Info
         simulation.set("userid", currentUserEmail);
-        simulation.set("simkey", key);
+        if(key !== undefined)
+            simulation.set("simkey", key);
         var labJson = $scope.lab.getAsJSON();
         simulation.set("edited", edited);
         simulation.set("SimulationData", labJson);
@@ -706,10 +723,12 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         simulationMetaData.set("userid", currentUserEmail);
         simulationMetaData.set("username", currentUserName);
         simulationMetaData.set("edited", edited);
-        simulationMetaData.set("simkey", key);
+        if(key !== undefined)
+            simulationMetaData.set("simkey", key);
         simulationMetaData.save(null, {
             success: function(simulationMetaData) {
               alert('SimulationMetaData saved: ' + simulationMetaData.id);
+              var res = simulationMetaData.get("edited");
             },
             error: function(simulationMetaData, error) {
               alert('error in saving SimulationMetaData: ' + error.message);

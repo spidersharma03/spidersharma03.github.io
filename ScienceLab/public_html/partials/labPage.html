@@ -35,7 +35,7 @@
         <div class="col-md-6">
         </div>
         <div ng-if="mode === 'Edit'" class="col-md-1">
-            <button ng-show="mode !== 'Preview'" class="btn btn-warning fa fa-upload" ng-click="OnPublishOptionPressed()" target="_self" data-toggle="modal"  data-target="#PublishOptionsModel"><a style="color: white" href="">Publish</a></button>
+            <button ng-show="mode !== 'Preview'" class="btn btn-warning fa fa-save fa-lg" ng-click="OnPublishOptionPressed()" target="_self" data-toggle="modal"  data-target="#PublishOptionsModel"><a style="color: white" href="">Save</a></button>
         </div>
     </div>
     <div class="row col-md-12" >
@@ -67,7 +67,10 @@
     </div>
     
     <div class="row-fluid col-md-12">
-        <div class="panel panel-info">
+         <markdowneditor>
+                    
+        </markdowneditor>
+<!--        <div class="panel">
             <div class="panel-heading">
                 <h3 class="panel-title" style="text-align: center">Edit</h3>
             </div>
@@ -75,9 +78,9 @@
                 <markdowneditor>
                     
                 </markdowneditor>
-            <!--<iframe id="IFrameEditor"  style="height:100%;width:100%; border: none; box-shadow: 3px 3px 5px 3px #888888;" src="labs/common/MarkDownEditor.html"></iframe>-->
+            <iframe id="IFrameEditor"  style="height:100%;width:100%; border: none; box-shadow: 3px 3px 5px 3px #888888;" src="labs/common/MarkDownEditor.html"></iframe>
             </div>
-        </div>
+        </div>-->
     </div>
     
 </div>

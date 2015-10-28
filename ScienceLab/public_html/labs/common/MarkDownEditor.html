@@ -1,59 +1,58 @@
 
 <!DOCTYPE html>
 <html>
-<head>
-    
-<title>Live markdown editor based on MathJax and Marked</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <head>
 
-<!-- based on MathJax/test/sample-dynamic-2.html -->
+        <title>Live markdown editor based on MathJax and Marked</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-<style>
-body {
-    /*width: 100em;*/
-}
-.hint {
-    text-align: right;
-    color: #555555;
-    font-size: small;
-}
-.hint a {
-    color: #555555;
-}
-textarea {
-    resize: none;
-/*    margin-top: 1ex;
-    width: 49%;*/
-    height: 20em;
-}
-.preview {
-/*    border:1px solid; 
-    padding: 1px; 
-    width: 49%;
-    height: 20em;
-    margin-top:1ex;
-    float: right;*/
-}
-</style>
-<link href="css/bootstrap.min.css" rel="stylesheet">
+        <!-- based on MathJax/test/sample-dynamic-2.html -->
+
+        <style>
+            body {
+                /*width: 100em;*/
+            }
+            .hint {
+                text-align: right;
+                color: #555555;
+                font-size: small;
+            }
+            .hint a {
+                color: #555555;
+            }
+            textarea {
+                resize: none;
+                /*    margin-top: 1ex;
+                    width: 49%;*/
+                height: 20em;
+            }
+            .preview {
+                /*    border:1px solid; 
+                    padding: 1px; 
+                    width: 49%;
+                    height: 20em;
+                    margin-top:1ex;
+                    float: right;*/
+            }
+        </style>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
         <!--<link href="css/bootstrap-responsive.css" rel="stylesheet">-->
-<link rel="stylesheet" href="css/bootstrap-theme.min.css">
-</head>
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    </head>
 
-<body>
+    <body>
+        <div class="row-fluid panel panel-default panel-body" style="overflow-y: scroll;">
+            <div ng-if="mode === 'Edit'" class="col-md-6" id="marked-mathjax-input">
+            <textarea   style="width: 100%; height: 500px; border: 1px solid #888888;border-radius: 10px" ng-model="uiDataValues.inputText" ng-change="OnMarkDownEditorKeyUp()">
+            </textarea>
+            </div>
 
-    <textarea ng-if="mode === 'Edit'" id="marked-mathjax-input" style="" class="col-md-6" ng-model="uiDataValues.inputText" ng-change="OnMarkDownEditorKeyUp()">
-    </textarea>
+            <div class=" col-md-6" style="display: inline-block; height: 500px;border: 1px solid #888888; border-radius: 10px;overflow-y: scroll;" id="marked-mathjax-preview">
+            </div>
 
-    
-  <div class=" col-md-6" style="display: inline-block; border:  inset;height:100%" id="marked-mathjax-preview"></div>
-  
-  <div class="col-md-6" style="display: inline-block;border:  inset ;height:100%" id="marked-mathjax-preview-buffer" 
-       style="display:none;
-              position:absolute; 
-                  top:0; left: 0">
-  </div>
-
-</body>
+            <div class="col-md-6" style="display: none ; height: 500px;border: 1px solid #888888;border-radius: 10px; position:absolute;overflow-y: scroll;" id="marked-mathjax-preview-buffer">
+            </div>
+        </div>
+    </body>
 </html>

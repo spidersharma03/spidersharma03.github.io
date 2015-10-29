@@ -50,6 +50,8 @@ function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
         body.position.copy(trackData.body.position);
         body.velocity.copy(trackData.body.velocity);
         body.acceleration.copy(trackData.body.acceleration);
+        body.initialPosition = body.position.x;
+        body.initialVelocity = body.velocity.x;
         body.addTag({name:"textTag", text:"Kinematics Body", offset:{x:0, y:40}, color:"red"});
         body.updateTag("textTag", "color", "green");
         body.addTag({name:"positionTag", text:"x = ", value:0, attribute:PhysicalBody.POSITION_ATTRIBUTE, offset:{x:15, y:20}});
@@ -153,6 +155,14 @@ Model_Kinematics1D_Lab.prototype = {
         return this.pauseSimulation;
     },
     
+    simulateFull: function() {
+        this.playSimulation(true);
+        while(!this.isSimulationOver()) {
+            this.simulate(0.016);
+        }
+        this.playSimulation(false);
+    },
+    
     playSimulation: function(bPlay) {
         this.pauseSimulation = !bPlay;
         if(this.time === 0) {
@@ -184,9 +194,6 @@ Model_Kinematics1D_Lab.prototype = {
         if(this.time > this.timeWindow) {
             this.playSimulation(false);
         }        
-        for( var i=0; i<this.tracks.length; i++) {
-            this.tracks[i].advanceBody(this.time, dt);
-        }
         this.syncViews();
         
         this.recordGraphData();
@@ -198,6 +205,9 @@ Model_Kinematics1D_Lab.prototype = {
             this.timeSnap();
         
         this.time += dt;  
+        for( var i=0; i<this.tracks.length; i++) {
+            this.tracks[i].advanceBody(this.time, dt);
+        }
         this.currentInterval.end = this.time;
         this.timeRecordCounter++;
         this.timeSnapRecordCounter++;
@@ -228,7 +238,7 @@ Model_Kinematics1D_Lab.prototype = {
                 tickHeight: 14,
                 text: this.time
             } );
-            this.graphObserver._graph.setAnnotations(this.annotations);
+            //this.graphObserver._graph.setAnnotations(this.annotations);
             return;
             //this.view3dObserver.addSpriteToScene(this.timeSnapPosition, 0.25);
             var taginfo1 = simBody.addTag({name:  "[a] = ", value:body.acceleration.x.toPrecision(3), offset:{x:0, y:80}});
@@ -316,14 +326,10 @@ Model_Kinematics1D_Lab.prototype = {
     },
     
     updateGraphData: function() {
-//        if(this.time > 5)
-//            return;
         this.graphObserver.updateData();
     },
     
     recordGraphData : function() {
-//        if(this.time > 5)
-//            return;
         if( this.bRecordGraphData ) {
             for( var i=0; i<this.tracks.length; i++) {
                 var body = this.tracks[i].body;
@@ -383,6 +389,8 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
     initializeState: function(time) {
         if(time === undefined)
             time = 0;
+        this.body.position.x = this.body.initialPosition;
+        this.body.velocity.x = this.body.initialVelocity;
         // Initialize state from corresponding input
         if(this.mathInput !== null) {
             //this.body.velocity.x = -2;
@@ -391,7 +399,9 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
     },
     
     resetState: function() {
-        this.setBodyState(this.state);
+        this.body.position.x = this.body.initialPosition;
+        this.body.velocity.x = this.body.initialVelocity;
+        //this.setBodyState(this.state);
     },
     
     setBodyState: function(state) {
@@ -411,9 +421,12 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
         // Check If the acceleration is governed by a spline or math equation
         if(this.mathInput) {
             if(this.mathInput.type === 2) { // acceleration-time
-                this.body.acceleration.x = this.mathInput.Value(time);
-                this.body.velocity.x += this.body.acceleration.x * dt;
-                this.body.position.x += this.body.velocity.x * dt;
+                var a1 = this.mathInput.Value(time);
+                var a2 = this.mathInput.Value(time+dt*0.5);
+                this.body.acceleration.x = a1;
+                var vtemp = this.body.velocity.x + a1 * dt * 0.5;
+                this.body.velocity.x += a2 * dt;
+                this.body.position.x += vtemp * dt;
             }
             else if(this.mathInput.type === 1) { // velocity-time
                 this.body.acceleration.x = this.mathInput.FirstDerivative(time);
@@ -427,9 +440,12 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
         }
         else if(this.graphInput) {
             if(this.graphInput.curveType === 2) { // acceleration-time
-                this.body.acceleration.x = this.graphInput.Value(time);
-                this.body.velocity.x += this.body.acceleration.x * dt;
-                this.body.position.x += this.body.velocity.x * dt;
+                var a1 = this.graphInput.Value(time);
+                var a2 = this.graphInput.Value(time+dt*0.5);
+                this.body.acceleration.x = a1;
+                var vtemp = this.body.velocity.x + a1 * dt * 0.5;
+                this.body.velocity.x += a2 * dt;
+                this.body.position.x += vtemp * dt;
             }
             else if(this.graphInput.curveType === 1) { // velocity-time
                 this.body.acceleration.x = this.graphInput.Velocity(time);
@@ -442,8 +458,8 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
             }
         }
         else {
-            this.body.velocity.x += this.body.acceleration.x * dt;
-            this.body.position.x += this.body.velocity.x * dt;
+            this.body.velocity.x = this.body.initialVelocity + this.body.acceleration.x * time;
+            this.body.position.x = this.body.initialPosition + this.body.initialVelocity * time + 0.5 * this.body.acceleration.x * time * time;
         }
         // Update 
         // Handle collision at end points for a finite track

@@ -28,7 +28,8 @@ Model_Graph.prototype = {
   },
   
   updateData: function() {
-      this._graph.updateOptions({ 'file': this.series_data });
+      if(this.series_data.length !== 0)
+        this._graph.updateOptions({ 'file': this.series_data });
   },
   
   updateOptions: function(options) {

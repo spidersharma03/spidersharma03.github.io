@@ -110,27 +110,27 @@ MathInput.prototype = {
     
     Value: function(t) {
        this.scope.t = t; 
-       var currentRecord;
-       for(var i=0; i<this.timeRecordData.length; i++) {
-           var record = this.timeRecordData[i];
-           if(t >= record.start && t < record.end) {
-               currentRecord = record;
-               break;
-           }
-       }
-       if( currentRecord === undefined) {
-           if( t < this.timeRecordData[0].start)
-               currentRecord = this.timeRecordData[0];
-           if( t > this.timeRecordData[this.timeRecordData.length-1].start)
-               currentRecord = this.timeRecordData[this.timeRecordData.length-1];
-       }
-       var code;
-       if(currentRecord !== undefined)
-             code = currentRecord.code;
-       else
-           code = this.code;
+//       var currentRecord;
+//       for(var i=0; i<this.timeRecordData.length; i++) {
+//           var record = this.timeRecordData[i];
+//           if(t >= record.start && t < record.end) {
+//               currentRecord = record;
+//               break;
+//           }
+//       }
+//       if( currentRecord === undefined) {
+//           if( t < this.timeRecordData[0].start)
+//               currentRecord = this.timeRecordData[0];
+//           if( t > this.timeRecordData[this.timeRecordData.length-1].start)
+//               currentRecord = this.timeRecordData[this.timeRecordData.length-1];
+//       }
+//       var code;
+//       if(currentRecord !== undefined)
+//             code = currentRecord.code;
+//       else
+//           code = this.code;
        
-       var result = code.eval(this.scope);
+       var result = this.code.eval(this.scope);
        if(this.isNumeric(result))
             return result;
        else

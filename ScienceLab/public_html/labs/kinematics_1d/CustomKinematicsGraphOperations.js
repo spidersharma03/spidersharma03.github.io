@@ -46,6 +46,10 @@ CustomKinematicsGraphOperations.prototype.changeGraphType = function(graphType) 
         var hairlines = this.graph.hairlines.get();
         this.calculateAverageValues(hairlines);
     }
+    if(this.probeType === 2) { // Chord probe
+        var hairlines = this.graph.hairlines.get();
+        this.calculateAreas(hairlines);
+    }
 };
 
 CustomKinematicsGraphOperations.prototype.changeProbeType = function (probeType) {
@@ -59,6 +63,7 @@ CustomKinematicsGraphOperations.prototype.changeProbeType = function (probeType)
             hairlines.push({xval:x1, interpolated : true});
             hairlines.push({xval:x2, interpolated : true});
             this.graph.hairlines.set(hairlines);
+            this.calculateAreas(hairlines);
      }
     if(this.probeType === 3) { // Chord probe
             var hairlines = this.graph.hairlines.get();
@@ -98,6 +103,8 @@ CustomKinematicsGraphOperations.prototype.drawLinesForChord = function(canvas) {
         canvas.lineWidth = 1.0;
         
         if( point1 !== undefined) {
+            canvas.installPattern([10, 5]);
+            
             canvas.beginPath();
             canvas.moveTo(point1[0], point1[1]);
             canvas.lineTo(point1[0] - 1000, point1[1]);
@@ -121,6 +128,14 @@ CustomKinematicsGraphOperations.prototype.drawLinesForChord = function(canvas) {
             canvas.lineTo(point2[0] - 1000, point2[1]);
             canvas.closePath();
             canvas.stroke();  
+            canvas.uninstallPattern();
+    
+            canvas.lineWidth = 2.0;
+            canvas.beginPath();
+            canvas.moveTo(point1[0], point1[1]);
+            canvas.lineTo(point2[0], point2[1]);
+            canvas.closePath();
+            canvas.stroke();
         }
     }
 };
@@ -291,22 +306,27 @@ CustomKinematicsGraphOperations.prototype.calculateAverageValues = function(hl) 
         deltat = Math.abs(x2 - x1);
         var y1 = [0,0,0], y2 = [0,0,0];
         // Find the corresponding row for each hairline
-        for( var i=0; i<nRows; i++ ) {
-            var val = this.graph._graph.getValue(i,0);
-            var diff = Math.abs(val - x1);
+        for( var i=0; i<nRows-1; i++ ) {
+            var val1 = this.graph._graph.getValue(i,0);
+            var val2 = this.graph._graph.getValue(i+1,0);
             
-                if( diff < 1e-2) {
-                    for(var j=0; j<this.graphTypeArray.length; j++) {
-                        var seriesIndex = this.graphTypeArray[j];
-                        y1[seriesIndex] = this.graph._graph.getValue(i,seriesIndex+1);
-                    }
+            if( x1 > val1 && x1 < val2) {
+                for(var j=0; j<this.graphTypeArray.length; j++) {
+                    var seriesIndex = this.graphTypeArray[j];
+                    var v1 = this.graph._graph.getValue(i,seriesIndex+1);
+                    var v2 = this.graph._graph.getValue(i+1,seriesIndex+1);
+                    var t = (x1 - val1)/(val2 - val1);
+                    y1[seriesIndex] = v1*(1-t) + v2*t;
                 }
+            }
             
-            diff = Math.abs(val - x2);
-            if( diff < 1e-2) {
+            if( x2 > val1 && x2 < val2) {
                     for(var j=0; j<this.graphTypeArray.length; j++) {
                         var seriesIndex = this.graphTypeArray[j];
-                        y2[seriesIndex] = this.graph._graph.getValue(i,seriesIndex+1);
+                        var v1 = this.graph._graph.getValue(i,seriesIndex+1);
+                        var v2 = this.graph._graph.getValue(i+1,seriesIndex+1);
+                        var t = (x2 - val1)/(val2 - val1);
+                        y2[seriesIndex] = v1*(1-t) + v2*t;
                     }
             }
         }

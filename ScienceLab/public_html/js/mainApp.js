@@ -484,7 +484,7 @@ mainApp.directive('graph', function () {
                     if (data.points.length === 0)
                         return;
                     var time = data.points[0].xval;
-                    $('.hairline-legend', div).html("<span>t = " + time.toFixed(3) + "</span>")
+                    $('.hairline-legend', div).html("<span>t: " + time.toFixed(3) + "</span>")
                     return;
                     if (hairlines.type > 1) {
                         return;
@@ -556,7 +556,11 @@ mainApp.directive('graph', function () {
             }
             $(hairlines).on('hairlineCreated', function (e) {
                 var hl = this.get();
-                if (hl.length > 2) {
+                var probeType = $scope.uiDataValues.selectedProbeType;
+                var n = 0;
+                if(probeType === "2" || probeType === "3")
+                    n = 2;
+                if (hl.length > n) {
                     hl.pop();
                     this.set(hl);
                 }

@@ -12,7 +12,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     $scope.uiDataValues = {
        inputText : "$v$ = $u$ + $a$$t$",
        selectedSplineGraphInputType : "0",
-       selectedGraphType : "3",
+       selectedGraphType : "0",
        selectedProbeType : "0",
        timeWindow: 5,
        timeRecordValue:10,
@@ -61,7 +61,8 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        type_time_Selected:[true, true, true],
        type_probe_Selected:[true, true, true, true],
        selectedSplineGraphInputType:"0",
-       selectedGraphType: "0",
+       selectedGraphType: "3",
+       selectedProbeType : "0",
        timeWindow:5,
        // Math Publish Options
        mathPublishOptions:{ 
@@ -78,6 +79,11 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             initialVelocityValue:0
        }
     };
+    
+    $scope.OnGraphSaveClicked = function() {
+        //var canvas = $scope.modelGraph._graph.canvas_;//.customGraphOperations.canvas;
+    },
+    
     $scope.timeRecordChanged = function() {
         if($scope.mathInput !== undefined) {
             $scope.mathInput.addTimeRecord($scope.uiDataValues.timeRecordValue);
@@ -230,15 +236,31 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         if($scope.publishDataValues.selectedViewType !== "View3D") {
                 var counter = 0;
                 for( var i=0; i<$scope.publishDataValues.type_time_Selected.length; i++) {
-                    if($scope.publishDataValues.type_time_Selected[i] === true)
+                    if($scope.publishDataValues.type_time_Selected[i] === true){
+                        $scope.uiDataValues.selectedGraphType = i.toString();
                         counter++;
+                    }
                 }
-                if(counter > 1)
+                if(counter > 1) {
                     $scope.publishDataValues.graphTypeMultiChoice = true;
+                    if(counter === 3)
+                        $scope.uiDataValues.selectedGraphType = "3";
+                }
                 else
                     $scope.publishDataValues.graphTypeMultiChoice = false;
-                    $scope.uiDataValues.selectedGraphType = "0";
-                    $scope.selectedGraphTypeChanged();
+                
+                var selectedIndex = -1;
+                for( var i=0; i<$scope.publishDataValues.type_probe_Selected.length; i++) {
+                    if($scope.publishDataValues.type_probe_Selected[i] === true) {
+                            selectedIndex = i;
+                            break;
+                    }
+                }
+                if(selectedIndex !== -1)
+                    $scope.uiDataValues.selectedProbeType = selectedIndex.toString();
+                    
+                $scope.selectedGraphTypeChanged();
+                $scope.selectedProbeTypeChanged();
             }
         if($scope.publishDataValues.selectedViewType === 'Graph') 
         {
@@ -249,6 +271,9 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             $('#GraphDiv').removeClass('col-md-pull-6');
             //$('#GraphDiv').addClass('col-md-push-6');
         }
+//        if($scope.lab !== undefined && $scope.uiDataValues.selectedViewType === 'Graph') {
+//            $scope.lab.simulateFull();
+//        }
     };
     
     $scope.loadSimulationDataFromServer = function(userName, simulationName) {
@@ -267,9 +292,11 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
                 var result = results[0];
                 var labJSON = result.get("SimulationData");
                 var mathInputData = result.get("MathInputJsonData");
-                $scope.uiDataValues.mathInputData = mathInputData;
+                if(mathInputData !== undefined)
+                    $scope.uiDataValues.mathInputData = mathInputData;
                 var graphInputData = result.get("GraphInputJsonData");
-                $scope.uiDataValues.graphInputData = graphInputData;
+                if(graphInputData !== undefined)
+                    $scope.uiDataValues.graphInputData = graphInputData;
                 
                 var publishOptions = result.get("PublishOptions");
                 var simText = result.get("SimulationText");
@@ -303,7 +330,6 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             
     $scope.initGUI = function() {
        $scope.uiDataValues.selectedGraphType = $scope.publishDataValues.selectedGraphType;
-       $scope.uiDataValues.selectedProbeType = "0";
        
        $scope.uiDataValues.InputTypeButtonState = false;
        // Math Data
@@ -363,16 +389,26 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     
     $scope.positionValueChanged = function() {
         if($scope.lab !== undefined) {
+             if($scope.lab.time !== 0)
+                $scope.OnResetPressed();
              var model = $scope.lab.tracks[0].body;
-             model.position.x = Number($scope.uiDataValues.positionValue);
+             model.initialPosition = Number($scope.uiDataValues.positionValue);
+             if($scope.lab.time === 0) {
+                 model.position.x = model.initialPosition;
+             }
              $scope.lab.syncViews();
         }
     };
     
     $scope.velocityValueChanged = function() {
         if($scope.lab !== undefined) {
+             if($scope.lab.time !== 0)
+                $scope.OnResetPressed();
              var model = $scope.lab.tracks[0].body;
-             model.velocity.x = Number($scope.uiDataValues.velocityValue);
+             model.initialVelocity = Number($scope.uiDataValues.velocityValue);
+             if($scope.lab.time === 0) {
+                 model.velocity.x = model.initialVelocity;
+             }
              $scope.lab.syncViews();
         }
     };
@@ -387,11 +423,16 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     
     $scope.selectedStateTypeChanged = function() {
         if($scope.lab !== undefined) {
+            if($scope.lab.time !== 0)
+                $scope.OnResetPressed();
             var selectedStateNumber = Number($scope.uiDataValues.selectedStateType);
             if(selectedStateNumber === 3) { // User defined
                 $scope.uiDataValues.positionValue = 0;
                 $scope.uiDataValues.velocityValue = 1;
                 $scope.uiDataValues.accelerationValue = 0;
+                var body = $scope.lab.tracks[0].body;
+                body.initialPosition = $scope.uiDataValues.positionValue;
+                body.initialVelocity = $scope.uiDataValues.velocityValue;
             }
             else {
                 var state = $scope.lab.states[selectedStateNumber];
@@ -399,6 +440,9 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
                 $scope.uiDataValues.positionValue = state.position;
                 $scope.uiDataValues.velocityValue = state.velocity;
                 $scope.uiDataValues.accelerationValue = state.acceleration;
+                var body = $scope.lab.tracks[0].body;
+                body.initialPosition = $scope.uiDataValues.positionValue;
+                body.initialVelocity = $scope.uiDataValues.velocityValue;
             }
             $scope.lab.syncViews();
         }
@@ -425,15 +469,16 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         var lab = $scope.lab;
         if( $scope.uiDataValues.playPauseButtonState === "Play") {
             if( lab !== undefined) {
-                lab.playSimulation(true);
+                if($scope.uiDataValues.selectedViewType === 'Graph')
+                    lab.simulateFull();
+                else {
+                    lab.playSimulation(true);
+                    $('#PlayPauseButton').removeClass('fa-play');
+                    $('#PlayPauseButton').addClass('fa-pause');
+                    $scope.uiDataValues.playPauseButtonState = "Pause";
+                }
             }
-            $('#PlayPauseButton').removeClass('fa-play');
-            $('#PlayPauseButton').addClass('fa-pause');
-            $scope.uiDataValues.playPauseButtonState = "Pause";
-            // Create a new Current interval
-            if( $scope.mathInput !== undefined) {
-                var currentInterval = {start:0, end:0};
-            }
+            
         } else {
             if( lab !== undefined) {
                 lab.playSimulation(false);
@@ -606,7 +651,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
               success: function(results) {
                     var sceneLoadType = sharedProperties.getPropertyValue('SceneLoadType');
                     numSimsForCurrentUser = results.length;
-                    if( numSimsForCurrentUser > 1 && sceneLoadType !== 'SceneEdit') {
+                    if( numSimsForCurrentUser > 10 && sceneLoadType !== 'SceneEdit') {
                         alert("You have exceeded the limit to publish more!");
                         return;
                     }

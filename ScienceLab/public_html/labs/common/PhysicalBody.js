@@ -42,6 +42,8 @@ PhysicalBody.prototype = Object.create(SimulationBody.prototype);
 function PhysicalBody(bodyParams) {
     SimulationBody.call(this);
     this.type = "PHYSICALBODY";
+    this.initialPosition = 0;
+    this.initialVelocity = 0;
     this.position = new THREE.Vector3();
     this.velocity = new THREE.Vector3();
     this.acceleration = new THREE.Vector3();

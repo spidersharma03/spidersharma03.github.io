@@ -8,7 +8,15 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     $scope.name = "Kinematics1dLabController";
     $scope.KinematicsTabName = 'Kinematics';
     $scope.mode = 'Edit';
-
+    
+    $scope.labelDivs = [];
+    $scope.labelData = {
+        text: "Label",
+        position: {x:0, y:0},
+        clicked:false,
+        currentSelected:null
+    };
+    
     $scope.uiDataValues = {
        inputText : "$v$ = $u$ + $a$$t$",
        selectedSplineGraphInputType : "0",
@@ -26,6 +34,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
            timeWindow:5
        },
        // Simulation Data
+       simTitle:"Introduction",
        playPauseButtonState:"Play",
        // Object Data
        selectedStateType:"3",
@@ -78,6 +87,83 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             initialPositionValue:0,
             initialVelocityValue:0
        }
+    };
+    
+    $scope.labelDivClicked = function(event) {
+        $scope.labelData.clicked = true;
+        $scope.labelData.currentSelected = this;
+        $scope.labelData.text = this.text;
+        $scope.showLabelEditor(event);
+        $scope.$apply();
+    };
+    
+    $scope.OnLabelTextChanged = function() {
+        var test = 0;
+        test++;
+        //$scope.modelGraph.customGraphOperations.changeAnnotationText($scope.labelData.text);
+    };
+    
+    $scope.OnGraphClicked = function(event) {
+        return;
+        $scope.showLabelEditor(event);
+        var ann = {
+            series: 'v',
+            x: 0.144,
+            //icon: 'img/sprite.png',
+            width: 115,
+            height: 125,
+            tickHeight: 14,
+            text: "this.time"
+          };
+//          this.annotations.push( {
+//                series: 'v',
+//                x: this.time,
+//                icon: 'img/sprite.png',
+//                width: 15,
+//                height: 15,
+//                tickHeight: 14,
+//                text: this.time
+//            } );
+          var anns = $scope.modelGraph._graph.annotations();
+          anns.push(ann);
+          $scope.modelGraph._graph.setAnnotations(anns);
+    };
+    
+    $scope.showLabelEditor = function(event) {
+        return;
+        var graphPos = Dygraph.findPos($scope.modelGraph._graph.graphDiv);
+        var canvasx = Dygraph.pageX(event) - graphPos.x;
+        var canvasy = Dygraph.pageY(event) - graphPos.y;
+        var div = document.getElementById("GraphLabelEditor");
+        var graphDiv = document.getElementById("graphDiv");
+//        function getPos(el) {
+//            for (var lx=0, ly=0;
+//                 el !== null;
+//                 lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent);
+//            return {x: lx,y: ly};
+//          }
+//        var pos = getPos(graphDiv);
+        var x = Dygraph.pageX(event);//canvasx + pos.x;
+        var y = Dygraph.pageY(event);//canvasy + pos.y;
+        div.style.visibility = 'visible';
+        div.style.left = x - div.offsetWidth/2 + 'px';
+        div.style.top = y - div.offsetHeight/2 + 'px';
+        div.style.display = 'inline';
+        div.style.zIndex = 1000;
+        document.body.appendChild(div);
+        $scope.labelData.position = {x:x, y:y};
+    };
+    
+    $scope.OnLabelEditorOkPressed = function() {
+        $scope.modelGraph.customGraphOperations.changeAnnotation($scope.labelData);
+    };
+
+    $scope.OnLabelEditorCancelPressed = function() {
+        $scope.modelGraph.customGraphOperations.hideLabelEditor();       
+    };
+    
+    $scope.OnLabelEditorDeletePressed = function() {
+        $scope.modelGraph.customGraphOperations.removeAnnotation();
     };
     
     $scope.OnGraphSaveClicked = function() {
@@ -274,6 +360,13 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
 //        if($scope.lab !== undefined && $scope.uiDataValues.selectedViewType === 'Graph') {
 //            $scope.lab.simulateFull();
 //        }
+        var sceneLoadType = sharedProperties.getPropertyValue("SceneLoadType");
+        if(sceneLoadType === 'SceneLoadNew' || sceneLoadType === 'SceneEdit')
+            $scope.modelGraph.customGraphOperations.setAnnotationEditable(true);
+        else
+            $scope.modelGraph.customGraphOperations.setAnnotationEditable(false);
+            
+        $scope.modelGraph.customGraphOperations.initAnnotationsFromJsonData($scope.uiDataValues.annotationsData);
     };
     
     $scope.loadSimulationDataFromServer = function(userName, simulationName) {
@@ -283,7 +376,6 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         query.equalTo("userid", userid);
         var key = sharedProperties.getPropertyValue("simKey");
         query.equalTo("simkey", key);
-        query.limit(1);
         query.find({
             success: function (results) {
                 if(results.length === 0)
@@ -300,10 +392,13 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
                 
                 var publishOptions = result.get("PublishOptions");
                 var simText = result.get("SimulationText");
+                var annotationsData = result.get("AnnotationsJsonData");
                 $scope.inputText = simText;
                 $scope.uiDataValues.labJSONData = labJSON;
                 $scope.uiDataValues.inputText = simText;
+                $scope.uiDataValues.annotationsData = annotationsData;
                 $scope.publishDataValues = publishOptions;
+                $scope.uiDataValues.simTitle = sharedProperties.getPropertyValue('simTitle');
                 $scope.$apply();
             },
             error: function (error) {
@@ -746,7 +841,17 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         if(graphInputJsonData !== undefined)
             simulation.set("GraphInputJsonData", graphInputJsonData);
         simulation.set("SimulationText", $scope.uiDataValues.inputText);
-        
+        var annotations = $scope.modelGraph._graph.annotations();
+        if(annotations.length > 0 && $scope.uiDataValues.selectedViewType !== 'View3D') {
+            var annotationArray = [];
+            for( var i=0; i<annotations.length; i++) {
+                var ann = annotations[i];
+                annotationArray.push({x:ann.xval, series:ann.series, text:ann.div.text});
+            }
+            var res = JSON.stringify(annotationArray);
+            var annotationsJSON = JSON.parse(res);
+            simulation.set("AnnotationsJsonData", annotationsJSON);
+        }
         simulation.save(null, {
             success: function(simulation) {
               alert('Simulation saved: ' + simulation.id);
@@ -764,7 +869,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         var currentUserName = currentUser.get("username");
         // Save SimulationMetaData
         simulationMetaData.set("simname", "Kinematics1d");
-        simulationMetaData.set("simtitle", "Introduction to Velocity");
+        simulationMetaData.set("simtitle", $scope.uiDataValues.simTitle);
         simulationMetaData.set("userid", currentUserEmail);
         simulationMetaData.set("username", currentUserName);
         simulationMetaData.set("edited", edited);
@@ -773,7 +878,6 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         simulationMetaData.save(null, {
             success: function(simulationMetaData) {
               alert('SimulationMetaData saved: ' + simulationMetaData.id);
-              var res = simulationMetaData.get("edited");
             },
             error: function(simulationMetaData, error) {
               alert('error in saving SimulationMetaData: ' + error.message);

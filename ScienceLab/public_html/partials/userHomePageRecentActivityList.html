@@ -10,7 +10,7 @@
   <!-- List group -->
   <div>
     <ul class="list-group" ng-repeat="data in recentActivity">
-        <li  class="list-group-item"><a href="#Profile"><b style=" color: #330099">{{data.username}}</b></a><b> {{data.createdOrEdited}} </b><a href="#Labs" ng-click="OnSimulationClicked($index)"><b style=" color: #330099"> {{data.simtitle}}</b></a> in <a href="#Labs">{{data.simname}}</a> on {{data.createdAt.toDateString()}}</li>
+        <li  class="list-group-item"><a href="#Profile"><b style=" color: #330099">{{data.username}}</b></a><b> {{data.createdOrEdited}} </b><a href="#Labs" ng-click="OnSimulationClicked($index)"><b style=" color: #330099"> {{data.simtitle}}</b></a> in <a href="#Labs">{{data.simname}}</a> {{data.createdAt}}</li>
     </ul>
   </div>    
 </div>

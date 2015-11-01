@@ -23,10 +23,51 @@ function CustomKinematicsGraphOperations(graph) {
         highlightCallback: this.highlightBindCallback,
         unhighlightCallback: this.unhighlightBindCallback,
         pointClickCallback: this.pointClickBindCallback,
-        zoomCallback : this.zoomBindCallback
+        zoomCallback : this.zoomBindCallback,
+        annotationDblClickHandler: this.annotationDblClickCallBack.bind(this)
     }
     );
+    this.selectedAnnotation = null;
+    this.editAnnotation = false;
 }
+
+CustomKinematicsGraphOperations.prototype.setAnnotationEditable = function(bEditable) {
+    this.editAnnotation = bEditable;
+},
+        
+CustomKinematicsGraphOperations.prototype.annotationDblClickCallBack = function(ann, point, dg, event) {
+    if(!this.editAnnotation)
+        return;
+    this.selectedAnnotation = ann;
+    this.showLabelEditor(event);
+},
+
+CustomKinematicsGraphOperations.prototype.changeAnnotation = function(annData) {
+    if(this.selectedAnnotation !== null) {
+        this.selectedAnnotation.div.text = annData.text;
+        this.selectedAnnotation.div.innerHTML = annData.text;
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub,this.selectedAnnotation.div]);
+        this.hideLabelEditor();
+    }
+};
+
+CustomKinematicsGraphOperations.prototype.removeAnnotation = function() {
+    if(this.selectedAnnotation !== null) {
+        var annotations = this.graph._graph.annotations();
+        var index = -1;
+        for( var i=0; i<annotations.length; i++) {
+            var ann = annotations[i];
+            if((ann.xval === this.selectedAnnotation.xval) && (ann.series === this.selectedAnnotation.series)){
+                index = i;
+                break;
+            }
+        }
+        this.selectedAnnotation = null;
+        annotations.splice(index,1);
+        this.graph._graph.setAnnotations(annotations);
+        this.hideLabelEditor();
+    }
+},
 
 CustomKinematicsGraphOperations.prototype.zoomCallback = function(minDate, maxDate, yRanges) {
 };
@@ -129,7 +170,7 @@ CustomKinematicsGraphOperations.prototype.drawLinesForChord = function(canvas) {
             canvas.closePath();
             canvas.stroke();  
             canvas.uninstallPattern();
-    
+            
             canvas.lineWidth = 2.0;
             canvas.beginPath();
             canvas.moveTo(point1[0], point1[1]);
@@ -163,16 +204,16 @@ CustomKinematicsGraphOperations.prototype.showValues = function (event, x, point
             acc = points[i].yval.toFixed(3);
 
         var c = Dygraph.toRGB_(this.dygraph.getColors()[seriesIndex]);
-//        c.r = Math.floor(255 - 0.5 * (255 - c.r));
-//        c.g = Math.floor(255 - 0.5 * (255 - c.g));
-//        c.b = Math.floor(255 - 0.5 * (255 - c.b));
+        c.r = Math.floor(255 - 0.5 * (255 - c.r));
+        c.g = Math.floor(255 - 0.5 * (255 - c.g));
+        c.b = Math.floor(255 - 0.5 * (255 - c.b));
         var color = 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
         ctx.strokeStyle = color;
         ctx.beginPath();
         ctx.arc(x_, y_, 3, 0, Math.PI * 2, true);
         ctx.closePath();
+        ctx.fill();
         ctx.stroke();
-        //ctx.fill();
     }
     this.labelHtml = "<span>time = " + time + "</span><br>";
     if(pos !== undefined)
@@ -365,5 +406,86 @@ CustomKinematicsGraphOperations.prototype.unhighlightCallback = function (event)
 };
 
 CustomKinematicsGraphOperations.prototype.pointClickCallback = function (event, point) {
+    if(!this.editAnnotation)
+        return;
+    var g = this.graph._graph;
+    // Check if the point is already annotated.
+          if (point.annotation) return;
+          // If not, add one.
+          var ann = {
+            series: point.name,
+            xval: point.xval,
+            shortText: "num",
+            tickHeight:20
+            //width:100,
+            //height:30
+          };
+          ann.div = this.createAnnotationDiv('Label');
+          var anns = g.annotations();
+          anns.push(ann);
+          g.setAnnotations(anns);
+};
 
+CustomKinematicsGraphOperations.prototype.hideLabelEditor = function() {
+    var div = document.getElementById("GraphLabelEditor");
+    div.style.visibility = 'hidden';
+};
+
+CustomKinematicsGraphOperations.prototype.showLabelEditor = function(event) {
+        var graphPos = Dygraph.findPos(this.graph._graph.graphDiv);
+        var canvasx = Dygraph.pageX(event) - graphPos.x;
+        var canvasy = Dygraph.pageY(event) - graphPos.y;
+        var div = document.getElementById("GraphLabelEditor");
+        var graphDiv = document.getElementById("graphDiv");
+//        function getPos(el) {
+//            for (var lx=0, ly=0;
+//                 el !== null;
+//                 lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent);
+//            return {x: lx,y: ly};
+//          }
+//        var pos = getPos(graphDiv);
+        var x = Dygraph.pageX(event);//canvasx + pos.x;
+        var y = Dygraph.pageY(event);//canvasy + pos.y;
+        div.style.visibility = 'visible';
+        div.style.left = x - div.offsetWidth/2 + 'px';
+        div.style.top = y - div.offsetHeight/2 + 'px';
+        div.style.display = 'inline';
+        div.style.zIndex = 1000;
+        document.body.appendChild(div);
+        //$scope.labelData.position = {x:x, y:y};
+    };
+    
+CustomKinematicsGraphOperations.prototype.createAnnotationDiv = function(text) {
+    var newdiv = document.createElement('div');
+    newdiv.text = text;
+    newdiv.innerHTML = text;
+    newdiv.style.visibility = 'visible';
+    newdiv.style.display = 'inline';
+    newdiv.style.zIndex = 1000;
+    newdiv.style.position = 'absolute';
+    newdiv.style.cursor = 'move';
+    newdiv.style.borderRadius = '5px';
+    newdiv.style.background = 'rgba(240,240,240,0.5)';
+    newdiv.style.border = "1px solid #888888";
+    //newdiv.onclick = $scope.labelDivClicked;
+    //document.body.appendChild(newdiv);
+    //$scope.labelDivs.push(newdiv);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,newdiv]);
+    newdiv.style.fontWeight = 'bolder';
+    //newdiv.style.left = $scope.labelData.position.x - newdiv.offsetWidth/2 + 'px';
+    //newdiv.style.top = $scope.labelData.position.y - newdiv.offsetHeight/2 + 'px';
+    return newdiv;
+};
+
+CustomKinematicsGraphOperations.prototype.initAnnotationsFromJsonData = function(jsonData) {
+    if(jsonData === undefined)
+        return;
+    var anns = this.graph._graph.annotations();
+    for(var i=0; i<jsonData.length; i++) {
+        var annData = jsonData[i];
+        var ann = {xval:annData.x, series:annData.series, tickHeight:20};
+        ann.div = this.createAnnotationDiv(annData.text);
+        anns.push(ann);
+    }
+    this.graph._graph.setAnnotations(anns);
 };

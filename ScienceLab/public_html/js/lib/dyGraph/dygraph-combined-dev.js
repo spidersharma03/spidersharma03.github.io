@@ -8417,7 +8417,7 @@ annotations.prototype.didDrawChart = function(e) {
       tick_height = a.tickHeight;
     }
 
-    var div = document.createElement("div");
+    var div = (a.div === undefined) ? document.createElement("div") : a.div;
     for (var name in annotationStyle) {
       if (annotationStyle.hasOwnProperty(name)) {
         div.style[name] = annotationStyle[name];
@@ -8439,7 +8439,7 @@ annotations.prototype.didDrawChart = function(e) {
       img.height = height;
       div.appendChild(img);
     } else if (p.annotation.hasOwnProperty('shortText')) {
-      div.appendChild(document.createTextNode(p.annotation.shortText));
+      //div.appendChild(document.createTextNode(p.annotation.shortText));
     }
     var left = p.canvasx - width / 2;
     div.style.left = left + "px";
@@ -8457,8 +8457,8 @@ annotations.prototype.didDrawChart = function(e) {
       divTop = p.canvasy - height - tick_height;
     }
     div.style.top = divTop + "px";
-    div.style.width = width + "px";
-    div.style.height = height + "px";
+    //div.style.width = width + "px";
+//    div.style.height = height + "px";
     div.title = p.annotation.text;
     div.style.color = g.colorsMap_[p.name];
     div.style.borderColor = g.colorsMap_[p.name];

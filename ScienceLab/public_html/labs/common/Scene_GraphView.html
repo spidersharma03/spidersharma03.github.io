@@ -80,7 +80,7 @@
         </style>  
     </head>
     <body>
-        
+        <div ng-include="'labs/common/GraphLabelEdit.html'"></div>
         <div class="row container-fluid" style="border: solid 1px lightgray;">
             <div class="col-md-2 hairline-info" id="hairline-template"  style="display:none; background-color : rgba(255, 100, 0, 0.4);;">
                 <!--<button class='hairline-kill-button'>Kill</button>-->
@@ -88,10 +88,9 @@
             </div>
         
             <div class="row-fluid col-md-10">
-                <div class="col-md-11" >
-                    <div id="graphDiv"  style=" border: solid 1px white;"></div>                    
+                <div class="col-md-12" >
+                    <div ng-dblclick='OnGraphClicked($event)' id="graphDiv"  style=" border: solid 1px white;"></div>                    
                 </div>
-                <div class="btn col-md-1" id="labels" style=""></div>
             </div>
             <div class="col-md-12">
                 <hr>
@@ -119,9 +118,11 @@
                             <option ng-show="publishDataValues.type_probe_Selected[3]" value="3">Chord</option>
                     </select>
                 </div>
-                <div class="col-md-1">
+<!--                <div class="col-md-1">
                     <button class="btn btn-success btn-xs fa fa-save fa-2x" ng-click="OnGraphSaveClicked()">Export</button>
-                </div>
+                </div>-->
+                <div class="col-md-3" id="labels" style=""></div>
+
             </div>   
         </div>
     </body>

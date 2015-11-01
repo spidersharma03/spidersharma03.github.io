@@ -47,11 +47,11 @@ function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
         var track = new Model_Kinematics1D_Lab.StraightTrack();
         track.setBodyState(trackData.state);
         var body = track.body;
-        body.position.copy(trackData.body.position);
-        body.velocity.copy(trackData.body.velocity);
+        body.position.x = (trackData.body.initialPosition);
+        body.velocity.x = (trackData.body.initialVelocity);
         body.acceleration.copy(trackData.body.acceleration);
-        body.initialPosition = body.position.x;
-        body.initialVelocity = body.velocity.x;
+        body.initialPosition = trackData.body.initialPosition;
+        body.initialVelocity = trackData.body.initialVelocity;
         body.addTag({name:"textTag", text:"Kinematics Body", offset:{x:0, y:40}, color:"red"});
         body.updateTag("textTag", "color", "green");
         body.addTag({name:"positionTag", text:"x = ", value:0, attribute:PhysicalBody.POSITION_ATTRIBUTE, offset:{x:15, y:20}});

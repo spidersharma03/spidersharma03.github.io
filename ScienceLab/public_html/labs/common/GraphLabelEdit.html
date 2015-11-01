@@ -1,0 +1,18 @@
+<div ng-if='sceneLoaded' id='GraphLabelEditor' class="row-fluid col-md-2" style="cursor: move; background: white; display: none; position: absolute; border: 1px solid #888888; border-radius: 10px; box-shadow: 1px 1px 1px 1px #888888">
+    <div class="row col-md-12">
+        <div class='col-md-4'>
+            <input style="" type="text" ng-model='labelData.text' ng-change="OnLabelTextChanged()"/>            
+        </div>
+    </div>
+    <div class="row col-md-12">
+        <div class="col-md-2">
+            <button class="btn btn-primary btn-xs" ng-click="OnLabelEditorOkPressed()">Ok</button>            
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-primary btn-xs" ng-click="OnLabelEditorCancelPressed()">Cancel</button>            
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-primary btn-xs" ng-click="OnLabelEditorDeletePressed()">Delete</button>            
+        </div>
+    </div>
+</div>

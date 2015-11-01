@@ -535,7 +535,6 @@ mainApp.directive('graph', function () {
                         gridLinePattern: [4, 4]
                     }
                 },
-                title: 'Kinematics',
                 // Set the plug-ins in the options.
                 plugins: [
                     hairlines
@@ -575,8 +574,15 @@ mainApp.directive('graph', function () {
                     $scope.modelGraph.customGraphOperations.calculateAverageValues(hairlines);
             }
             );
-        };
+            
+            $scope.$on('$destroy', function () {
+                var div = document.getElementById("GraphLabelEditor");
+                document.body.removeChild(div);
+            });
 
+        };
+        
+        
         return linkFunction;
     };
     return directive;
@@ -590,6 +596,7 @@ mainApp.directive('view3d', function () {
         // do one-time configuration of element.
         var linkFunction = function ($scope, element, atttributes) {
             var div = element[0].parentNode;
+            var bOnce = true;
             var lab;
             var jsonData = $scope.uiDataValues.labJSONData;
             var kinematics3DView = new Kinematics3DView(div, lab);
@@ -632,7 +639,8 @@ mainApp.directive('view3d', function () {
                 // Update the lab
                 lab.simulate(dt);
                 updateTimeProgress();
-                if(lab.isSimulationOver()) {
+                if(lab.isSimulationOver() && bOnce) {
+                    bOnce = false;
                     $('#PlayPauseButton').removeClass('fa-pause');
                     $('#PlayPauseButton').addClass('fa-play');
                 }

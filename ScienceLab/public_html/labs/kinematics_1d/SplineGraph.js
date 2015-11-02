@@ -19,6 +19,7 @@ function SplineGraph(div, graphInputData) {
     this.curveType = SplineGraph.X_T;
     this.scaleFactor = 5.0;
     this.linearInterpolation = false;
+    this.graphChangeCallBack = null;
     if(graphInputData !== undefined) {
         for(var i=0; i<graphInputData.points.length; i++) {
             this.sparsePoints.push(graphInputData.points[i]);
@@ -43,6 +44,7 @@ function SplineGraph(div, graphInputData) {
             this.sparsePoints[index] = newvals[1];
             this.CalculateCubicSplineData(this.sparsePoints);
             this.updateDensePointsInGraphData();
+            this.graphChangeCallBack();
             g.updateOptions({'file': this.data});
         }
     };

@@ -207,6 +207,8 @@ Model_Kinematics1D_Lab.prototype = {
         this.time += dt;  
         for( var i=0; i<this.tracks.length; i++) {
             this.tracks[i].advanceBody(this.time, dt);
+            var body = this.tracks[i].body;
+            this.checkForZeros(body);
         }
         this.currentInterval.end = this.time;
         this.timeRecordCounter++;
@@ -341,6 +343,20 @@ Model_Kinematics1D_Lab.prototype = {
         }
     },
     
+    checkForZeros: function(body) {
+        // Velocity sign changed, so there must be a zero of velocity here
+        if(body.prevVelocity * body.velocity.x < 0) {
+            var dt = 0.016;
+            var t1 = this.time - dt;
+            var t2 = this.time;
+            var t = body.velocity.x * t1 - body.prevVelocity * t2;
+            t /= (body.velocity.x - body.prevVelocity);
+            var pos = body.prevPosition + (body.prevVelocity + body.velocity.x) * (t-t1)/2;
+            var acc = body.prevAcceleration * (t2 - t)/dt + body.acceleration.x * ( t - t1)/dt;
+            this.graphObserver.recordData([t, pos, 0, acc ]);
+        }
+    },
+    
     addGraphObserver : function(graphObserver) {
         this.graphObserver = graphObserver;   
     },
@@ -393,14 +409,37 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
         this.body.velocity.x = this.body.initialVelocity;
         // Initialize state from corresponding input
         if(this.mathInput !== null) {
-            //this.body.velocity.x = -2;
-            //var a = this.mathInput.Value(time);
+            if(this.mathInput.type === 2){ // acc-time
+                this.body.acceleration.x = this.mathInput.Value(0);
+            }
+            else if(this.mathInput.type === 1){ // vel-time
+                this.body.acceleration.x = this.mathInput.FirstDerivative(0);
+                this.body.initialVelocity = this.body.velocity.x = this.mathInput.Value(0);
+            }
+            else {
+                this.body.acceleration.x = this.mathInput.SecondDerivative(0);
+                this.body.initialVelocity = this.body.velocity.x = this.mathInput.FirstDerivative(0);
+                this.body.initialPosition = this.body.position.x = this.mathInput.Value(0);
+            }
+        }
+        if(this.graphInput !== null) {
+            if(this.graphInput.curveType === 2){ // acc-time
+                this.body.acceleration.x = this.graphInput.Value(0);
+            }
+            else if(this.graphInput.curveType === 1){ // vel-time
+                this.body.acceleration.x = this.graphInput.Acceleration(0);
+                this.body.initialVelocity = this.body.velocity.x = this.graphInput.Value(0);
+            }
+            else {
+                this.body.acceleration.x = this.graphInput.Acceleration(0);
+                this.body.initialVelocity = this.body.velocity.x = this.graphInput.Velocity(0);
+                this.body.initialPosition = this.body.position.x = this.graphInput.Value(0);
+            }
         }
     },
     
     resetState: function() {
-        this.body.position.x = this.body.initialPosition;
-        this.body.velocity.x = this.body.initialVelocity;
+        this.initializeState();
         //this.setBodyState(this.state);
     },
     
@@ -418,6 +457,9 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
     },
     
     advanceBody : function(time, dt) {
+        this.body.prevPosition = this.body.position.x;
+        this.body.prevVelocity = this.body.velocity.x;
+        this.body.prevAcceleration = this.body.acceleration.x;
         // Check If the acceleration is governed by a spline or math equation
         if(this.mathInput) {
             if(this.mathInput.type === 2) { // acceleration-time
@@ -434,8 +476,8 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
                 this.body.position.x += this.body.velocity.x * dt;
             } else {
                 this.body.acceleration.x = this.mathInput.SecondDerivative(time);
-                this.body.velocity.x = this.mathInput.FirstDerivative(time);;
-                this.body.position.x = this.mathInput.Value(time);;
+                this.body.velocity.x = this.mathInput.FirstDerivative(time);
+                this.body.position.x = this.mathInput.Value(time);
             }
         }
         else if(this.graphInput) {

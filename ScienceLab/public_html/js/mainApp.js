@@ -294,6 +294,7 @@ mainApp.directive('splinegraph', function () {
         var linkFunction = function ($scope, element, atttributes) {
             var div = document.getElementById('Kinematics_Input_Graph');
             var splineGraph = new SplineGraph(div, $scope.uiDataValues.graphInputData);
+            splineGraph.graphChangeCallBack = $scope.splineGraphChanged;
             $scope.setSplineGraph(splineGraph);
             if ($scope.publishDataValues.selectedInputType === "Graph") {
                 $scope.lab.setGraphInput(splineGraph);
@@ -514,7 +515,11 @@ mainApp.directive('graph', function () {
                 legend: 'follow',
                 series: {
                     'x': {
-                        strokeWidth: 1.0
+                        strokeWidth: 1.0,
+                        //fillGraph: true,
+                        fillAlpha:0.15,
+                        //fillStartIndex:50,
+                        //fillLength:10
                     },
                     'v': {
                     },

@@ -70,6 +70,7 @@ CustomKinematicsGraphOperations.prototype.removeAnnotation = function() {
 },
 
 CustomKinematicsGraphOperations.prototype.zoomCallback = function(minDate, maxDate, yRanges) {
+    //this.graph._graph.findClosestRow();
 };
 
 CustomKinematicsGraphOperations.prototype.changeGraphType = function(graphType) {
@@ -96,7 +97,16 @@ CustomKinematicsGraphOperations.prototype.changeGraphType = function(graphType) 
 CustomKinematicsGraphOperations.prototype.changeProbeType = function (probeType) {
     this.probeType = probeType;
     this.graph.hairlines.set([]); // clear any hairlines for area and chord probe
-    this.graph.updateOptions({}); // refresh graph
+    if(this.probeType === 0 || this.probeType === 1) {
+        this.graph.updateOptions({
+            series:{
+                'x':{ fillGraph:false },
+                'v':{ fillGraph:false },
+                'a':{ fillGraph:false }
+                }
+            }
+        ); // refresh graph        
+    }
     if(this.probeType === 2) { // Area probe
             var hairlines = this.graph.hairlines.get();
             var x1 = this.areaProbeData.x1;
@@ -297,6 +307,7 @@ CustomKinematicsGraphOperations.prototype.hairlineProbeChanges = function() {
 
 CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
     var sum = 0, sum_lower = 0, sum_upper = 0;
+    var startIndex=0, endIndex=0;
     var area = [0, 0, 0];
     if (hl.length > 1) {
         var end = hl[0].xval;
@@ -309,11 +320,16 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
         var nRows = this.graph._graph.numRows();
         for (var i = 0; i < nRows - 1; i++) {
             var t1 = this.graph._graph.getValue(i, 0);
-            if (t1 < start)
+            if (t1 < start) {
+                startIndex = i+1;
                 continue;
+            }
             var t2 = this.graph._graph.getValue(i + 1, 0);
-            if (t2 > end)
+            if (t2 > end) {
                 continue;
+            } else {
+                endIndex = i + 1;
+            }
             for(var j=0; j<this.graphTypeArray.length; j++) {
                 var seriesIndex = this.graphTypeArray[j];
                 var val1 = this.graph._graph.getValue(i, seriesIndex+1);
@@ -335,7 +351,33 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
     if(area[2] > 0)
         this.labelHtml += "<span>Aa = " + area[2].toFixed(3) + "</span><br>";
     this.graph.labelDiv.innerHTML = this.labelHtml;
-    this.graph.updateOptions({});
+    var fillLength = endIndex - startIndex + 1;
+//    this.graph.updateOptions({});
+    this.graph.updateOptions({
+         series:{
+             'x': {
+                        strokeWidth: 1.0,
+                        fillGraph: true,
+                        fillAlpha:0.15,
+                        fillStartIndex:startIndex,
+                        fillLength:fillLength
+                    },
+              'v': {
+                        strokeWidth: 1.0,
+                        fillGraph: true,
+                        fillAlpha:0.15,
+                        fillStartIndex:startIndex,
+                        fillLength:fillLength
+                    },
+              'a': {
+                        strokeWidth: 1.0,
+                        fillGraph: true,
+                        fillAlpha:0.15,
+                        fillStartIndex:startIndex,
+                        fillLength:fillLength
+                    }       
+                }
+    });
 };
 
 CustomKinematicsGraphOperations.prototype.calculateAverageValues = function(hl) {
@@ -397,7 +439,14 @@ CustomKinematicsGraphOperations.prototype.calculateAverageValues = function(hl) 
     if(deltaa > 0)
         this.labelHtml += "<span>dela ~ " + deltaa.toFixed(3) + "</span><br>";
     this.graph.labelDiv.innerHTML = this.labelHtml;
-    this.graph.updateOptions({});
+    this.graph.updateOptions({
+            series:{
+                'x':{ fillGraph:false },
+                'v':{ fillGraph:false },
+                'a':{ fillGraph:false }
+                }
+            }
+        ); 
 };
 
 CustomKinematicsGraphOperations.prototype.unhighlightCallback = function (event) {

@@ -44,6 +44,9 @@ function PhysicalBody(bodyParams) {
     this.type = "PHYSICALBODY";
     this.initialPosition = 0;
     this.initialVelocity = 0;
+    this.prevPosition = 0;
+    this.prevVelocity = 0;
+    this.prevAcceleration = 0;
     this.position = new THREE.Vector3();
     this.velocity = new THREE.Vector3();
     this.acceleration = new THREE.Vector3();

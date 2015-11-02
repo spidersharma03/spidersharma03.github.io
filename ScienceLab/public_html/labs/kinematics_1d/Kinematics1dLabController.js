@@ -629,6 +629,12 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     
     $scope.selectedSplineGraphInputTypeChanged = function() {
         $scope.splineGraph.curveType = Number($scope.uiDataValues.selectedSplineGraphInputType);
+        $scope.OnResetPressed();
+        $scope.lab.tracks[0].initializeState();
+        $scope.lab.syncViews();
+        var body = $scope.lab.tracks[0].body;
+        $scope.uiDataValues.positionValue = body.initialPosition;
+        $scope.uiDataValues.velocityValue = body.initialVelocity;        
     };
     
     $scope.selectedProbeTypeChanged = function(){
@@ -656,12 +662,33 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     $scope.OnMathExpressionChanged = function() {
         $scope.uiDataValues.mathExpressionSyntaxError = !$scope.mathInput.setExpression($scope.uiDataValues.mathInputData.expression);
         if(!$scope.uiDataValues.mathExpressionSyntaxError) {
-            
+            $scope.lab.tracks[0].initializeState();
+            $scope.lab.syncViews();
         }
     };
     
     $scope.selectedMathInputTypeChanged = function() {
         $scope.mathInput.type  = Number($scope.uiDataValues.mathInputData.type);
+        if($scope.lab !== undefined) {
+            $scope.OnResetPressed();
+            $scope.lab.tracks[0].initializeState();
+            var body = $scope.lab.tracks[0].body;
+            $scope.uiDataValues.positionValue = body.initialPosition;
+            $scope.uiDataValues.velocityValue = body.initialVelocity;
+            $scope.lab.syncViews();
+        }
+    };
+    
+    $scope.splineGraphChanged = function() {
+        if($scope.lab !== undefined) {
+            $scope.OnResetPressed();
+            $scope.lab.tracks[0].initializeState();
+            var body = $scope.lab.tracks[0].body;
+            $scope.uiDataValues.positionValue = body.initialPosition;
+            $scope.uiDataValues.velocityValue = body.initialVelocity;
+            $scope.$apply();
+            $scope.lab.syncViews();
+        }
     };
     
     $scope.setSplineGraph = function(splineGraph) {
@@ -883,37 +910,6 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
               alert('error in saving SimulationMetaData: ' + error.message);
             }
         });
-    };
-
-    window.onSimFrameLoad = function()
-    {
-      $scope.KinematicsTabName = "Kinematics";
-      $scope.$apply();
-      var div = document.getElementById('Kinematics_Input_Graph');
-      var splineGraph = new SplineGraph(div, $scope.uiDataValues.graphInputData); 
-      if($scope.publishDataValues.selectedInputType === "Graph") {
-          $scope.lab.setGraphInput(splineGraph);
-          $scope.splineGraph.graph.resize(400,200);
-      }
-      $scope.splineGraph = splineGraph;
-      $scope.mathInput = new MathInput(); 
-      var iframe = document.getElementById('IFrame');
-      var lab = iframe.contentWindow.lab;
-      lab.addGraphObserver($scope.modelGraph);
-    };
-    window.onGraphFrameLoad = function()
-    {
-        var div = document.getElementById('Kinematics_Input_Graph');
-        var splineGraph = new SplineGraph(div, $scope.uiDataValues.graphInputData); 
-        $scope.splineGraph = splineGraph;
-        if($scope.publishDataValues.selectedInputType === "Graph") {
-          $scope.lab.setGraphInput(splineGraph);
-          $scope.splineGraph.graph.resize(400,200);
-        }
-        var iframe = document.getElementById('IFrameGraph');
-        var innerDocGraph = iframe.contentDocument || iframe.contentWindow.document;
-        $scope.modelGraph = innerDocGraph.modelGraph;
-        $scope.lab.addGraphObserver($scope.modelGraph);
     };
 });
 

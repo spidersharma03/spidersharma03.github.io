@@ -1836,7 +1836,12 @@ DygraphCanvasRenderer._fillPlotter = function(e) {
     var ctx = e.drawingContext;
     var setName = setNames[setIdx];
     if (!g.getBooleanOption('fillGraph', setName)) continue;
-
+    var fillStartIndex = g.getNumericOption('fillStartIndex', setName);
+    var fillLength = g.getNumericOption('fillLength', setName);
+    if(fillStartIndex === -1)
+        fillStartIndex = e.start;
+    if(fillLength === -1)
+        fillLength = e.end;
     var stepPlot = g.getBooleanOption('stepPlot', setName);
     var color = colors[setIdx];
     var axis = g.axisPropertiesForSeries(setName);
@@ -1846,7 +1851,9 @@ DygraphCanvasRenderer._fillPlotter = function(e) {
     axisY = area.h * axisY + area.y;
 
     var points = sets[setIdx];
-    var iter = Dygraph.createIterator(points, 0, points.length,
+    var xoord = g.toDomXCoord(points[0].x);
+    var row = g.findClosestRow(xoord);
+    var iter = Dygraph.createIterator(points, fillStartIndex-row, fillLength,
         DygraphCanvasRenderer._getIteratorPredicate(
             g.getBooleanOption("connectSeparatedPoints", setName)));
 
@@ -2272,6 +2279,8 @@ Dygraph.DEFAULT_ATTRS = {
   wilsonInterval: true,  // only relevant if fractions is true
   customBars: false,
   fillGraph: false,
+  fillStartIndex:-1,
+  fillLength:-1,
   fillAlpha: 0.15,
   connectSeparatedPoints: false,
 
@@ -8441,7 +8450,7 @@ annotations.prototype.didDrawChart = function(e) {
     } else if (p.annotation.hasOwnProperty('shortText')) {
       //div.appendChild(document.createTextNode(p.annotation.shortText));
     }
-    var left = p.canvasx - width / 2;
+    var left = p.canvasx;// - width / 2;
     div.style.left = left + "px";
     var divTop = 0;
     if (a.attachAtBottom) {
@@ -10790,6 +10799,19 @@ Dygraph.OPTIONS_REFERENCE =  // <JSON>
     "type": "boolean",
     "description": "Should the area underneath the graph be filled? This option is not compatible with error bars. This may be set on a <a href='per-axis.html'>per-series</a> basis."
   },
+  "fillStartIndex": {
+    "default": "-1",
+    "labels": ["Data Line display"],
+    "type": "integer",
+    "description": "Should the area underneath the graph be filled? This option is not compatible with error bars. This may be set on a <a href='per-axis.html'>per-series</a> basis."
+  },
+  "fillLength": {
+    "default": "-1",
+    "labels": ["Data Line display"],
+    "type": "integer",
+    "description": "Should the area underneath the graph be filled? This option is not compatible with error bars. This may be set on a <a href='per-axis.html'>per-series</a> basis."
+  },
+  
   "highlightCircleSize": {
     "default": "3",
     "labels": ["Interactive Elements"],

@@ -320,11 +320,31 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
         var nRows = this.graph._graph.numRows();
         for (var i = 0; i < nRows - 1; i++) {
             var t1 = this.graph._graph.getValue(i, 0);
+            var t2 = this.graph._graph.getValue(i + 1, 0);
+            if(t1 < start && t2 > start) {
+                var diff1 = t2 - start;
+                for(var j=0; j<this.graphTypeArray.length; j++) {
+                    var seriesIndex = this.graphTypeArray[j];
+                    var val1 = this.graph._graph.getValue(i, seriesIndex+1);
+                    var val2 = this.graph._graph.getValue(i + 1, seriesIndex+1);
+                    var avg = (val1 + val2) * 0.5;
+                    area[seriesIndex] += avg * diff1;
+                }
+            }
+            if(t1 < end && t2 > end) {
+                var diff2 = end - t1;
+                for(var j=0; j<this.graphTypeArray.length; j++) {
+                    var seriesIndex = this.graphTypeArray[j];
+                    var val1 = this.graph._graph.getValue(i, seriesIndex+1);
+                    var val2 = this.graph._graph.getValue(i + 1, seriesIndex+1);
+                    var avg = (val1 + val2) * 0.5;
+                    area[seriesIndex] += avg * diff2;
+                }
+            }
             if (t1 < start) {
                 startIndex = i+1;
                 continue;
             }
-            var t2 = this.graph._graph.getValue(i + 1, 0);
             if (t2 > end) {
                 continue;
             } else {
@@ -344,11 +364,11 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
         this.areaProbeData.x2 = end;
     }
     this.labelHtml ="";
-    if(area[0] > 0)
+    if(this.graphTypeArray[0] === 0)
         this.labelHtml += "<span>Ax = " + area[0].toFixed(3) + "</span><br>";
-    if(area[1] > 0)
+    if(this.graphTypeArray[0] === 1 || this.graphTypeArray[1] === 1)
         this.labelHtml += "<span>Av = " + area[1].toFixed(3) + "</span><br>";
-    if(area[2] > 0)
+    if(this.graphTypeArray[0] === 2 || this.graphTypeArray[2] === 2)
         this.labelHtml += "<span>Aa = " + area[2].toFixed(3) + "</span><br>";
     this.graph.labelDiv.innerHTML = this.labelHtml;
     var fillLength = endIndex - startIndex + 1;
@@ -432,11 +452,11 @@ CustomKinematicsGraphOperations.prototype.calculateAverageValues = function(hl) 
 //        var color = 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
     }
     this.labelHtml = "<span>delt = " + deltat.toFixed(3) + "</span><br>";
-    if(deltax > 0)
+    if(this.graphTypeArray[0] === 0)
         this.labelHtml += "<span>delx ~ " + deltax.toFixed(3) + "</span><br>";
-    if(deltav > 0)
+    if(this.graphTypeArray[0] === 1 || this.graphTypeArray[1] === 1)
         this.labelHtml += "<span>delv ~ " + deltav.toFixed(3) + "</span><br>";
-    if(deltaa > 0)
+    if(this.graphTypeArray[0] === 2 || this.graphTypeArray[2] === 2)
         this.labelHtml += "<span>dela ~ " + deltaa.toFixed(3) + "</span><br>";
     this.graph.labelDiv.innerHTML = this.labelHtml;
     this.graph.updateOptions({

@@ -28,7 +28,12 @@ function CustomKinematicsGraphOperations(graph) {
     }
     );
     this.selectedAnnotation = null;
-    this.editAnnotation = false;
+    this.editAnnotation = false;  
+    this.areaTrapezoid = {};
+    this.offsetAreas1 = [{}, {}, {}];
+    this.offsetAreas2 = [{}, {}, {}];
+    this.labelAnnotations = [];
+    this.labelDivClickedCallBack = undefined;
 }
 
 CustomKinematicsGraphOperations.prototype.setAnnotationEditable = function(bEditable) {
@@ -38,14 +43,34 @@ CustomKinematicsGraphOperations.prototype.setAnnotationEditable = function(bEdit
 CustomKinematicsGraphOperations.prototype.annotationDblClickCallBack = function(ann, point, dg, event) {
     if(!this.editAnnotation)
         return;
-    this.selectedAnnotation = ann;
+    for(var i=0; i<this.labelAnnotations.length; i++) {
+        if((this.labelAnnotations[i].xval === ann.xval) && (this.labelAnnotations[i].series === ann.series)) {
+            this.selectedAnnotation = this.labelAnnotations[i];     
+            break;
+        }
+    }
+    if(this.labelDivClickedCallBack !== undefined)
+        this.labelDivClickedCallBack(this.selectedAnnotation);
+    
     this.showLabelEditor(event);
 },
 
 CustomKinematicsGraphOperations.prototype.changeAnnotation = function(annData) {
     if(this.selectedAnnotation !== null) {
         this.selectedAnnotation.div.text = annData.text;
-        this.selectedAnnotation.div.innerHTML = annData.text;
+        this.selectedAnnotation.div.style.maxWidth = "300px";
+        this.selectedAnnotation.div.innerHTML = "";
+        this.selectedAnnotation.showX = annData.showX;
+        this.selectedAnnotation.showV = annData.showV;
+        this.selectedAnnotation.showA = annData.showA;
+        if(annData.text.length > 0)
+            this.selectedAnnotation.div.innerHTML = annData.text + "<br>";
+        if(annData.showX)
+            this.selectedAnnotation.div.innerHTML += "x: " + this.selectedAnnotation.posVal.toFixed(3);
+        if(annData.showV)
+            this.selectedAnnotation.div.innerHTML += " v: " + this.selectedAnnotation.velVal.toFixed(3);
+        if(annData.showA)
+            this.selectedAnnotation.div.innerHTML += " a: " + this.selectedAnnotation.accVal.toFixed(3);
         MathJax.Hub.Queue(["Typeset",MathJax.Hub,this.selectedAnnotation.div]);
         this.hideLabelEditor();
     }
@@ -53,7 +78,7 @@ CustomKinematicsGraphOperations.prototype.changeAnnotation = function(annData) {
 
 CustomKinematicsGraphOperations.prototype.removeAnnotation = function() {
     if(this.selectedAnnotation !== null) {
-        var annotations = this.graph._graph.annotations();
+        var annotations = this.labelAnnotations;//this.graph._graph.annotations();
         var index = -1;
         for( var i=0; i<annotations.length; i++) {
             var ann = annotations[i];
@@ -70,7 +95,12 @@ CustomKinematicsGraphOperations.prototype.removeAnnotation = function() {
 },
 
 CustomKinematicsGraphOperations.prototype.zoomCallback = function(minDate, maxDate, yRanges) {
-    //this.graph._graph.findClosestRow();
+    if(this.probeType === 2) {
+        var hairlines = this.graph.hairlines.get();
+        this.calculateAreas(hairlines);
+        this.transformOffsetAreasToDomCoords();
+        this.graph._graph.updateOptions({});
+    }
 };
 
 CustomKinematicsGraphOperations.prototype.changeGraphType = function(graphType) {
@@ -133,6 +163,12 @@ CustomKinematicsGraphOperations.prototype.underlayCallback = function (canvas, a
     this.graph.labelDiv.innerHTML = this.labelHtml;
     if(this.probeType === 3) {
       this.drawLinesForChord(this.canvas);
+    }
+    if(this.probeType === 2) {
+        for(var i=0; i<this.offsetAreas1.length; i++)
+            this.fillTrapezoidArea(this.offsetAreas1[i]);
+        for(var i=0; i<this.offsetAreas2.length; i++)
+            this.fillTrapezoidArea(this.offsetAreas2[i]);
     }
 };
 
@@ -324,21 +360,35 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
             if(t1 < start && t2 > start) {
                 var diff1 = t2 - start;
                 for(var j=0; j<this.graphTypeArray.length; j++) {
+                    var trapezoid = {};
                     var seriesIndex = this.graphTypeArray[j];
                     var val1 = this.graph._graph.getValue(i, seriesIndex+1);
                     var val2 = this.graph._graph.getValue(i + 1, seriesIndex+1);
                     var avg = (val1 + val2) * 0.5;
                     area[seriesIndex] += avg * diff1;
+                    trapezoid.x0 = start; trapezoid.y0 = 0;
+                    trapezoid.x1 = start + diff1; trapezoid.y1 = 0;
+                    trapezoid.x2 = start + diff1; trapezoid.y2 = val2;
+                    var t = (start - t1)/(t2 - t1);
+                    trapezoid.x3 = start; trapezoid.y3 = val1 * (1-t) + val2 * t;
+                    this.offsetAreas1[j] = trapezoid;
                 }
             }
             if(t1 < end && t2 > end) {
                 var diff2 = end - t1;
                 for(var j=0; j<this.graphTypeArray.length; j++) {
+                    var trapezoid = {};
                     var seriesIndex = this.graphTypeArray[j];
                     var val1 = this.graph._graph.getValue(i, seriesIndex+1);
                     var val2 = this.graph._graph.getValue(i + 1, seriesIndex+1);
                     var avg = (val1 + val2) * 0.5;
                     area[seriesIndex] += avg * diff2;
+                    trapezoid.x0 = t1; trapezoid.y0 = 0;
+                    trapezoid.x1 = t1 + diff2; trapezoid.y1 = 0;
+                    var t = (end - t1)/(t2 - t1);
+                    trapezoid.x2 = t1 + diff2; trapezoid.y2 = val1 * (1-t) + val2 * t;
+                    trapezoid.x3 = t1; trapezoid.y3 = val1;
+                    this.offsetAreas2[j] = trapezoid;
                 }
             }
             if (t1 < start) {
@@ -372,7 +422,7 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
         this.labelHtml += "<span>Aa = " + area[2].toFixed(3) + "</span><br>";
     this.graph.labelDiv.innerHTML = this.labelHtml;
     var fillLength = endIndex - startIndex + 1;
-//    this.graph.updateOptions({});
+    this.transformOffsetAreasToDomCoords();
     this.graph.updateOptions({
          series:{
              'x': {
@@ -398,6 +448,43 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
                     }       
                 }
     });
+    //this.graph.updateOptions({});
+};
+
+CustomKinematicsGraphOperations.prototype.transformOffsetAreasToDomCoords = function() {
+    var colors = this.graph._graph.getColors();
+    for( var i=0; i<this.offsetAreas1.length; i++) {
+        var trapezoid = this.offsetAreas1[i];
+        var coords = this.graph._graph.toDomCoords(trapezoid.x0, trapezoid.y0);
+        trapezoid.x0 = coords[0]; trapezoid.y0 = coords[1];
+        coords = this.graph._graph.toDomCoords(trapezoid.x1, trapezoid.y1);
+        trapezoid.x1 = coords[0]; trapezoid.y1 = coords[1];
+        coords = this.graph._graph.toDomCoords(trapezoid.x2, trapezoid.y2);
+        trapezoid.x2 = coords[0]; trapezoid.y2 = coords[1];
+        coords = this.graph._graph.toDomCoords(trapezoid.x3, trapezoid.y3);
+        trapezoid.x3 = coords[0]; trapezoid.y3 = coords[1];
+        this.areaTrapezoid = trapezoid;
+        var rgb = Dygraph.toRGB_(colors[i]);
+        var color =
+            'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + 0.15 + ')';
+        trapezoid.color = color;
+    }
+    for( var i=0; i<this.offsetAreas2.length; i++) {
+        var trapezoid = this.offsetAreas2[i];
+        var coords = this.graph._graph.toDomCoords(trapezoid.x0, trapezoid.y0);
+        trapezoid.x0 = coords[0]; trapezoid.y0 = coords[1];
+        coords = this.graph._graph.toDomCoords(trapezoid.x1, trapezoid.y1);
+        trapezoid.x1 = coords[0]; trapezoid.y1 = coords[1];
+        coords = this.graph._graph.toDomCoords(trapezoid.x2, trapezoid.y2);
+        trapezoid.x2 = coords[0]; trapezoid.y2 = coords[1];
+        coords = this.graph._graph.toDomCoords(trapezoid.x3, trapezoid.y3);
+        trapezoid.x3 = coords[0]; trapezoid.y3 = coords[1];
+        this.areaTrapezoid = trapezoid;
+        var rgb = Dygraph.toRGB_(colors[i]);
+        var color =
+            'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + 0.15 + ')';
+        trapezoid.color = color;
+    }
 };
 
 CustomKinematicsGraphOperations.prototype.calculateAverageValues = function(hl) {
@@ -489,8 +576,17 @@ CustomKinematicsGraphOperations.prototype.pointClickCallback = function (event, 
             //width:100,
             //height:30
           };
+          var xoord = g.toDomXCoord(ann.xval);
+          var row = g.findClosestRow(xoord);
+          ann.showX = false;
+          ann.showV = false;
+          ann.showA = false;          
+          ann.posVal = g.getValue(row, 1);
+          ann.velVal = g.getValue(row, 2);
+          ann.accVal = g.getValue(row, 3);
+          ann.text = 'time = ' + ann.xval.toFixed(3);
           ann.div = this.createAnnotationDiv('Label');
-          var anns = g.annotations();
+          var anns = this.labelAnnotations;
           anns.push(ann);
           g.setAnnotations(anns);
 };
@@ -524,10 +620,17 @@ CustomKinematicsGraphOperations.prototype.showLabelEditor = function(event) {
         //$scope.labelData.position = {x:x, y:y};
     };
     
-CustomKinematicsGraphOperations.prototype.createAnnotationDiv = function(text) {
+CustomKinematicsGraphOperations.prototype.createAnnotationDiv = function(text, posVal, velVal, accVal) {
     var newdiv = document.createElement('div');
     newdiv.text = text;
-    newdiv.innerHTML = text;
+    if(text.length > 0)
+        newdiv.innerHTML = text + "<br>";
+    if(posVal !== undefined)
+        newdiv.innerHTML += "x:" + posVal.toFixed(3);
+    if(velVal !== undefined)
+        newdiv.innerHTML += " v:" + velVal.toFixed(3);
+    if(accVal !== undefined)
+        newdiv.innerHTML += " a:" + accVal.toFixed(3);
     newdiv.style.visibility = 'visible';
     newdiv.style.display = 'inline';
     newdiv.style.zIndex = 1000;
@@ -536,11 +639,11 @@ CustomKinematicsGraphOperations.prototype.createAnnotationDiv = function(text) {
     newdiv.style.borderRadius = '5px';
     newdiv.style.background = 'rgba(240,240,240,0.5)';
     newdiv.style.border = "1px solid #888888";
-    //newdiv.onclick = $scope.labelDivClicked;
+    //newdiv.onclick = this.labelDivClickedCallBack;
     //document.body.appendChild(newdiv);
     //$scope.labelDivs.push(newdiv);
     MathJax.Hub.Queue(["Typeset",MathJax.Hub,newdiv]);
-    newdiv.style.fontWeight = 'bolder';
+    //newdiv.style.fontWeight = 'bolder';
     //newdiv.style.left = $scope.labelData.position.x - newdiv.offsetWidth/2 + 'px';
     //newdiv.style.top = $scope.labelData.position.y - newdiv.offsetHeight/2 + 'px';
     return newdiv;
@@ -549,12 +652,243 @@ CustomKinematicsGraphOperations.prototype.createAnnotationDiv = function(text) {
 CustomKinematicsGraphOperations.prototype.initAnnotationsFromJsonData = function(jsonData) {
     if(jsonData === undefined)
         return;
-    var anns = this.graph._graph.annotations();
+    var anns = this.labelAnnotations;
     for(var i=0; i<jsonData.length; i++) {
         var annData = jsonData[i];
-        var ann = {xval:annData.x, series:annData.series, tickHeight:20};
-        ann.div = this.createAnnotationDiv(annData.text);
+        var ann = {xval:annData.x, series:annData.series, tickHeight:20, text:annData.x.toFixed(3)};
+        ann.posVal = annData.posVal;
+        ann.velVal = annData.velVal;
+        ann.accVal = annData.accVal;
+        ann.div = this.createAnnotationDiv(annData.text, annData.posVal, annData.velVal, annData.accVal);
         anns.push(ann);
     }
     this.graph._graph.setAnnotations(anns);
+};
+
+CustomKinematicsGraphOperations.prototype.fillTrapezoidArea = function(trapezoid) {
+    var ctx = this.canvas;
+    ctx.fillStyle = trapezoid.color;  
+    ctx.beginPath();
+    ctx.moveTo(trapezoid.x0, trapezoid.y0);
+    ctx.lineTo(trapezoid.x1, trapezoid.y1);
+    ctx.lineTo(trapezoid.x2, trapezoid.y2);
+    ctx.lineTo(trapezoid.x3, trapezoid.y3);
+    //ctx.lineTo(trapezoid.x0, trapezoid.y0);
+    ctx.fill();
+};
+
+CustomKinematicsGraphOperations.prototype.fillGraph = function(fillOptions) {
+    this.graph.updateOptions({
+         series:{
+             'x': {
+                        strokeWidth: 1.0,
+                        fillGraph: true,
+                        fillAlpha:0.15,
+                        fillStartIndex:50,
+                        fillLength:200
+                    },
+              'v': {
+                        strokeWidth: 1.0,
+                        fillGraph: true,
+                        fillAlpha:0.15,
+                        fillStartIndex:0,
+                        fillLength:300
+                    },
+              'a': {
+                        strokeWidth: 1.0,
+                        fillGraph: true,
+                        fillAlpha:0.15,
+                        fillStartIndex:100,
+                        fillLength:250
+                    }       
+                }
+    });
+    
+  var g = this.graph._graph;
+  var setNames = g.getLabels().slice(1);  // remove x-axis
+
+  // getLabels() includes names for invisible series, which are not included in
+  // allSeriesPoints. We remove those to make the two match.
+  // TODO(danvk): provide a simpler way to get this information.
+  for (var i = setNames.length; i >= 0; i--) {
+    if (!g.visibility()[i]) setNames.splice(i, 1);
+  }
+
+  var anySeriesFilled = (function() {
+    for (var i = 0; i < setNames.length; i++) {
+      if (g.getBooleanOption("fillGraph", setNames[i])) return true;
+    }
+    return false;
+  })();
+
+  if (!anySeriesFilled) return;
+
+  var area = g.getArea();
+  var sets = g.plotter_.layout.points;
+  var setCount = sets.length;
+
+  var fillAlpha = g.getNumericOption('fillAlpha');
+  var stackedGraph = g.getBooleanOption("stackedGraph");
+  var colors = g.getColors();
+
+  // For stacked graphs, track the baseline for filling.
+  //
+  // The filled areas below graph lines are trapezoids with two
+  // vertical edges. The top edge is the line segment being drawn, and
+  // the baseline is the bottom edge. Each baseline corresponds to the
+  // top line segment from the previous stacked line. In the case of
+  // step plots, the trapezoids are rectangles.
+  var baseline = {};
+  var currBaseline;
+  var prevStepPlot;  // for different line drawing modes (line/step) per series
+
+  // Helper function to trace a line back along the baseline.
+  var traceBackPath = function(ctx, baselineX, baselineY, pathBack) {
+    ctx.lineTo(baselineX, baselineY);
+    if (stackedGraph) {
+      for (var i = pathBack.length - 1; i >= 0; i--) {
+        var pt = pathBack[i];
+        ctx.lineTo(pt[0], pt[1]);
+      }
+    }
+  };
+
+  // process sets in reverse order (needed for stacked graphs)
+  for (var setIdx = setCount - 1; setIdx >= 0; setIdx--) {
+    var ctx = this.canvas;
+    var setName = setNames[setIdx];
+    if (!g.getBooleanOption('fillGraph', setName)) continue;
+    var fillStartIndex = g.getNumericOption('fillStartIndex', setName);
+    var fillLength = g.getNumericOption('fillLength', setName);
+    if(fillStartIndex === -1)
+        fillStartIndex = e.start;
+    if(fillLength === -1)
+        fillLength = e.end;
+    var stepPlot = g.getBooleanOption('stepPlot', setName);
+    var color = colors[setIdx];
+    var axis = g.axisPropertiesForSeries(setName);
+    var axisY = 1.0 + axis.minyval * axis.yscale;
+    if (axisY < 0.0) axisY = 0.0;
+    else if (axisY > 1.0) axisY = 1.0;
+    axisY = area.h * axisY + area.y;
+
+    var points = sets[setIdx];
+    var xoord = g.toDomXCoord(points[0].x);
+    var row = g.findClosestRow(xoord);
+    var iter = Dygraph.createIterator(points, fillStartIndex-row, fillLength,
+        DygraphCanvasRenderer._getIteratorPredicate(
+            g.getBooleanOption("connectSeparatedPoints", setName)));
+
+    // setup graphics context
+    var prevX = NaN;
+    var prevYs = [-1, -1];
+    var newYs;
+    // should be same color as the lines but only 15% opaque.
+    var rgb = Dygraph.toRGB_(color);
+    var err_color =
+        'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + fillAlpha + ')';
+    ctx.fillStyle = err_color;
+    ctx.beginPath();
+    var last_x, is_first = true;
+
+    // If the point density is high enough, dropping segments on their way to
+    // the canvas justifies the overhead of doing so.
+    if (points.length > 2 * g.width_ || Dygraph.FORCE_FAST_PROXY) {
+      ctx = DygraphCanvasRenderer._fastCanvasProxy(ctx);
+    }
+
+    // For filled charts, we draw points from left to right, then back along
+    // the x-axis to complete a shape for filling.
+    // For stacked plots, this "back path" is a more complex shape. This array
+    // stores the [x, y] values needed to trace that shape.
+    var pathBack = [];
+
+    // TODO(danvk): there are a lot of options at play in this loop.
+    //     The logic would be much clearer if some (e.g. stackGraph and
+    //     stepPlot) were split off into separate sub-plotters.
+    var point;
+    while (iter.hasNext) {
+      point = iter.next();
+      if (!Dygraph.isOK(point.y) && !stepPlot) {
+        traceBackPath(ctx, prevX, prevYs[1], pathBack);
+        pathBack = [];
+        prevX = NaN;
+        if (point.y_stacked !== null && !isNaN(point.y_stacked)) {
+          baseline[point.canvasx] = area.h * point.y_stacked + area.y;
+        }
+        continue;
+      }
+      if (stackedGraph) {
+        if (!is_first && last_x == point.xval) {
+          continue;
+        } else {
+          is_first = false;
+          last_x = point.xval;
+        }
+
+        currBaseline = baseline[point.canvasx];
+        var lastY;
+        if (currBaseline === undefined) {
+          lastY = axisY;
+        } else {
+          if(prevStepPlot) {
+            lastY = currBaseline[0];
+          } else {
+            lastY = currBaseline;
+          }
+        }
+        newYs = [ point.canvasy, lastY ];
+
+        if (stepPlot) {
+          // Step plots must keep track of the top and bottom of
+          // the baseline at each point.
+          if (prevYs[0] === -1) {
+            baseline[point.canvasx] = [ point.canvasy, axisY ];
+          } else {
+            baseline[point.canvasx] = [ point.canvasy, prevYs[0] ];
+          }
+        } else {
+          baseline[point.canvasx] = point.canvasy;
+        }
+
+      } else {
+        if (isNaN(point.canvasy) && stepPlot) {
+          newYs = [ area.y + area.h, axisY ];
+        } else {
+          newYs = [ point.canvasy, axisY ];
+        }
+      }
+      if (!isNaN(prevX)) {
+        // Move to top fill point
+        if (stepPlot) {
+          ctx.lineTo(point.canvasx, prevYs[0]);
+          ctx.lineTo(point.canvasx, newYs[0]);
+        } else {
+          ctx.lineTo(point.canvasx, newYs[0]);
+        }
+
+        // Record the baseline for the reverse path.
+        if (stackedGraph) {
+          pathBack.push([prevX, prevYs[1]]);
+          if (prevStepPlot && currBaseline) {
+            // Draw to the bottom of the baseline
+            pathBack.push([point.canvasx, currBaseline[1]]);
+          } else {
+            pathBack.push([point.canvasx, newYs[1]]);
+          }
+        }
+      } else {
+        ctx.moveTo(point.canvasx, newYs[1]);
+        ctx.lineTo(point.canvasx, newYs[0]);
+      }
+      prevYs = newYs;
+      prevX = point.canvasx;
+    }
+    prevStepPlot = stepPlot;
+    if (newYs && point) {
+      traceBackPath(ctx, point.canvasx, newYs[1], pathBack);
+      pathBack = [];
+    }
+    ctx.fill();
+  }
 };

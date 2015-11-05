@@ -1,0 +1,25 @@
+<div id="KinematicsSettingsDiv" class="row container col-md-3" style="display: none; border: solid 1px #888888; box-shadow: 1px 1px 1px 1px #888888">
+    <div class="row-fluid col-md-12">
+        <div class="col-md-3">
+            Name
+        </div>
+        <div class="col-md-4">
+            <input type="text" ng-model="uiDataValues.nameTag" ng-change="OnNameChanged()"/>
+        </div>
+    </div>
+  
+    <div class="row-fluid col-md-12">
+        <div class="col-md-4">
+            Text
+        </div>
+        <div class="col-md-2">
+            <input type="checkbox" value="on" ng-model="uiDataValues.textVisibility" ng-change="OnTextVisibilityChanged()"/>
+        </div>
+        <div class="col-md-4">
+            Arrow
+        </div>
+        <div class="col-md-2">
+            <input type="checkbox" value="on" ng-model="uiDataValues.arrowVisibility" ng-change="OnArrowVisibilityChanged()"/>
+        </div>
+    </div>
+</div>

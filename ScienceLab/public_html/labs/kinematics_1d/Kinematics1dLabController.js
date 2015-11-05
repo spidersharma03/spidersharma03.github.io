@@ -14,6 +14,9 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         text: "Label",
         position: {x:0, y:0},
         clicked:false,
+        showX: false,
+        showV: false,
+        showA: false,
         currentSelected:null
     };
     
@@ -25,6 +28,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        timeWindow: 5,
        timeRecordValue:10,
        InputTypeButtonState: false,
+       SettingTypeButtonState: false,
        // Math Data
        mathExpressionSyntaxError:false,
        mathInputData:{type:"0", expression:"t^2 + t"},
@@ -42,6 +46,8 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        velocityValue:0,
        accelerationValue:1,
        nameTag:"Kinematics Body",
+       textVisibility:true,
+       arrowVisibility:false,
        accelerationArrowVisibility:false,
        velocityArrowVisibility:false,
        positionTextVisibility:true,
@@ -89,71 +95,33 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        }
     };
     
-    $scope.labelDivClicked = function(event) {
-        $scope.labelData.clicked = true;
-        $scope.labelData.currentSelected = this;
-        $scope.labelData.text = this.text;
-        $scope.showLabelEditor(event);
+    $scope.OnTextVisibilityChanged = function() {
+        if($scope.lab !== undefined) {
+            var model = $scope.lab.tracks[0].body;
+            $scope.textViewObserver.setVisible(model.id, "textTag",$scope.uiDataValues.textVisibility);    
+            $scope.textViewObserver.setVisible(model.id, "positionTag",$scope.uiDataValues.textVisibility);    
+            $scope.textViewObserver.setVisible(model.id, "velocityTag",$scope.uiDataValues.textVisibility);    
+            $scope.textViewObserver.setVisible(model.id, "accelerationTag",$scope.uiDataValues.textVisibility);
+        }
+    };
+    
+    $scope.OnArrowVisibilityChanged = function() {
+        if($scope.lab !== undefined) {
+            var model = $scope.lab.tracks[0].body;
+            $scope.kinematics3DView.setAccelerationArrowVisibility(model, $scope.uiDataValues.arrowVisibility);
+            $scope.kinematics3DView.setVelocityArrowVisibility(model, $scope.uiDataValues.arrowVisibility);
+            $scope.lab.syncViews();
+        }
+    };
+    
+    $scope.labelDivClickedCallBack = function(annotation) {
+        $scope.labelData.text = annotation.div.text;
+        $scope.labelData.showX = annotation.showX;
+        $scope.labelData.showV = annotation.showV;
+        $scope.labelData.showA = annotation.showA;
         $scope.$apply();
     };
-    
-    $scope.OnLabelTextChanged = function() {
-        var test = 0;
-        test++;
-        //$scope.modelGraph.customGraphOperations.changeAnnotationText($scope.labelData.text);
-    };
-    
-    $scope.OnGraphClicked = function(event) {
-        return;
-        $scope.showLabelEditor(event);
-        var ann = {
-            series: 'v',
-            x: 0.144,
-            //icon: 'img/sprite.png',
-            width: 115,
-            height: 125,
-            tickHeight: 14,
-            text: "this.time"
-          };
-//          this.annotations.push( {
-//                series: 'v',
-//                x: this.time,
-//                icon: 'img/sprite.png',
-//                width: 15,
-//                height: 15,
-//                tickHeight: 14,
-//                text: this.time
-//            } );
-          var anns = $scope.modelGraph._graph.annotations();
-          anns.push(ann);
-          $scope.modelGraph._graph.setAnnotations(anns);
-    };
-    
-    $scope.showLabelEditor = function(event) {
-        return;
-        var graphPos = Dygraph.findPos($scope.modelGraph._graph.graphDiv);
-        var canvasx = Dygraph.pageX(event) - graphPos.x;
-        var canvasy = Dygraph.pageY(event) - graphPos.y;
-        var div = document.getElementById("GraphLabelEditor");
-        var graphDiv = document.getElementById("graphDiv");
-//        function getPos(el) {
-//            for (var lx=0, ly=0;
-//                 el !== null;
-//                 lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent);
-//            return {x: lx,y: ly};
-//          }
-//        var pos = getPos(graphDiv);
-        var x = Dygraph.pageX(event);//canvasx + pos.x;
-        var y = Dygraph.pageY(event);//canvasy + pos.y;
-        div.style.visibility = 'visible';
-        div.style.left = x - div.offsetWidth/2 + 'px';
-        div.style.top = y - div.offsetHeight/2 + 'px';
-        div.style.display = 'inline';
-        div.style.zIndex = 1000;
-        document.body.appendChild(div);
-        $scope.labelData.position = {x:x, y:y};
-    };
-    
+        
     $scope.OnLabelEditorOkPressed = function() {
         $scope.modelGraph.customGraphOperations.changeAnnotation($scope.labelData);
     };
@@ -357,15 +325,13 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             $('#GraphDiv').removeClass('col-md-pull-6');
             //$('#GraphDiv').addClass('col-md-push-6');
         }
-//        if($scope.lab !== undefined && $scope.uiDataValues.selectedViewType === 'Graph') {
-//            $scope.lab.simulateFull();
-//        }
         var sceneLoadType = sharedProperties.getPropertyValue("SceneLoadType");
         if(sceneLoadType === 'SceneLoadNew' || sceneLoadType === 'SceneEdit')
             $scope.modelGraph.customGraphOperations.setAnnotationEditable(true);
         else
             $scope.modelGraph.customGraphOperations.setAnnotationEditable(false);
-            
+        
+        $scope.modelGraph.customGraphOperations.labelDivClickedCallBack = $scope.labelDivClickedCallBack;
         $scope.modelGraph.customGraphOperations.initAnnotationsFromJsonData($scope.uiDataValues.annotationsData);
     };
     
@@ -516,6 +482,31 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         }
     };
     
+    $scope.OnKinematicsSettingClicked = function() {
+        $scope.uiDataValues.SettingTypeButtonState = !$scope.uiDataValues.SettingTypeButtonState;
+        var div = document.getElementById('KinematicsSettingsDiv');
+        div.style.zIndex = "1000";
+        div.style.position = 'absolute';
+        div.style.overflow = 'hidden';
+        function getPos(el) {
+          for (var lx=0, ly=0;
+               el !== null;
+               lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent);
+          return {x: lx,y: ly};
+        }
+        var button = document.getElementById("KinematicsSettingsButton");
+        div.style.left = getPos(button).x - 100 + 'px';
+        div.style.top = getPos(button).y + button.offsetHeight*2 + 'px';
+        div.style.display = 'inline';
+        div.style.backgroundColor = 'rgba(255,255,255,0.5)';
+        div.style.borderRadius = '10px';
+        if(!$scope.uiDataValues.SettingTypeButtonState) {
+          div.style.visibility = 'hidden';
+        } else {
+          div.style.visibility = 'visible';            
+        }
+    };
+    
     $scope.selectedStateTypeChanged = function() {
         if($scope.lab !== undefined) {
             if($scope.lab.time !== 0)
@@ -596,6 +587,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         if($scope.lab !== undefined) {
             var model = $scope.lab.tracks[0].body;
             $scope.kinematics3DView.setAccelerationArrowVisibility(model, $scope.uiDataValues.accelerationArrowVisibility);
+            $scope.lab.syncViews();
         }
     };
     
@@ -603,6 +595,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         if($scope.lab !== undefined) {
             var model = $scope.lab.tracks[0].body;
             $scope.kinematics3DView.setVelocityArrowVisibility(model, $scope.uiDataValues.velocityArrowVisibility);
+            $scope.lab.syncViews();
         }
     };
     
@@ -868,12 +861,22 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         if(graphInputJsonData !== undefined)
             simulation.set("GraphInputJsonData", graphInputJsonData);
         simulation.set("SimulationText", $scope.uiDataValues.inputText);
-        var annotations = $scope.modelGraph._graph.annotations();
+        var annotations = $scope.modelGraph.customGraphOperations.labelAnnotations;
         if(annotations.length > 0 && $scope.uiDataValues.selectedViewType !== 'View3D') {
             var annotationArray = [];
             for( var i=0; i<annotations.length; i++) {
                 var ann = annotations[i];
-                annotationArray.push({x:ann.xval, series:ann.series, text:ann.div.text});
+                var annData = {};
+                annData.x = ann.xval;
+                annData.series = ann.series;
+                annData.text = ann.div.text;
+                if(ann.showX)
+                    annData.posVal = ann.posVal;
+                if(ann.showV)
+                    annData.velVal = ann.velVal;
+                if(ann.showA)
+                    annData.accVal = ann.accVal;
+                annotationArray.push(annData);
             }
             var res = JSON.stringify(annotationArray);
             var annotationsJSON = JSON.parse(res);
@@ -893,12 +896,12 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         if(currentUser === undefined)
             return;
         var currentUserEmail = currentUser.get("email");
-        var currentUserName = currentUser.get("username");
+        var currentUserName = currentUser.get("userdisplayname");
         // Save SimulationMetaData
         simulationMetaData.set("simname", "Kinematics1d");
         simulationMetaData.set("simtitle", $scope.uiDataValues.simTitle);
         simulationMetaData.set("userid", currentUserEmail);
-        simulationMetaData.set("username", currentUserName);
+        simulationMetaData.set("userdisplayname", currentUserName);
         simulationMetaData.set("edited", edited);
         if(key !== undefined)
             simulationMetaData.set("simkey", key);

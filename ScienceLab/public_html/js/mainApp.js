@@ -85,7 +85,7 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route, sh
         var currentUser = Parse.User.current();
         if (currentUser) {
             $scope.logged_in = true;
-            $scope.currentUserName = "Welcome " + currentUser.get("username");
+            $scope.currentUserName = "Welcome " + currentUser.get("userdisplayname");
 
             var Simulation = Parse.Object.extend("Simulation");
             var query = new Parse.Query(Simulation);
@@ -163,7 +163,8 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route, sh
             $scope.register_InvalidEmail = false;
             // email is valid, proceed
             var user = new Parse.User();
-            user.set("username", nameField);
+            user.set("username", emailField);
+            user.set("userdisplayname", nameField);
             user.set("password", pwField);
             user.set("email", emailField);
 
@@ -251,7 +252,7 @@ mainApp.controller('homePageLoadController', function ($scope, $http, $route, sh
                     // Do stuff after successful login.
                     $('#LoginModal').modal('hide');
                     $scope.logged_in = true;
-                    $scope.currentUserName = "Welcome " + user.get("username");
+                    $scope.currentUserName = "Welcome " + user.get("userdisplayname");
                     $scope.$apply();
                     $route.reload();
                 },
@@ -517,7 +518,7 @@ mainApp.directive('graph', function () {
                     'x': {
                         strokeWidth: 1.0,
                         //fillGraph: true,
-                        fillAlpha:0.15,
+                        fillAlpha:0.15
                         //fillStartIndex:50,
                         //fillLength:10
                     },
@@ -582,7 +583,18 @@ mainApp.directive('graph', function () {
             
             $scope.$on('$destroy', function () {
                 var div = document.getElementById("GraphLabelEditor");
-                document.body.removeChild(div);
+                function isDescendant(parent, child) {
+                var node = child.parentNode;
+                while (node != null) {
+                    if (node == parent) {
+                        return true;
+                    }
+                    node = node.parentNode;
+                }
+                    return false;
+                }
+                if(isDescendant(document.body, div))
+                    document.body.removeChild(div);
             });
 
         };

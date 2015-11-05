@@ -43,7 +43,7 @@ controllers.controller('simulationMetaDataLoadController', function ($scope, $ht
                 // Do something with the returned Parse.Object values
                 for (var i = 0; i < results.length; i++) {
                     var object = results[i];
-                    var username = object.get("username");
+                    var username = object.get("userdisplayname");
                     var userid = object.get("userid");
                     var simname = object.get("simname");
                     var simtitle = object.get("simtitle");

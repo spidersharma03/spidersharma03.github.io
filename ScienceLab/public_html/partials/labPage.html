@@ -2,13 +2,14 @@
 <div ng-include="'labs/kinematics_1d/Kinematics_PropertiesInputView.html'"></div>
 <div ng-include="'labs/kinematics_1d/Kinematics_MathInputView.html'"></div>
 <div ng-include="'labs/kinematics_1d/Kinematics_GraphInputView.html'"></div>
+<div ng-include="'labs/kinematics_1d/Kinematics_SettingsView.html'"></div>
 
 <div ng-if="sceneLoaded" class = "row-fluid">
     <div class="col-md-12" style="" >
         <div class="col-md-1">
             <div id ="PlayPauseButton" ng-click="OnPlayPauseButtonPressed()" class="btn btn-primary btn-xs fa fa-play fa-lg" style="position: relative; border: solid 1px #888888; color: rgba(0, 100, 100,0.1)'">        
             </div>
-            <div ng-click="OnResetPressed()" class="btn btn-primary btn-xs fa fa-backward fa-lg" style="position: relative; border: solid 1px #888888; color: rgba(0, 100, 100,0.1)'">        
+            <div ng-click="OnResetPressed()" class="btn btn-primary btn-xs fa fa-repeat fa-lg" style="position: relative; border: solid 1px #888888; color: rgba(0, 100, 100,0.1)'">        
             </div>
         </div>
         <div class="col-md-2">
@@ -29,10 +30,10 @@
                   <li ng-show="publishDataValues.selectedInputType === 'Graph' || mode === 'Edit'"><a target='_self' ng-click='OnInputTypeChanged("Graph")' href="">Graph</a></li>
                 </ul>
             </div>
-            
         </div>
-        
-        <div class="col-md-6">
+        <div ng-show="uiDataValues.selectedViewType !=='Graph'" id='KinematicsSettingsButton' ng-click='OnKinematicsSettingClicked()' class="col-md-1 btn btn-primary btn-xs fa fa-cog fa-lg" data-toggle="button" style="width: 30px; position: relative; border: solid 1px #888888; color: 'rgba(0, 100, 100,0.1)'">        
+        </div>
+        <div class="col-md-5">
         </div>
         <div ng-if="mode === 'Edit'" class="col-md-1">
             <button ng-show="mode !== 'Preview'" class="btn btn-warning fa fa-save fa-lg" ng-click="OnPublishOptionPressed()" target="_self" data-toggle="modal"  data-target="#PublishOptionsModel"><a style="color: white" href="">Save</a></button>

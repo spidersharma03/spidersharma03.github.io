@@ -45,7 +45,7 @@ controllers.controller('userProfilePageLoadController', function ($scope, $http,
             success: function (results) {
                 for (var i = 0; i < results.length; i++) {
                     var object = results[i];
-                    var username = object.get("username");
+                    var username = object.get("userdisplayname");
                     var userid = object.get("userid");
                     var simname = object.get("simname");
                     var simtitle = object.get("simtitle");
@@ -112,11 +112,8 @@ controllers.controller('userProfilePageLoadController', function ($scope, $http,
         
         var SimulationMetaData = Parse.Object.extend("SimulationMetaData");
         var query = new Parse.Query(SimulationMetaData);
-        var date = $scope.recentActivity[index].createdAt;
-        var userid = $scope.recentActivity[index].userid;
-        query.greaterThanOrEqualTo("createdAt", date);
         query.equalTo("userid", userid);
-        query.limit(1);
+        query.equalTo("simkey", simKey);
         query.find({
             success: function (results) {
                 if(results.length === 0)

@@ -27,6 +27,8 @@ function Kinematics3DView(parent, kinematics_lab) {
     this.lambertMaterial1.side = THREE.DoubleSide;
     this.lambertMaterial2.side = THREE.DoubleSide;
     this.render();
+    this.velocityArrowVisibility = false;
+    this.accelerationArrowVisibility = false;    
 }
 
 Kinematics3DView.prototype = {
@@ -41,22 +43,16 @@ Kinematics3DView.prototype = {
     },
     
     setVelocityArrowVisibility: function(modelObject, bVisible){
-        this.objects_3d[modelObject.id.toString()].velocityArrow.getRootNode().visible = bVisible;
+        this.velocityArrowVisibility = bVisible;
     },
     
     setAccelerationArrowVisibility: function(modelObject, bVisible){
+        this.accelerationArrowVisibility = bVisible;
         this.objects_3d[modelObject.id.toString()].accelerationArrow.getRootNode().visible = bVisible;
     },
     
     removeObject3D: function(modelObject) {
         if(modelObject.type === "SIMULATIONBODY") {    
-//            var object3d = this.objects_3d[modelObject.id];
-//            for( var i=0; i<this.objects_3d.length; i++) {
-//                if( object3d === this.objects_3d[i]) {
-//                    this.objects_3d.splice(modelObject.id,1);
-//                    break;
-//                }
-//            }
             var object = this.objects_3d[modelObject.id.toString()];
             if(object !== undefined) {
                 this.scene.remove(object);
@@ -109,16 +105,16 @@ Kinematics3DView.prototype = {
             var acceleration = modelObject.acceleration.x;
             object3d.position.x = position;
             object3d.updateMatrixWorld();
-//            if(velocity === 0) {
-//                this.setVelocityArrowVisibility(modelObject, false);
-//            } else {
-//                this.setVelocityArrowVisibility(modelObject, true);
-//            }
-//            if(acceleration === 0) {
-//                this.setAccelerationArrowVisibility(modelObject, false);
-//            } else {
-//                this.setAccelerationArrowVisibility(modelObject, true);
-//            }
+            if(velocity !== 0 && this.velocityArrowVisibility) {
+                this.objects_3d[modelObject.id.toString()].velocityArrow.getRootNode().visible = true;
+            } else {
+                this.objects_3d[modelObject.id.toString()].velocityArrow.getRootNode().visible = false;
+            }
+            if(acceleration !== 0 && this.accelerationArrowVisibility) {
+                this.objects_3d[modelObject.id.toString()].accelerationArrow.getRootNode().visible = true;
+            } else {
+                this.objects_3d[modelObject.id.toString()].accelerationArrow.getRootNode().visible = false;
+            }
             // Update 3d arrows
             var velocityScale = Math.abs(velocity);
             object3d.velocityArrow.setLength(velocityScale);

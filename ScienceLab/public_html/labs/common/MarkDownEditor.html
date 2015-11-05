@@ -6,12 +6,14 @@
         <title>Live markdown editor based on MathJax and Marked</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
+        <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Oswald">
         <!-- based on MathJax/test/sample-dynamic-2.html -->
-
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <!--<link href="css/bootstrap-responsive.css" rel="stylesheet">-->
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
         <style>
             body {
-                /*width: 100em;*/
+                
             }
             .hint {
                 text-align: right;
@@ -36,13 +38,11 @@
                     float: right;*/
             }
         </style>
-        <link href="css/bootstrap.min.css" rel="stylesheet">
-        <!--<link href="css/bootstrap-responsive.css" rel="stylesheet">-->
-        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        
     </head>
 
     <body>
-        <div class="row-fluid panel panel-default panel-body" style="overflow-y: scroll;">
+        <div class="row-fluid panel panel-default panel-body" style="overflow-y: scroll; font-family: 'Oswald', serif; font-size: 1.3em">
             <div ng-if="mode === 'Edit'" class="col-md-6" id="marked-mathjax-input">
             <textarea   style="width: 100%; height: 500px; border: 1px solid #888888;border-radius: 10px" ng-model="uiDataValues.inputText" ng-change="OnMarkDownEditorKeyUp()">
             </textarea>

@@ -11,7 +11,24 @@ function Kinematics_Body(bodyParams) {
 Kinematics_Body.prototype = Object.create(PhysicalBody.prototype);
 
 Kinematics_Body.prototype.updateTagsOffsets = function() {
-    
+    for (var tagname in this.tags) {
+        var tagObject = this.tags[tagname];
+        var tagOffset = tagObject.offset;
+        if(tagname === 'velocityTag') {
+            if(this.velocity.x < 0)
+                tagOffset.dx = -100;
+            else
+                tagOffset.dx = 0;
+        }else if(tagname === 'accelerationTag') {
+            if(this.acceleration.x < 0)
+                tagOffset.dx = -100;
+            else
+                tagOffset.dx = 0;
+        }  
+        else{
+            tagOffset.dx = 0;
+        }
+    }
 };
 
 function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
@@ -30,6 +47,7 @@ function Model_Kinematics1D_Lab(kinematics3DView, textViewObserver, labParams) {
     this.IntervalDataRecord = [];
     this.currentInterval = {start:0, end:0};
     
+    this.bTakeTimeSnap = true;
     this.bRecordGraphData = true;
     this.bRecordGraphDataEveryFrame = true;
     this.NumFramesToSkipForDataRecord = 60;
@@ -201,7 +219,7 @@ Model_Kinematics1D_Lab.prototype = {
         if(this.timeRecordCounter === 0  && this.graphObserver !== null)
                 this.updateGraphData();
 
-        if(this.timeSnapRecordCounter === 0)
+        if(this.timeSnapRecordCounter === 0 && this.bTakeTimeSnap)
             this.timeSnap();
         
         this.time += dt;  
@@ -267,6 +285,7 @@ Model_Kinematics1D_Lab.prototype = {
             for( var i=0; i<this.tracks.length; i++) {
                 var track = this.tracks[i];
                 var body = this.tracks[i].body;
+                body.updateTagsOffsets();
                 for (var tagname in track.body.tags) {
                     var tagObject = track.body.tags[tagname];
                     if(!tagObject.dirty)
@@ -278,7 +297,7 @@ Model_Kinematics1D_Lab.prototype = {
                     var object3d = this.view3dObserver.getObject3D(body);
                     var projectedPos = this.view3dObserver.projectToScreenSpace(object3d);
                     if(tagOffset) {
-                        projectedPos.x += tagOffset.x;
+                        projectedPos.x += tagOffset.x + tagOffset.dx;
                         projectedPos.y -= tagOffset.y;
                     }
                     body.updateTag(tagname, "value", value_);

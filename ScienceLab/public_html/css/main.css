@@ -1,0 +1,29 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Nov 5, 2015, 9:16:51 PM
+    Author     : prashantsharma
+*/
+hr {
+  border: 1px solid #eee;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+hr.margin {
+  border: 1px solid #0a9cb2;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.progress .bar {
+    -webkit-transition: none;
+    -moz-transition: none;
+    -ms-transition: none;
+    -o-transition: none;
+    transition: none;
+}
+

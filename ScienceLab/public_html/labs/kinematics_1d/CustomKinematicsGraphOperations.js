@@ -286,12 +286,12 @@ CustomKinematicsGraphOperations.prototype.calculateTangents = function (event, x
         var y_ = this.dygraph.toDomCoords(x, points[i].yval)[1];
         //var slope = this.dygraph.getValue(row, 2);
         var slope = (val2 - val1) / (t2 - t1);
-        if (seriesIndex === 0)
-            dxdt = slope.toFixed(3);
-        if (seriesIndex === 1)
-            dvdt = slope.toFixed(3);
+        if (seriesIndex === 0) // derivative of x(t) is v(t)
+            slope = dxdt = this.dygraph.getValue(row, 2).toFixed(3);
+        if (seriesIndex === 1) // derivative of
+            slope = dvdt = this.dygraph.getValue(row, 3).toFixed(3);
         if (seriesIndex === 2)
-            dadt = slope.toFixed(3);
+            slope = dadt = slope.toFixed(3);
         var c = points[i].yval - slope * x;
         var x1 = x + 100;
         var x2 = x - 100;
@@ -655,10 +655,13 @@ CustomKinematicsGraphOperations.prototype.initAnnotationsFromJsonData = function
     var anns = this.labelAnnotations;
     for(var i=0; i<jsonData.length; i++) {
         var annData = jsonData[i];
-        var ann = {xval:annData.x, series:annData.series, tickHeight:20, text:annData.x.toFixed(3)};
+        var ann = {xval:annData.x, series:annData.series, tickHeight:20, text:"time = "+annData.x.toFixed(3)};
         ann.posVal = annData.posVal;
         ann.velVal = annData.velVal;
         ann.accVal = annData.accVal;
+        ann.showX = (ann.posVal !== undefined) ? true: false;
+        ann.showV = (ann.velVal !== undefined) ? true: false;
+        ann.showA = (ann.accVal !== undefined) ? true: false;
         ann.div = this.createAnnotationDiv(annData.text, annData.posVal, annData.velVal, annData.accVal);
         anns.push(ann);
     }

@@ -28,6 +28,7 @@ function SplineGraph(div, graphInputData) {
         this.timeWindow = graphInputData.timeWindow;
         this.curveType = graphInputData.type;
         this.scaleFactor = 5.0;
+        this.linearInterpolation = graphInputData.linearInterpolation;
         this.numSplines = this.numPoints - 1;
     }
     
@@ -49,7 +50,7 @@ function SplineGraph(div, graphInputData) {
         }
     };
     var mouseMotion = mouseMotion_.bind(this);
-    
+         
     function moveV4_(event, g, context) {
         var RANGE = 7;
         if (this.v4Active) {
@@ -132,12 +133,17 @@ SplineGraph.X_T = 0;
 SplineGraph.V_T = 1;
 SplineGraph.A_T = 2;
 
+SplineGraph.prototype.reset = function() {
+    this.updateDensePointsInGraphData();
+    this.graph.updateOptions({'file': this.data});
+};
+       
 SplineGraph.prototype.setLinearInterpolation = function(bLinear) {
     this.linearInterpolation = bLinear;
 };
 
 SplineGraph.prototype.getPersistentDataAsJSON = function() {
-    var res = JSON.stringify({points: this.sparsePoints, type:this.curveType, timeWindow:this.timeWindow});
+    var res = JSON.stringify({points: this.sparsePoints, type:this.curveType, timeWindow:this.timeWindow, linearInterpolation:this.linearInterpolation});
     var out = JSON.parse(res);
     return out;
 };
@@ -181,15 +187,18 @@ SplineGraph.prototype.updateDensePointsInGraphData = function () {
     var count = 0;
     for (var i = 0; i < this.splines.length; i++) {
         var currentSpline = this.splines[i];
-//        var p1 = this.sparsePoints[i];
-//        var p2 = this.sparsePoints[i+1];
+        var p1 = this.sparsePoints[i];
+        var p2 = this.sparsePoints[i+1];
         var n = this.numDivisionsbetweenPoints;
         if (i === this.splines.length - 1)
             n = this.numDivisionsbetweenPoints + 1;
+        var interpolatedVal;
         for (var j = 0; j < n; j++) {
             var t = j / this.numDivisionsbetweenPoints;
-            var interpolatedVal = currentSpline.Value(t);
-//            var interpolatedVal = p1 * (1-t) + p2 * t;
+            if(this.linearInterpolation)
+                 interpolatedVal = p1 * (1-t) + p2 * t;
+            else 
+                 interpolatedVal = currentSpline.Value(t);
             var vals = this.data[count++];
             vals[2] = interpolatedVal;
         }
@@ -201,19 +210,24 @@ SplineGraph.prototype.setType = function(type) {
 };
 
 SplineGraph.prototype.Value = function(t) {
-    if(t > this.timeWindow)
-        return 0;
+    if(t > this.timeWindow){
+        t = this.timeWindow;
+    }
     // Find the spline index
     var deltaT = this.timeWindow/this.numSplines;
     var tval = t/deltaT;
     var index = Math.floor(tval);
-//    var p1 = this.sparsePoints[index];
-//    var p2 = this.sparsePoints[index+1];
+    index = index >= this.numSplines ? this.numSplines-1 : index;
+    var p1 = this.sparsePoints[index];
+    var p2 = this.sparsePoints[index+1];
     var spline = this.splines[index];
     if(spline) {
         var t_ = tval - index;
-       var val = spline.Value(tval - index) * this.scaleFactor;
-//       var val = (p1*(1-t_) + p2*t_) * this.scaleFactor;
+       var val; 
+       if(this.linearInterpolation) 
+            val = (p1*(1-t_) + p2*t_) * this.scaleFactor;
+       else 
+            val = spline.Value(tval - index) * this.scaleFactor;
        return val;
     } else {
         return 0;
@@ -221,15 +235,23 @@ SplineGraph.prototype.Value = function(t) {
 };
 
 SplineGraph.prototype.Velocity = function(t) {
-    if(t > this.timeWindow)
-        return 0;
+    if(t > this.timeWindow){
+        t = this.timeWindow;
+    }
     // Find the spline index
     var deltaT = this.timeWindow/this.numSplines;
     var tval = t/deltaT;
     var index = Math.floor(tval);
+    index = index >= this.numSplines ? this.numSplines-1 : index;
+    var p1 = this.sparsePoints[index];
+    var p2 = this.sparsePoints[index+1];
     var spline = this.splines[index];
     if(spline) {
-       var val = spline.FirstDerivative(tval - index) * this.scaleFactor;
+       var val;
+       if(this.linearInterpolation) 
+            val = (-p1 + p2) * this.scaleFactor;
+       else 
+            val = spline.FirstDerivative(tval - index) * this.scaleFactor;
        return val;
     } else {
         return 0;
@@ -237,15 +259,21 @@ SplineGraph.prototype.Velocity = function(t) {
 }; 
 
 SplineGraph.prototype.Acceleration = function(t) {
-    if(t > this.timeWindow)
-        return 0;
+    if(t > this.timeWindow){
+        t = this.timeWindow;
+    }
     // Find the spline index
     var deltaT = this.timeWindow/this.numSplines;
     var tval = t/deltaT;
     var index = Math.floor(tval);
+    index = index >= this.numSplines ? this.numSplines-1 : index;
     var spline = this.splines[index];
     if(spline) {
-       var val = spline.SecondDerivative(tval - index) * this.scaleFactor;
+       var val;
+       if(this.linearInterpolation) 
+           val = 0;
+       else    
+         val = spline.SecondDerivative(tval - index) * this.scaleFactor;
        return val;
     } else {
         return 0;

@@ -143,6 +143,11 @@ Model_Kinematics1D_Lab.prototype = {
             }
         }
     },
+    setTimeSnapObjectsVisible: function(bVisible) {
+        for(var i=0; i<this.timesnap_objects.length; i++) {
+            this.view3dObserver.setObjectVisibility(this.timesnap_objects[i], bVisible);
+        }
+    },
     
     resetSimulation: function(time) {
         this.pauseSimulation = true;
@@ -314,8 +319,6 @@ Model_Kinematics1D_Lab.prototype = {
                         value_ = value_ + track.body.acceleration.x.toPrecision(3);
                         tagObject.dirty = true;
                     }
-                    //projectedPos.x = 0;
-                    //projectedPos.y = 0;
                     this.textViewObserver.updateTextView(body.id, tagname, value_, projectedPos);
                 }
             }
@@ -370,9 +373,20 @@ Model_Kinematics1D_Lab.prototype = {
             var t2 = this.time;
             var t = body.velocity.x * t1 - body.prevVelocity * t2;
             t /= (body.velocity.x - body.prevVelocity);
-            var pos = body.prevPosition + (body.prevVelocity + body.velocity.x) * (t-t1)/2;
+            var pos = body.prevPosition + body.prevVelocity * (t-t1);
             var acc = body.prevAcceleration * (t2 - t)/dt + body.acceleration.x * ( t - t1)/dt;
             this.graphObserver.recordData([t, pos, 0, acc ]);
+        }
+        // Acceleration sign changed, so there must be a zero of acceleration here
+        if(body.prevAcceleration * body.acceleration.x < 0) {
+            var dt = 0.016;
+            var t1 = this.time - dt;
+            var t2 = this.time;
+            var t = body.acceleration.x * t1 - body.prevAcceleration * t2;
+            t /= (body.acceleration.x - body.prevAcceleration);
+            var vel = body.prevVelocity + body.prevAcceleration * (t-t1);
+            var pos = body.prevPosition + vel * (t - t1);
+            this.graphObserver.recordData([t, pos, vel, 0 ]);
         }
     },
     
@@ -514,8 +528,8 @@ Model_Kinematics1D_Lab.StraightTrack.prototype = {
                 this.body.position.x += this.body.velocity.x * dt;
             } else {
                 this.body.acceleration.x = this.graphInput.Acceleration(time);
-                this.body.velocity.x = this.graphInput.Velocity(time);;
-                this.body.position.x = this.graphInput.Value(time);;
+                this.body.velocity.x = this.graphInput.Velocity(time);
+                this.body.position.x = this.graphInput.Value(time);
             }
         }
         else {

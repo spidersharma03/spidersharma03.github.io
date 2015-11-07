@@ -23,10 +23,14 @@ var mainApp = angular.module('mainApp', ['ngRoute', 'DataLoadControllers', 'Cont
                     templateUrl: 'partials/SimulationPage.html',
                     controller: 'SimulationDataLoadController'
                 }).
-                when('/Labs', {
+                when('/Labs/:simulationID', {
                     templateUrl: 'partials/labPage.html',
                     controller: 'Kinematics1dLabController'
                 }).
+                when('/Labs', {
+                    templateUrl: 'partials/labPage.html',
+                    controller: 'Kinematics1dLabController'
+                }).        
                 when('/PublishedView', {
                     templateUrl: 'labs/kinematics_1d/preview/labPage.html'
                             //controller: 'Kinematics1dLabController'
@@ -318,8 +322,23 @@ mainApp.directive('markdowneditor', function () {
             tex2jax: { inlineMath: [['$','$'],['\\(','\\)']] },
             TeX: { equationNumbers: {autoNumber: "AMS"} }
           });
+         var renderer = new marked.Renderer();
+         renderer.heading = function (text, level) {
+            var escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+            return '<h' + level + '><a name="' +
+                        escapedText +
+                         '" class="anchor" href="#' +
+                         escapedText +
+                         '"><span class="header-link"></span></a>' +
+                          text + '</h' + level + '>';
+         };
+         
+         renderer.hr = function () {
+            return this.options.xhtml ? '<hr class="margin"/>\n' : '<hr class="margin">\n';
+         }; 
+         
          marked.setOptions({
-                renderer: new marked.Renderer(),
+                renderer: renderer,
                 gfm: true,
                 tables: true,
                 breaks: false,
@@ -656,8 +675,7 @@ mainApp.directive('view3d', function () {
                 // Update the lab
                 lab.simulate(dt);
                 updateTimeProgress();
-                if(lab.isSimulationOver() && bOnce) {
-                    bOnce = false;
+                if(lab.isSimulationOver()) {
                     $('#PlayPauseButton').removeClass('fa-pause');
                     $('#PlayPauseButton').addClass('fa-play');
                 }

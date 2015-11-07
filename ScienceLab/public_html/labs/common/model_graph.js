@@ -7,6 +7,7 @@
 function Model_Graph(parentdiv, options, numSeries) {
     this.series_data = [];
     this.numSeries = numSeries;
+    this.customGraphOperations = null;
     var array = [];
     for(var i=0; i<numSeries; i++){
         array.push(0);
@@ -27,9 +28,36 @@ Model_Graph.prototype = {
       this._graph.updateOptions({ 'file': this.series_data });
   },
   
-  updateData: function() {
+  updateData: function() {  
+      // Update Label Annotations  
+      if(this.customGraphOperations !== null) {
+          var numRows = this._graph.numRows();
+          var max_timeVal = this._graph.getValue(numRows-1, 0);
+          var annotations = this.customGraphOperations.labelAnnotations;
+          for(var i=0; i<annotations.length; i++) {
+              var ann = annotations[i];
+              if(ann.xval <= max_timeVal) {
+                  var xoord = this._graph.toDomXCoord(ann.xval);
+                  var row = this._graph.findClosestRow(xoord);
+                  ann.posVal = this._graph.getValue(row, 1);
+                  ann.velVal = this._graph.getValue(row, 2);
+                  ann.accVal = this._graph.getValue(row, 3);
+                  ann.div.innerHTML = "";
+                  if(ann.div.text.length > 0)
+                      ann.div.innerHTML = ann.div.text + "<br>";
+                  if(ann.showX)
+                      ann.div.innerHTML += "x: " + ann.posVal.toFixed(3);
+                  if(ann.showV)
+                      ann.div.innerHTML += " v: " + ann.velVal.toFixed(3);
+                  if(ann.showA)
+                      ann.div.innerHTML += " a: " + ann.accVal.toFixed(3);
+                  }
+            }
+      }
+      // Update graph
       if(this.series_data.length !== 0)
         this._graph.updateOptions({ 'file': this.series_data });
+      
   },
   
   updateOptions: function(options) {
@@ -59,6 +87,8 @@ Model_Graph.prototype = {
   },
   
   clearData: function() {
+      if(this.series_data.length === 0)
+          return;
       this.series_data = [];
       this._graph.updateOptions({ 'file': this.series_data });
   }

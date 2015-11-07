@@ -4,8 +4,12 @@
  * and open the template in the editor.
  */
 
-controllers.controller('Kinematics1dLabController', function($scope,sharedProperties){
-    $scope.name = "Kinematics1dLabController";
+controllers.controller('Kinematics1dLabController', function($routeParams, $scope,sharedProperties){
+    var simulationID = $routeParams.simulationID;
+    if(simulationID !== undefined) {
+        sharedProperties.addPropertyValue("SceneLoadType", "SceneLoadFromServer");
+        sharedProperties.addPropertyValue("simKey", simulationID);
+    }
     $scope.KinematicsTabName = 'Kinematics';
     $scope.mode = 'Edit';
     
@@ -20,6 +24,17 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
         currentSelected:null
     };
     
+    String.prototype.hashCode = function(){
+        var hash = 0;
+        if (this.length == 0) return hash;
+        for (i = 0; i < this.length; i++) {
+            var char = this.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
+    }
+
     $scope.uiDataValues = {
        inputText : "$v$ = $u$ + $a$$t$",
        selectedSplineGraphInputType : "0",
@@ -37,7 +52,16 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
            linearInterpolation:false,
            timeWindow:5
        },
+       // Settings Data
+       settingsData: {
+           nameTag:"Kinematics Body",
+           textVisibility: true,
+           arrowVisibility: false,
+           timeSnapVisibility:true,
+           timeSnapInterval: 60
+       },
        // Simulation Data
+       
        simTitle:"Introduction",
        playPauseButtonState:"Play",
        // Object Data
@@ -45,9 +69,6 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        positionValue:0,
        velocityValue:0,
        accelerationValue:1,
-       nameTag:"Kinematics Body",
-       textVisibility:true,
-       arrowVisibility:false,
        accelerationArrowVisibility:false,
        velocityArrowVisibility:false,
        positionTextVisibility:true,
@@ -95,21 +116,33 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
        }
     };
     
+    $scope.OnTimeSnapVisibilityChanged = function() {
+        if($scope.lab !== undefined) {
+            $scope.lab.setTimeSnapObjectsVisible($scope.uiDataValues.settingsData.timeSnapVisibility);
+        }
+    };
+    
+    $scope.OnTimeSnapIntervalChanged = function() {
+        if($scope.lab !== undefined) {
+            $scope.lab.NumFramesToSkipForTimeSnap = $scope.uiDataValues.settingsData.timeSnapInterval;
+        }
+    };
+    
     $scope.OnTextVisibilityChanged = function() {
         if($scope.lab !== undefined) {
             var model = $scope.lab.tracks[0].body;
-            $scope.textViewObserver.setVisible(model.id, "textTag",$scope.uiDataValues.textVisibility);    
-            $scope.textViewObserver.setVisible(model.id, "positionTag",$scope.uiDataValues.textVisibility);    
-            $scope.textViewObserver.setVisible(model.id, "velocityTag",$scope.uiDataValues.textVisibility);    
-            $scope.textViewObserver.setVisible(model.id, "accelerationTag",$scope.uiDataValues.textVisibility);
+            $scope.textViewObserver.setVisible(model.id, "textTag",$scope.uiDataValues.settingsData.textVisibility);    
+            $scope.textViewObserver.setVisible(model.id, "positionTag",$scope.uiDataValues.settingsData.textVisibility);    
+            $scope.textViewObserver.setVisible(model.id, "velocityTag",$scope.uiDataValues.settingsData.textVisibility);    
+            $scope.textViewObserver.setVisible(model.id, "accelerationTag",$scope.uiDataValues.settingsData.textVisibility);
         }
     };
     
     $scope.OnArrowVisibilityChanged = function() {
         if($scope.lab !== undefined) {
             var model = $scope.lab.tracks[0].body;
-            $scope.kinematics3DView.setAccelerationArrowVisibility(model, $scope.uiDataValues.arrowVisibility);
-            $scope.kinematics3DView.setVelocityArrowVisibility(model, $scope.uiDataValues.arrowVisibility);
+            $scope.kinematics3DView.setAccelerationArrowVisibility(model, $scope.uiDataValues.settingsData.arrowVisibility);
+            $scope.kinematics3DView.setVelocityArrowVisibility(model, $scope.uiDataValues.settingsData.arrowVisibility);
             $scope.lab.syncViews();
         }
     };
@@ -265,7 +298,9 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     },
     
     $scope.InterpolationTypeChanged = function() {
-        
+        $scope.splineGraph.linearInterpolation = $scope.uiDataValues.graphInputData.linearInterpolation;
+        $scope.splineGraph.reset();
+        $scope.OnResetPressed();
     };
     
     $scope.onLabInitialized = function() {
@@ -409,7 +444,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
             $scope.uiDataValues.positionValue = body.position.x;
             $scope.uiDataValues.velocityValue = body.velocity.x;
             $scope.uiDataValues.accelerationValue = body.acceleration.x;
-            $scope.uiDataValues.nameTag = "Kinematics Body";
+            $scope.uiDataValues.settingsData.nameTag = "Kinematics Body";
             $scope.uiDataValues.accelerationArrowVisibility = false;
             $scope.uiDataValues.velocityArrowVisibility = false;
             $scope.uiDataValues.positionTextVisibility = true;
@@ -578,7 +613,7 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
     $scope.OnNameChanged = function() {
         if($scope.lab !== undefined) {
             var model = $scope.lab.tracks[0].body;
-            model.updateTag("textTag", "text", $scope.uiDataValues.nameTag);
+            model.updateTag("textTag", "text", $scope.uiDataValues.settingsData.nameTag);
             $scope.lab.syncText2DView();
         }
     };
@@ -812,8 +847,9 @@ controllers.controller('Kinematics1dLabController', function($scope,sharedProper
                         var simulation = new Simulation();
                         var date = new Date();
                         var dateKey = date.toISOString();
-                        $scope.publishSimulationMetaData(currentUser, simulationMetaData, false, dateKey);
-                        $scope.publishSimulation(currentUser, simulation, false, dateKey);
+                        var newKey = Math.abs(dateKey.hashCode() + currentUserEmail.hashCode());
+                        $scope.publishSimulationMetaData(currentUser, simulationMetaData, false, newKey.toString());
+                        $scope.publishSimulation(currentUser, simulation, false, newKey.toString());
                     }
               },
               error: function(error) {

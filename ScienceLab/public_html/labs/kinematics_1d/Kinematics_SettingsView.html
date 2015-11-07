@@ -4,7 +4,7 @@
             Name
         </div>
         <div class="col-md-4">
-            <input type="text" ng-model="uiDataValues.nameTag" ng-change="OnNameChanged()"/>
+            <input type="text" ng-model="uiDataValues.settingsData.nameTag" ng-change="OnNameChanged()"/>
         </div>
     </div>
   
@@ -13,13 +13,32 @@
             Text
         </div>
         <div class="col-md-2">
-            <input type="checkbox" value="on" ng-model="uiDataValues.textVisibility" ng-change="OnTextVisibilityChanged()"/>
+            <input type="checkbox" value="on" ng-model="uiDataValues.settingsData.textVisibility" ng-change="OnTextVisibilityChanged()"/>
         </div>
         <div class="col-md-4">
             Arrow
         </div>
         <div class="col-md-2">
-            <input type="checkbox" value="on" ng-model="uiDataValues.arrowVisibility" ng-change="OnArrowVisibilityChanged()"/>
+            <input type="checkbox" value="on" ng-model="uiDataValues.settingsData.arrowVisibility" ng-change="OnArrowVisibilityChanged()"/>
+        </div>
+    </div>
+    <div class="row-fluid col-md-12">
+        <div class="col-md-4">
+            Snap
+        </div>
+        <div class="col-md-2">
+            <input type="checkbox" value="on" ng-model="uiDataValues.settingsData.timeSnapVisibility" ng-change="OnTimeSnapVisibilityChanged()"/>
+        </div>
+    </div>
+    <div class="row-fluid col-md-12">
+        <div class="col-md-3">
+            Interval
+        </div>
+        <div class="col-md-7">
+            <input type="range" min="10" max="60" step="5"  ng-model="uiDataValues.settingsData.timeSnapInterval" ng-change="OnTimeSnapIntervalChanged()"/>
+        </div>
+        <div class="col-md-2">
+            <input type="text" disabled="disabled" ng-model="uiDataValues.settingsData.timeSnapInterval"/>
         </div>
     </div>
 </div>

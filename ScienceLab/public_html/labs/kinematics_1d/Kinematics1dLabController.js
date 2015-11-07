@@ -374,7 +374,6 @@ controllers.controller('Kinematics1dLabController', function($routeParams, $scop
         var Simulation = Parse.Object.extend("Simulation");
         var query = new Parse.Query(Simulation);
         var userid = sharedProperties.getPropertyValue("userid");
-        query.equalTo("userid", userid);
         var key = sharedProperties.getPropertyValue("simKey");
         query.equalTo("simkey", key);
         query.find({

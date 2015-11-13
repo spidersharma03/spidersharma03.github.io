@@ -1,7 +1,7 @@
 <div ng-if="sceneLoaded" id='GraphInputDiv' class="row col-md-6" style="display: none; border: solid 1px #888888; box-shadow: 1px 1px 1px 1px #888888">
 
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-2">
             Type
         </div>
         <div class="col-md-3">
@@ -10,6 +10,9 @@
             <option value="1">velocity-time</option>
             <option value="2">acceleration-time</option>
         </select>
+        </div>
+        <div class="col-md-1 btn btn-xs btn-default" ng-click="OnSplineGraphResetClicked()">
+            Reset
         </div>
         <div class="col-md-3">
             Linear Interpolation

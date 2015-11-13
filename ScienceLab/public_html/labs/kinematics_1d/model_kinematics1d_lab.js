@@ -125,7 +125,7 @@ Model_Kinematics1D_Lab.prototype = {
     setTimeWindow: function(timeWindow) {
         this.timeWindow = timeWindow;
         if(this.graphObserver !== null ) {
-            this.graphObserver.updateOptions({dateWindow:[0,this.timeWindow]});
+            this.graphObserver.updateOptions({dateWindow:[0,Number(this.timeWindow) + 1]});
         }
     },
     addTrack : function(track) {
@@ -212,10 +212,13 @@ Model_Kinematics1D_Lab.prototype = {
     },
     
     simulate : function(dt) {
-        if(this.pauseSimulation)
+            if(this.pauseSimulation)
             return;
-        if(this.time > this.timeWindow) {
+        var diff = this.time - Number(this.timeWindow);
+        if(diff > 1e-6) {
             this.playSimulation(false);
+            this.updateGraphData();
+            return;
         }        
         this.syncViews();
         
@@ -366,6 +369,19 @@ Model_Kinematics1D_Lab.prototype = {
     },
     
     checkForZeros: function(body) {
+        // Position sign changed, so there must be a zero of position here
+        if(body.prevPosition * body.position.x < 0) {
+            var dt = 0.016;
+            var t1 = this.time - dt;
+            var t2 = this.time;
+            var t = body.position.x * t1 - body.prevPosition * t2;
+            t /= (body.position.x - body.prevPosition);
+            //var pos = body.prevPosition + body.prevVelocity * (t-t1);
+            //body.position.x = pos;
+            var vel  = body.prevVelocity * (t2 - t)/dt + body.velocity.x * ( t - t1)/dt;
+            var acc = body.prevAcceleration * (t2 - t)/dt + body.acceleration.x * ( t - t1)/dt;
+            this.graphObserver.recordData([t, 0, Number(vel.toFixed(6)), Number(acc.toFixed(6)) ]);
+        }
         // Velocity sign changed, so there must be a zero of velocity here
         if(body.prevVelocity * body.velocity.x < 0) {
             var dt = 0.016;
@@ -374,6 +390,7 @@ Model_Kinematics1D_Lab.prototype = {
             var t = body.velocity.x * t1 - body.prevVelocity * t2;
             t /= (body.velocity.x - body.prevVelocity);
             var pos = body.prevPosition + body.prevVelocity * (t-t1);
+            body.position.x = pos;
             var acc = body.prevAcceleration * (t2 - t)/dt + body.acceleration.x * ( t - t1)/dt;
             this.graphObserver.recordData([t, pos, 0, acc ]);
         }
@@ -385,6 +402,7 @@ Model_Kinematics1D_Lab.prototype = {
             var t = body.acceleration.x * t1 - body.prevAcceleration * t2;
             t /= (body.acceleration.x - body.prevAcceleration);
             var vel = body.prevVelocity + body.prevAcceleration * (t-t1);
+            body.velocity.x = vel;
             var pos = body.prevPosition + vel * (t - t1);
             this.graphObserver.recordData([t, pos, vel, 0 ]);
         }

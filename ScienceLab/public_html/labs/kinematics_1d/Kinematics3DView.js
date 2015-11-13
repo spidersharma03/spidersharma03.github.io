@@ -22,6 +22,7 @@ function Kinematics3DView(parent, kinematics_lab) {
     
     var map = THREE.ImageUtils.loadTexture( "img/sprite.png" );
     this.spriteMaterial = new THREE.SpriteMaterial( { map: map, transparent:true } );
+    //this.spriteMaterial.color = new THREE.Color("rgb(255, 200, 200)");
     this.lambertMaterial1 = new THREE.MeshLambertMaterial({color:0x111188, ambient: 0xaaaaaa, combine: THREE.MixOperation});
     this.lambertMaterial2 = new THREE.MeshLambertMaterial({color:0x881111, ambient: 0xaaaaaa, combine: THREE.MixOperation});
     this.lambertMaterial1.side = THREE.DoubleSide;

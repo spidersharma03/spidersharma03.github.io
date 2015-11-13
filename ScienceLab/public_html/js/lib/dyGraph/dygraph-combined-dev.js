@@ -1887,6 +1887,7 @@ DygraphCanvasRenderer._fillPlotter = function(e) {
     var point;
     while (iter.hasNext) {
       point = iter.next();
+      if(point === undefined) continue;
       if (!Dygraph.isOK(point.y) && !stepPlot) {
         traceBackPath(ctx, prevX, prevYs[1], pathBack);
         pathBack = [];

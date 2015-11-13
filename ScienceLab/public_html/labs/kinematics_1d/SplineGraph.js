@@ -12,22 +12,26 @@ function SplineGraph(div, graphInputData) {
     this.numDivisionsbetweenPoints = 10;
     this.splines = [];
     this.sparsePoints = [];
+    this.originalSparsePoints = [];
     this.v4Active = false;
     this.clickedPoint = null;
     
     this.timeWindow = 7;
     this.curveType = SplineGraph.X_T;
-    this.scaleFactor = 5.0;
+    this.scaleFactor = 15.0;
+    this.normalizationFactor = 1.0;
     this.linearInterpolation = false;
     this.graphChangeCallBack = null;
     if(graphInputData !== undefined) {
         for(var i=0; i<graphInputData.points.length; i++) {
             this.sparsePoints.push(graphInputData.points[i]);
+            this.originalSparsePoints.push(graphInputData.points[i]);
         }
         this.numPoints = this.sparsePoints.length;
         this.timeWindow = graphInputData.timeWindow;
         this.curveType = graphInputData.type;
-        this.scaleFactor = 5.0;
+        this.scaleFactor = 15.0;
+        this.normalizationFactor = 1.0;
         this.linearInterpolation = graphInputData.linearInterpolation;
         this.numSplines = this.numPoints - 1;
     }
@@ -104,7 +108,7 @@ function SplineGraph(div, graphInputData) {
             this.data,
             {
                 dateWindow: [-0.1, 1.1],
-                valueRange: [-0.1, 1.1],
+                valueRange: [-0.5, 0.5],
                 labels: ['x', 'A', 'B'],
                 series: {
                     'A': {
@@ -120,7 +124,20 @@ function SplineGraph(div, graphInputData) {
                 },
                 legend: 'never',
                 animatedZooms: true,
-                drawGrid: false,
+                drawGrid: true,
+                axes: {
+                    x: {
+                        valueFormatter: function (val) {
+                            return val.toFixed(3);
+                        },
+                        pixelsPerLabel: 25,
+                        gridLinePattern: [4, 4]
+                    },
+                    y: {
+                        pixelsPerLabel: 25,
+                        gridLinePattern: [4, 4]
+                    }
+                },
                 interactionModel: {
                     'mousedown': downV4,
                     'mousemove': mouseMotion,
@@ -137,6 +154,15 @@ SplineGraph.prototype.reset = function() {
     this.updateDensePointsInGraphData();
     this.graph.updateOptions({'file': this.data});
 };
+
+SplineGraph.prototype.reinitialize = function() {
+    this.data = [];
+    for(var i=0; i<this.originalSparsePoints.length; i++) {
+        this.sparsePoints[i] = this.originalSparsePoints[i];
+    }
+    this.initSplineStuff();
+    this.graph.updateOptions({'file': this.data});
+    };
        
 SplineGraph.prototype.setLinearInterpolation = function(bLinear) {
     this.linearInterpolation = bLinear;
@@ -225,9 +251,9 @@ SplineGraph.prototype.Value = function(t) {
         var t_ = tval - index;
        var val; 
        if(this.linearInterpolation) 
-            val = (p1*(1-t_) + p2*t_) * this.scaleFactor;
+            val = (p1*(1-t_) + p2*t_) * this.scaleFactor * deltaT;
        else 
-            val = spline.Value(tval - index) * this.scaleFactor;
+            val = spline.Value(tval - index) * this.scaleFactor * deltaT;
        return val;
     } else {
         return 0;
@@ -273,7 +299,7 @@ SplineGraph.prototype.Acceleration = function(t) {
        if(this.linearInterpolation) 
            val = 0;
        else    
-         val = spline.SecondDerivative(tval - index) * this.scaleFactor;
+         val = spline.SecondDerivative(tval - index) * this.scaleFactor / deltaT;
        return val;
     } else {
         return 0;

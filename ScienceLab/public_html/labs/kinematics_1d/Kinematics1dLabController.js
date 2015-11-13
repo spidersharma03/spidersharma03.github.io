@@ -26,14 +26,14 @@ controllers.controller('Kinematics1dLabController', function($routeParams, $scop
     
     String.prototype.hashCode = function(){
         var hash = 0;
-        if (this.length == 0) return hash;
+        if (this.length === 0) return hash;
         for (i = 0; i < this.length; i++) {
             var char = this.charCodeAt(i);
             hash = ((hash<<5)-hash)+char;
             hash = hash & hash; // Convert to 32bit integer
         }
         return hash;
-    }
+    };
 
     $scope.uiDataValues = {
        inputText : "$v$ = $u$ + $a$$t$",
@@ -48,7 +48,7 @@ controllers.controller('Kinematics1dLabController', function($routeParams, $scop
        mathExpressionSyntaxError:false,
        mathInputData:{type:"0", expression:"t^2 + t"},
        // Graph Data
-       graphInputData:{type:0, points:[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9],
+       graphInputData:{type:0, points:[0,0,0,0,0,0,0,0,0,0],
            linearInterpolation:false,
            timeWindow:5
        },
@@ -116,6 +116,11 @@ controllers.controller('Kinematics1dLabController', function($routeParams, $scop
        }
     };
     
+    $scope.OnSplineGraphResetClicked = function() {
+        $scope.splineGraph.reinitialize();
+        $scope.OnResetPressed();
+    };
+    
     $scope.OnTimeSnapVisibilityChanged = function() {
         if($scope.lab !== undefined) {
             $scope.lab.setTimeSnapObjectsVisible($scope.uiDataValues.settingsData.timeSnapVisibility);
@@ -173,8 +178,8 @@ controllers.controller('Kinematics1dLabController', function($routeParams, $scop
     
     $scope.timeRecordChanged = function() {
         if($scope.mathInput !== undefined) {
-            $scope.mathInput.addTimeRecord($scope.uiDataValues.timeRecordValue);
-            var record = $scope.mathInput.getTimeRecord($scope.uiDataValues.timeRecordValue);
+            //$scope.mathInput.addTimeRecord($scope.uiDataValues.timeRecordValue);
+            //var record = $scope.mathInput.getTimeRecord($scope.uiDataValues.timeRecordValue);
 //            if(record !== undefined)
 //                $scope.uiDataValues.mathInputData.expression = record.expression;
         }
@@ -583,6 +588,9 @@ controllers.controller('Kinematics1dLabController', function($routeParams, $scop
             $('#PlayPauseButton').addClass('fa-play');
             $scope.uiDataValues.playPauseButtonState = "Play";
         }
+        if($scope.modelGraph.customGraphOperations !== undefined) {
+            $scope.modelGraph.customGraphOperations.reset();
+        }
     },
     
     $scope.OnPlayPauseButtonPressed = function() {
@@ -687,8 +695,9 @@ controllers.controller('Kinematics1dLabController', function($routeParams, $scop
     };
     
     $scope.OnMathExpressionChanged = function() {
-        $scope.uiDataValues.mathExpressionSyntaxError = !$scope.mathInput.setExpression($scope.uiDataValues.mathInputData.expression);
+        $scope.uiDataValues.mathExpressionSyntaxError = !$scope.mathInput.setExpression($scope.uiDataValues.mathInputData.expression);        
         if(!$scope.uiDataValues.mathExpressionSyntaxError) {
+            $scope.mathInput.addTimeRecord($scope.uiDataValues.timeRecordValue);
             $scope.lab.tracks[0].initializeState();
             $scope.lab.syncViews();
         }
@@ -728,8 +737,8 @@ controllers.controller('Kinematics1dLabController', function($routeParams, $scop
                 $scope.uiDataValues.graphInputData = {type:$scope.splineGraph.curveType, points:$scope.splineGraph.sparsePoints,
                     linearInterpolation:false,
                     timeWindow:$scope.publishDataValues.timeWindow
-            };
-        }   
+                };
+           }   
         }    
     };
     

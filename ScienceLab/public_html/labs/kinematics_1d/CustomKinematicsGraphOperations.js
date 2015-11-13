@@ -32,10 +32,22 @@ function CustomKinematicsGraphOperations(graph) {
     this.areaTrapezoid = {};
     this.offsetAreas1 = [{}, {}, {}];
     this.offsetAreas2 = [{}, {}, {}];
+    this.bAbsAreas = false;
     this.labelAnnotations = [];
     this.labelDivClickedCallBack = undefined;
 }
 
+CustomKinematicsGraphOperations.prototype.reset = function() {
+    return;
+    this.areaProbeData = {x1: 0, y1:0, x2: 1, y2: 0};
+    this.chordProbeData = {x1: 0, y1:[0,0,0], x2: 1, y2: [0,0,0]};
+    var hairlines = this.graph.hairlines.get();
+    this.graph.hairlines.set([]); // clear any hairlines for area and chord probe
+    hairlines.push({xval:0, interpolated : false});
+    hairlines.push({xval:1, interpolated : false});
+    this.graph.hairlines.set(hairlines);
+},
+        
 CustomKinematicsGraphOperations.prototype.setAnnotationEditable = function(bEditable) {
     this.editAnnotation = bEditable;
 },
@@ -141,8 +153,8 @@ CustomKinematicsGraphOperations.prototype.changeProbeType = function (probeType)
             var hairlines = this.graph.hairlines.get();
             var x1 = this.areaProbeData.x1;
             var x2 = this.areaProbeData.x2;
-            hairlines.push({xval:x1, interpolated : true});
-            hairlines.push({xval:x2, interpolated : true});
+            hairlines.push({xval:x1, interpolated : false});
+            hairlines.push({xval:x2, interpolated : false});
             this.graph.hairlines.set(hairlines);
             this.calculateAreas(hairlines);
      }
@@ -150,8 +162,8 @@ CustomKinematicsGraphOperations.prototype.changeProbeType = function (probeType)
             var hairlines = this.graph.hairlines.get();
             var x1 = this.chordProbeData.x1;
             var x2 = this.chordProbeData.x2;
-            hairlines.push({xval:x1, interpolated : true});
-            hairlines.push({xval:x2, interpolated : true});
+            hairlines.push({xval:x1, interpolated : false});
+            hairlines.push({xval:x2, interpolated : false});
             this.graph.hairlines.set(hairlines);
             this.calculateAverageValues(hairlines);
      }
@@ -287,14 +299,14 @@ CustomKinematicsGraphOperations.prototype.calculateTangents = function (event, x
         //var slope = this.dygraph.getValue(row, 2);
         var slope = (val2 - val1) / (t2 - t1);
         if (seriesIndex === 0) // derivative of x(t) is v(t)
-            slope = dxdt = this.dygraph.getValue(row, 2).toFixed(3);
-        if (seriesIndex === 1) // derivative of
-            slope = dvdt = this.dygraph.getValue(row, 3).toFixed(3);
+            slope = dxdt = Number(this.dygraph.getValue(row, 2).toFixed(3));
+        if (seriesIndex === 1) // derivative of v(t) is a(t)
+            slope = dvdt = Number(this.dygraph.getValue(row, 3).toFixed(3));
         if (seriesIndex === 2)
             slope = dadt = slope.toFixed(3);
         var c = points[i].yval - slope * x;
-        var x1 = x + 100;
-        var x2 = x - 100;
+        var x1 = x + 1;
+        var x2 = x - 1;
         var y1 = slope * x1 + c;
         var y2 = slope * x2 + c;
         var linestart = this.dygraph.toDomCoords(x1, y1);
@@ -364,6 +376,10 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
                     var seriesIndex = this.graphTypeArray[j];
                     var val1 = this.graph._graph.getValue(i, seriesIndex+1);
                     var val2 = this.graph._graph.getValue(i + 1, seriesIndex+1);
+                    if(this.bAbsAreas) {
+                        val1 = Math.abs(val1);
+                        val2 = Math.abs(val2);
+                    }
                     var avg = (val1 + val2) * 0.5;
                     area[seriesIndex] += avg * diff1;
                     trapezoid.x0 = start; trapezoid.y0 = 0;
@@ -381,6 +397,10 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
                     var seriesIndex = this.graphTypeArray[j];
                     var val1 = this.graph._graph.getValue(i, seriesIndex+1);
                     var val2 = this.graph._graph.getValue(i + 1, seriesIndex+1);
+                     if(this.bAbsAreas) {
+                        val1 = Math.abs(val1);
+                        val2 = Math.abs(val2);
+                    }
                     var avg = (val1 + val2) * 0.5;
                     area[seriesIndex] += avg * diff2;
                     trapezoid.x0 = t1; trapezoid.y0 = 0;
@@ -404,6 +424,13 @@ CustomKinematicsGraphOperations.prototype.calculateAreas = function (hl) {
                 var seriesIndex = this.graphTypeArray[j];
                 var val1 = this.graph._graph.getValue(i, seriesIndex+1);
                 var val2 = this.graph._graph.getValue(i + 1, seriesIndex+1);
+                if(t2-t1 < 0.016) {
+                    var test = 0; test++;
+                }
+                if(this.bAbsAreas) {
+                     val1 = Math.abs(val1);
+                     val2 = Math.abs(val2);
+                }
                 var avg = (val1 + val2) * 0.5;
                 area[seriesIndex] += avg * (t2 - t1);
                 //sum_lower += val1 * (t2 - t1);

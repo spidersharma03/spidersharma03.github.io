@@ -40,7 +40,7 @@
         "simulations":
             [
                {
-                   "display_name": "Image Based Refraction",
+                   "display_name": "Ray Traced Refraction",
                    "description":"",
                    "image" : "diamond.png",
                    "scene_name" : "Scene_Diamond_1"

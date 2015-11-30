@@ -430,6 +430,7 @@ diamondNames.push('../../img/wafercut.obj');
 diamondNames.push('../../img/rectangle.obj');
 diamondNames.push('../../img/Diamond_Emerald_Cut.obj');
 diamondNames.push('../../img/diamond_cut.stl.obj');
+diamondNames.push('../../img/twinkle.obj');
 
 var currentTextureIndex = 0;
 var textureNames = [];
@@ -759,7 +760,7 @@ function init() {
     effectFXAA.renderToScreen = true;
     var effectFilm = new THREE.FilmPass(0.35, 0.95, 1024, false);
     effectFilm.renderToScreen = true;
-    bloomPass = new THREE.BloomPass(1.0, 25, 0.07, 512);
+    bloomPass = new THREE.BloomPass(1.0, 25, 0.7, 512);
 
     composer = new THREE.EffectComposer(renderer);
     composer.setSize(window.innerWidth * dpr, window.innerHeight * dpr);

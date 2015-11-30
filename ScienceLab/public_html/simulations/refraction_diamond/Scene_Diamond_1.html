@@ -677,7 +677,7 @@ function init() {
 
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.3, 100);
     camera.position.z = 3;
-    camera.position.y = 0;
+    camera.position.y = 3;
     controls = new THREE.OrbitControls(camera);
     controls.addEventListener('change', render);
     // scene
@@ -760,7 +760,7 @@ function init() {
     effectFXAA.renderToScreen = true;
     var effectFilm = new THREE.FilmPass(0.35, 0.95, 1024, false);
     effectFilm.renderToScreen = true;
-    bloomPass = new THREE.BloomPass(1.0, 25, 0.7, 512);
+    bloomPass = new THREE.BloomPass(1.0, 25, 0.25, 512);
 
     composer = new THREE.EffectComposer(renderer);
     composer.setSize(window.innerWidth * dpr, window.innerHeight * dpr);

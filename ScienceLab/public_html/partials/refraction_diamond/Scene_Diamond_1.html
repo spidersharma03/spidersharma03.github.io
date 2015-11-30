@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->    
+<div class ="row-fluid">
+        <!--RIndex Delta<input style = "width:200px" type="range" min="0.0" max="0.5" step ="10" value = "0.1" >-->
+        <input type="button" onclick="(function(){document.getElementById('IFrame').contentWindow.changeDiamond();})(value)" value="Change Diamond"><br>
+        <br>
+        <input type="button" onclick="(function(){document.getElementById('IFrame').contentWindow.changeTexture();})(value)" value="Toggle Env Texture"><br>
+        <br>
+        Debug<input style="margin-left: 10px" type="checkbox" onchange="(function(){document.getElementById('IFrame').contentWindow.toggleDebugMode(value)})(value)">
+        <br>
+        <!--Sphere/Cone<input style="margin-left: 10px" type="checkbox" onchange="(function(){document.getElementById('IFrame').contentWindow.toggleIntersectionGeometry(value)})(value)">-->
+        <!--<br>-->
+        <!--Rotate<input style="margin-left: 10px" type="checkbox" onchange="(function(){document.getElementById('IFrame').contentWindow.toggleRotation(value)})(value)">-->
+        <!--<br>-->
+        <!--Max Bounces<input style = "width:200px" type="range" min="1" max="32" step ="1" value = "1" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBounceCount(value)})(value)">-->
+        Refraction Index<input style = "width:200px" type="range" min="1.0" max="10" step ="0.01" value = "2.4" onchange="(function(){document.getElementById('IFrame').contentWindow.changeRefractiveIndex(value)})(value)">
+        Refraction Index Delta<input style = "width:200px" type="range" min="0.0" max="0.5" step ="0.001" value = "0.01" onchange="(function(){document.getElementById('IFrame').contentWindow.changeRIndexDelta(value)})(value)">
+        Normal Offset<input style = "width:200px" type="range" min="0.0" max="0.2" step ="0.005" value = "0.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeNormalOffset(value)})(value)">
+        <!--Cone Radius Scale<input style = "width:200px" type="range" min="1.0" max="10" step ="0.01" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeConeRadiusScale(value)})(value)">-->
+        BoundingSphere Radius Scale<input style = "width:200px" type="range" min="1.0" max="5" step ="0.01" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBoundingSphereRadiusScale(value)})(value)">
+        BoundingSphere Squash Factor<input style = "width:200px" type="range" min="0.2" max="5" step ="0.05" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBoundingSphereSquashFactor(value)})(value)">
+        <div>
+            Bloom
+            <br>
+            <div>
+                Strength<input style = "width:200px" type="range" min="0.0" max="10" step ="0.1" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBloomStrength(value)})(value)">
+                <!--Sigma<input style = "width:200px" type="range" min="0.1" max="2.0" step ="0.01" value = "0.25" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBloomSigma(value)})(value)">-->
+            </div>
+        </div>
+        <br>
+        <div style="border: 1px solid black">HDR
+            <div>
+                HDR YWhite<input style = "width:200px" type="range" min="0.1" max="1000" step ="0.1" value = "10.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeHDRYWhite(value)})(value)">
+                HDR LogAvgLum<input style = "width:200px" type="range" min="0.1" max="5" step ="0.01" value = "0.2" onchange="(function(){document.getElementById('IFrame').contentWindow.changeHDRLogAvgLum(value)})(value)">
+                HDR Key<input style = "width:200px" type="range" min="0.1" max="4" step ="0.01" value = "0.8" onchange="(function(){document.getElementById('IFrame').contentWindow.changeHDRKey(value)})(value)">
+                HDR Saturation<input style = "width:200px" type="range" min="0.2" max="3" step ="0.01" value = "0.45" onchange="(function(){document.getElementById('IFrame').contentWindow.changeHDRSaturation(value)})(value)">
+            </div>
+        </div>
+</div>

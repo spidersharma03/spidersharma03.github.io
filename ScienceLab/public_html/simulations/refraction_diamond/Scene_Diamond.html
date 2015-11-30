@@ -64,7 +64,7 @@
            
             var cameraPosition = new THREE.Vector3();
             var library = new MaterialLibrary();
-            var sphereMesh, sphereMesh1, objNode;
+            var sphereMesh, sphereMesh1, objNode, objNode1;
             var clonedUniforms1, clonedUniforms2;
             var bRotate = true;
             
@@ -108,8 +108,8 @@
 //                var attributes = {
 //                    tangent: {type:"v4", value: tangents}
 //                };
-                sphereMaterial.side = THREE.DoubleSide;
-                sphereMaterial1.side = THREE.DoubleSide;
+                sphereMaterial1.side = THREE.FrontSide;
+                sphereMaterial.side = THREE.BackSide;
                 sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
                 sphereMesh.position.x = 7;
                 sphereMesh.position.y = 5;
@@ -147,7 +147,14 @@
 
                 var loader = new THREE.OBJLoader( manager );
                 loader.load( '../../img/Diamond_Emerald_Cut.obj', function ( object ) {
+                        object.position.y = 3;
+                        object.scale.x = 4;
+                        object.scale.y = 4;
+                        object.scale.z = 4;
+                        scene.add( object );
                         objNode = object;
+                        objNode1 = objNode.clone();
+                        scene.add( objNode1 );
                         object.traverse( function ( child ) {
 
                                 if ( child instanceof THREE.Mesh ) {
@@ -162,11 +169,19 @@
 
                         } );
                         
-                        object.position.y = 3;
-                        object.scale.x = 4;
-                        object.scale.y = 4;
-                        object.scale.z = 4;
-                        scene.add( object );
+                        objNode1.traverse( function ( child ) {
+
+                                if ( child instanceof THREE.Mesh ) {
+
+                                        child.material = sphereMaterial;
+                                        child.scale.x = 0.3;
+                                        child.scale.y = 0.3;
+                                        child.scale.z = 0.3;
+                                        //child.geometry.computeVertexNormals();
+                                        child.geometry.computeTangents();
+                                }
+
+                        } );
 
                 }, onProgress, onError );
             }
@@ -283,6 +298,8 @@
                         {uniforms: clonedUniforms1, 
                         vertexShader:library.shaderSource.vertexShader,
                         fragmentShader:library.shaderSource.fragmentShader});
+                sphereMaterial.transparent = true;
+                sphereMaterial.opacity = 0.5;
                 sphereMaterial.map = true;
                 clonedUniforms2 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
                 clonedUniforms2['IBLTexture'].value = reflTexture;
@@ -301,8 +318,10 @@
                         vertexShader:library.shaderSource.vertexShader,
                         fragmentShader:library.shaderSource.fragmentShader});
                 sphereMaterial1.map = true;
-                
-				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
+                sphereMaterial1.transparent = true;
+                sphereMaterial1.opacity = 0.5;
+                sphereMaterial1.side = THREE.BackSide;
+                renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 container.appendChild(renderer.domElement);
 
@@ -404,8 +423,10 @@
                 time += 0.16;
                 sphereMesh1.rotation.y += 0.01;
                 sphereMesh.rotation.y += 0.01;
-                if(objNode && bRotate)
+                if(objNode && bRotate) {
                     objNode.rotation.y += 0.003;
+                    objNode1.rotation.y += 0.003;
+                }
                 var roughness = Math.sin(time);
                 roughness *= roughness;
                 //library.shaderSource.uniforms['Roughness'].value = 0.5; 

@@ -43,7 +43,7 @@
                    "display_name": "Image Based Refraction",
                    "description":"",
                    "image" : "diamond.png",
-                   "scene_name" : "Scene_Diamond"
+                   "scene_name" : "Scene_Diamond_1"
                }
             ],
         "pageLink"  : "refraction_diamond"

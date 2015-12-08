@@ -12,17 +12,23 @@ and open the template in the editor.
         <br>
         Debug<input style="margin-left: 10px" type="checkbox" onchange="(function(){document.getElementById('IFrame').contentWindow.toggleDebugMode(value)})(value)">
         <br>
-        <!--Sphere/Cone<input style="margin-left: 10px" type="checkbox" onchange="(function(){document.getElementById('IFrame').contentWindow.toggleIntersectionGeometry(value)})(value)">-->
-        <!--<br>-->
-        <!--Rotate<input style="margin-left: 10px" type="checkbox" onchange="(function(){document.getElementById('IFrame').contentWindow.toggleRotation(value)})(value)">-->
-        <!--<br>-->
+        Sphere/Cone<input style="margin-left: 10px" type="checkbox" onchange="(function(){document.getElementById('IFrame').contentWindow.toggleIntersectionGeometry(value)})(value)">
+        <br>
+        Rotate<input style="margin-left: 10px" type="checkbox" onchange="(function(){document.getElementById('IFrame').contentWindow.toggleRotation(value)})(value)">
+        <br>
         <!--Max Bounces<input style = "width:200px" type="range" min="1" max="32" step ="1" value = "1" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBounceCount(value)})(value)">-->
         Refraction Index<input style = "width:200px" type="range" min="1.0" max="10" step ="0.01" value = "2.4" onchange="(function(){document.getElementById('IFrame').contentWindow.changeRefractiveIndex(value)})(value)">
         Refraction Index Delta<input style = "width:200px" type="range" min="0.0" max="0.5" step ="0.001" value = "0.01" onchange="(function(){document.getElementById('IFrame').contentWindow.changeRIndexDelta(value)})(value)">
         Normal Offset<input style = "width:200px" type="range" min="0.0" max="0.2" step ="0.005" value = "0.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeNormalOffset(value)})(value)">
-        <!--Cone Radius Scale<input style = "width:200px" type="range" min="1.0" max="10" step ="0.01" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeConeRadiusScale(value)})(value)">-->
+        Cone Radius Scale<input style = "width:200px" type="range" min="1.0" max="10" step ="0.01" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeConeRadiusScale(value)})(value)">
         BoundingSphere Radius Scale<input style = "width:200px" type="range" min="1.0" max="5" step ="0.01" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBoundingSphereRadiusScale(value)})(value)">
         BoundingSphere Squash Factor<input style = "width:200px" type="range" min="0.2" max="5" step ="0.05" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBoundingSphereSquashFactor(value)})(value)">
+        <br>
+        <div>
+            Absorbtion R<input style = "width:200px" type="range" min="0.0" max="5" step ="0.01" value = "0.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeAbsorbption(0,value)})(value)">
+            Absorbtion G<input style = "width:200px" type="range" min="0.0" max="5" step ="0.01" value = "0.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeAbsorbption(1,value)})(value)">
+            Absorbtion B<input style = "width:200px" type="range" min="0.0" max="5" step ="0.01" value = "0.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeAbsorbption(2,value)})(value)">
+        </div>
         <div>
             Bloom
             <br>

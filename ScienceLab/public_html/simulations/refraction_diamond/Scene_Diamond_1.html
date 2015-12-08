@@ -33,6 +33,7 @@
         <script src="../../js/lib/three.js/js/Detector.js"></script>
         <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
         <script src="../../js/lib/three.js/js/loaders/OBJLoader.js"></script>
+        <script src="../../js/lib/three.js/js/loaders/ColladaLoader.js"></script>
         <script src="../../js/lib/three.js/js/postprocessing/EffectComposer.js"></script>
         <script src="../../js/lib/three.js/js/postprocessing/RenderPass.js"></script>
         <script src="../../js/lib/three.js/js/postprocessing/MaskPass.js"></script>
@@ -67,7 +68,7 @@
             gl_FragColor = vec4( color, 1.0 );
             }
         </script>
-
+        
         <script id="fragment_shader_normal_map_test" type="x-shader/x-fragment">
             varying vec2 vUv;
             varying vec3 Normal;
@@ -102,6 +103,8 @@
                 uniform float boundingSphereRadius;
                 uniform vec3 boundingSphereCenter;
                 uniform int maxBounces;
+                uniform mat4 ModelMatrix;
+                uniform mat4 InverseModelMatrix;
                 // Tweak params
                 uniform float n2;
                 uniform bool bIntersectSphere;
@@ -109,6 +112,7 @@
                 uniform float rIndexDelta;
                 uniform float normalOffset;
                 uniform float squashFactor;
+                uniform vec3 Absorbption;
                 // hdr params
                 uniform float YWhite;
                 uniform float LogAvgLum;
@@ -216,7 +220,7 @@
                 }
                 
                  vec3 intersectSphere(vec3 origin, vec3 direction) {
-                     origin -= boundingSphereCenter;
+                     //origin -= boundingSphereCenter;
                      direction.y /= squashFactor;
 //                     origin.y /= squashFactor;
                      float A = dot(direction, direction);
@@ -231,7 +235,7 @@
                          float t = (t1 > t2) ? t1 : t2;
 //                         origin.y *= squashFactor;
                          direction.y *= squashFactor;
-                         return vec3(origin + boundingSphereCenter + direction * t);
+                         return vec3(origin + direction * t);
                      }
                      return vec3(0.0);
                  }
@@ -252,11 +256,13 @@
                          vec3 d = lightPosition[i] - pos;
                          float dist = length(d);
                          d /= dist;
-                         float dotProd = max(0.0, dot(d,direction));
-                         float I = 10.0*pow(dotProd, 100.0);
-                         outColor += vec3(I, I, I);
+                         float dotProd = abs(dot(d,direction));
+                         if(dotProd < 0.005){
+                             float val = 1.0*dotProd/0.005;
+                             outColor += vec3(val, val*0.3, val*0.3);
+                         }
                      }
-                     return pow(outColor, vec3(1.0/2.2));
+                     return pow(outColor, vec3(1.0/1.0));
                  }
                  
                  vec3 debugBounces(int count) {
@@ -292,7 +298,10 @@
                     outColor += SampleSpecularContribution(vec4(1.0), reflectedDirection, 0.0).rgb * fresenelReflected;
                     const int iterCount = 6;
                     int count = 0;
-//                    mat4 transposeMatrix = transpose(NormalMatrix);
+                    mat4 transposeMatrix = transpose(NormalMatrix);
+                    newDirection = (InverseModelMatrix * vec4(newDirection, 0.0)).xyz;
+                    newDirection = normalize(newDirection);
+                    origin = (InverseModelMatrix * vec4(origin, 1.0)).xyz;
 //                    vec4 v1 = transposeMatrix[0];
 //                    vec4 v2 = transposeMatrix[1];
 //                    vec4 v3 = transposeMatrix[2];
@@ -315,34 +324,41 @@
                             intersectedPos = intersectCone(origin + vec3(epsilon), newDirection);                             
                          vec3 dist = intersectedPos - origin - boundingSphereCenter;
                          vec3 d = normalize(intersectedPos - boundingSphereCenter);
-                         d = (vec4(d, 0.0) * NormalMatrix).xyz;
+                         //d = (vec4(d, 0.0) * NormalMatrix).xyz;
                          // Normal of the diamond
                          vec3 mappedNormal = textureCube( tCubeMap, d ).xyz;
                          mappedNormal.y += normalOffset;
                          mappedNormal = normalize(mappedNormal);
                          float r = sqrt(dot(dist, dist));
                          // refract the ray at intersection
-                        vec3 oldDir = vec3(newDirection);
+                        vec3 oldDir = newDirection;
                         newDirection = refract(newDirection, mappedNormal, n2/n1);
                         origin = intersectedPos;
-                        const vec3 c = vec3(0.01, 0.01, 0.01);
-                        attenuationFactor *= exp(-r*c);
+                        //const vec3 c = vec3(0.01, 0.01, 0.01);
+                        //outColor += vec3(dot(newDirection, newDirection));
+                        attenuationFactor *= exp(-r*Absorbption);
                         if( dot(newDirection, newDirection) == 0.0) { // Total Internal Reflection. Continue inside the diamond
                              newDirection = reflect(oldDir, mappedNormal);
                              if(i == iterCount-1 ) 
                              {
                                 float f1 = SchlickApproxFresenel(f0, dot(mappedNormal, -oldDir));
-                                outColor += SampleSpecularContribution(vec4(1.0), oldDir, 0.0).rgb * attenuationFactor * (1.0 - f1);
-                            }
+                                vec3 d1 = (ModelMatrix * vec4(oldDir, 0.0)).xyz;
+                                outColor += SampleSpecularContribution(vec4(1.0), d1, 0.0).rgb * attenuationFactor * (1.0 - f1);
+                                //outColor += ContributionFromLights(origin, oldDir);
+                             }
                         } else { // Add the contribution from outgoing ray, and continue the reflected ray inside the diamond
                             float fresnelRefractedRay = SchlickApproxFresenel(f0, dot(-mappedNormal, newDirection));
-                            // outgoing(refracted) ray's contribution    
-                            vec3 colorG = SampleSpecularContribution(vec4(1.0), newDirection, 0.0).rgb* ( 1.0 - fresnelRefractedRay);
+                            // outgoing(refracted) ray's contribution 
+                            vec3 d1 = (ModelMatrix * vec4(newDirection, 0.0)).xyz;
+                            vec3 colorG = SampleSpecularContribution(vec4(1.0), d1, 0.0).rgb* ( 1.0 - fresnelRefractedRay);
                             vec3 dir1 = refract(oldDir, mappedNormal, (n2+rIndexDelta)/n1);
                             vec3 dir2 = refract(oldDir, mappedNormal, (n2-rIndexDelta)/n1);
-                            vec3 colorR = SampleSpecularContribution(vec4(1.0), dir1, 0.0).rgb * ( 1.0 - fresnelRefractedRay);
-                            vec3 colorB = SampleSpecularContribution(vec4(1.0), dir2, 0.0).rgb * ( 1.0 - fresnelRefractedRay);
+                            vec3 d2 = (ModelMatrix * vec4(dir1, 0.0)).xyz;
+                            vec3 d3 = (ModelMatrix * vec4(dir2, 0.0)).xyz;
+                            vec3 colorR = SampleSpecularContribution(vec4(1.0), d2, 0.0).rgb * ( 1.0 - fresnelRefractedRay);
+                            vec3 colorB = SampleSpecularContribution(vec4(1.0), d3, 0.0).rgb * ( 1.0 - fresnelRefractedRay);
                             outColor += vec3(colorR.r, colorG.g, colorB.b) * attenuationFactor;
+                            //outColor += ContributionFromLights(origin, newDirection);
                             // new reflected ray inside the diamond
                             newDirection = reflect(oldDir, mappedNormal);
                             float fresnelReflectedRay = SchlickApproxFresenel(f0, dot(mappedNormal, newDirection));
@@ -425,12 +441,15 @@ var roughnessArray = [];
 var currentDiamondIndex = 0;
 var diamondNames = [];
 
+
+//diamondNames.push('../../img/cushion_square.obj');
 diamondNames.push('../../img/Diamond_Round_Cut.obj');
 diamondNames.push('../../img/wafercut.obj');
 diamondNames.push('../../img/rectangle.obj');
 diamondNames.push('../../img/Diamond_Emerald_Cut.obj');
 diamondNames.push('../../img/diamond_cut.stl.obj');
 diamondNames.push('../../img/twinkle.obj');
+diamondNames.push('../../img/oval.obj');
 
 var currentTextureIndex = 0;
 var textureNames = [];
@@ -450,21 +469,32 @@ var onObjectLoad = function (object)
                 child.geometry.normalize();
                 child.geometry.computeBoundingSphere();
                 boundingSphere = child.geometry.boundingSphere.clone();
-                //coneRadius = boundingSphere.radius + boundingSphere.radius*0.55;
-                //var coneHeight = 2*boundingSphere.radius;
-                //var tanConeAngle = coneRadius/coneHeight;
-                //diamondMaterial.uniforms["tanAngleSqCone"].value = tanConeAngle*tanConeAngle;
-                //diamondMaterial.uniforms["coneHeight"].value = coneHeight;
+                coneRadius = boundingSphere.radius + boundingSphere.radius*0.55;
+                var coneHeight = 2*boundingSphere.radius;
+                var tanConeAngle = coneRadius/coneHeight;
+                diamondMaterial.uniforms["tanAngleSqCone"].value = tanConeAngle*tanConeAngle;
+                diamondMaterial.uniforms["coneHeight"].value = coneHeight;
             }
         });
         
         diamondNode = diamondNormalsBakeNode.clone();
+        //diamondNode.rotation.y = Math.PI/4;
+        //diamondNode.rotation.x = Math.PI/4;
+        //diamondNode.position.x = 1;
+        diamondNode.scale.x = 1.0;
+        diamondNode.scale.y = 1.0;
+        diamondNode.scale.z = 1.0;
+        diamondNode.updateMatrix();
+        var mat4 = diamondNode.matrix.clone();
+        diamondMaterial.uniforms["ModelMatrix"].value = mat4;
+        var inverse = mat4.clone();
+        diamondMaterial.uniforms["InverseModelMatrix"].value = inverse.getInverse(mat4);
         scene.add(diamondNode);
         diamondNode.traverse(function (child) {
             if (child instanceof THREE.Mesh) {
                 child.material = diamondMaterial;
                 diamondMaterial.side = THREE.DoubleSide;
-                boundingSphere.center.add(diamondNode.position);
+                //boundingSphere.center.add(diamondNode.position);
                 diamondMaterial.uniforms["boundingSphereRadius"].value = boundingSphere.radius;
                 diamondMaterial.uniforms["boundingSphereCenter"].value = boundingSphere.center;
                 //var sphGeom = new THREE.SphereGeometry(boundingSphere.radius, 20, 20);
@@ -515,8 +545,10 @@ var diamondMaterial = new THREE.ShaderMaterial({
         "YWhite": {type: 'f', value: 10},
         "LogAvgLum": {type: 'f', value: 0.2},
         "Key": {type: 'f', value: 0.8},
-        "Saturation": {type: 'f', value: 0.45}
-
+        "Saturation": {type: 'f', value: 0.45},
+        "Absorbption": {type: 'v3', value: new THREE.Vector3(0.0, 0.0, 0.0)},
+        "ModelMatrix": {type: 'm4', value: new THREE.Matrix4()},
+        "InverseModelMatrix": {type: 'm4', value: new THREE.Matrix4()}        
     },
     vertexShader: document.getElementById('vertexShader').textContent,
     fragmentShader: document.getElementById('fragment_shader_diamond').textContent
@@ -577,12 +609,24 @@ function TextureCoordSet() {
 
 function readIBLData() {
     readIBL_Info("../../img/IBL_Info.txt", this);
-}
-;
+};
 
 readIBLData();
 init();
 animate();
+
+function toggleRotation() {
+    bRotate = !bRotate;
+};
+
+function changeAbsorbption(index, value) {
+    if(index === 0)
+        diamondMaterial.uniforms["Absorbption"].value.x = Number(value);
+    if(index === 1)    
+        diamondMaterial.uniforms["Absorbption"].value.y = Number(value);
+    if(index === 2)    
+        diamondMaterial.uniforms["Absorbption"].value.z = Number(value);
+}
 
 function changeTexture() {
     currentTextureIndex++;
@@ -773,6 +817,19 @@ function init() {
     container.appendChild(stats.domElement);
 
     loadDiamondObject(diamondNames[0]);
+    
+//    var loaderCollada = new THREE.ColladaLoader();
+//    loaderCollada.options.convertUpAxis = true;
+//    loaderCollada.load( '../../img/test.dae', function ( collada ) {
+//        var dae = collada.scene;
+//        scene.add(dae);
+//        dae.traverse( function ( child ) {
+//            if(child instanceof THREE.Mesh) {
+//                child.material = diamondMaterial;
+//            }
+//        } );
+//    } );
+
 }
 
 function keydown(e) {
@@ -872,6 +929,14 @@ function animate() {
         controls.update();
         stats.update();
         render();
+        if(bRotate) {
+            diamondNode.rotation.y += 0.016;
+            diamondNode.updateMatrix();
+            diamondMaterial.uniforms["ModelMatrix"].value.copy(diamondNode.matrix);
+            var m1 = diamondMaterial.uniforms["ModelMatrix"].value;
+            var m2 = diamondMaterial.uniforms["InverseModelMatrix"].value;
+            m2.getInverse(m1);
+        }
     }
 }
 

@@ -54,7 +54,7 @@
         <script>
 
 var container, stats;
-var camera, backgroundCamera, sceneBackground, scene, renderer, controls, sceneScreen;
+var camera, backgroundCamera, sceneBackground, scene, renderer, controls;
 var count = 0;
 var composer, dpr, effectFXAA, bloomPass, renderScene, renderSceneBg;
 
@@ -62,18 +62,13 @@ var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight / 2;
 
 var cameraPosition = new THREE.Vector3();
-var boundingSphere;
-var coneRadius;
 var bRotate = false;
 var bObjectLoaded = false;
 var IsIBLDataRead = false;
 var rootNode = new THREE.Object3D();
 
 var diamondArray = [];
-
-function initDiamondRing() {
-    
-}
+var diamondPrototypeArray = [];
 
 function initDiamonds() {
     var radius = 2;
@@ -81,7 +76,7 @@ function initDiamonds() {
     var theta = 0;
     var dTheta = 2*Math.PI/(n+1);
     for(var i=0; i<n; i++) {
-        var diamondCopy = diamond.shallowCopy();
+        var diamondCopy = diamondPrototype1.shallowCopy();
         rootNode.add(diamondCopy.mesh);
         diamondCopy.setRotation(0, 0, -theta);
         diamondCopy.setScale(0.13,0.13,0.13);
@@ -92,12 +87,11 @@ function initDiamonds() {
         diamondCopy.applyTransform();
         diamondArray.push(diamondCopy);
     }
-    scene.add(rootNode);
 }
 
 function initMainDiamond() {
     var radius = 2;
-    var diamond1 = diamondRect.shallowCopy();
+    var diamond1 = diamondPrototype2.shallowCopy();
     diamond1.setPosition(0,radius,0);
     diamond1.setScale(0.5, 0.5, 0.5);
     diamond1.applyTransform();
@@ -105,32 +99,56 @@ function initMainDiamond() {
     rootNode.add(diamond1.mesh);
     
     var theta = Math.PI/9;
-    var diamond2 = diamondRect.shallowCopy();
+    var diamond2 = diamondPrototype2.shallowCopy();
     diamond2.setRotation(0,0,-theta);
     diamond2.setPosition(radius*Math.sin(theta),radius*Math.cos(theta),0);
     diamond2.setScale(0.35, 0.35, 0.35);
     diamond2.applyTransform();
     diamondArray.push(diamond2);
     rootNode.add(diamond2.mesh);
+    var absorbption = diamond2.material.uniforms["Absorbption"].value;
+    absorbption.x = 0.85;
+    absorbption.z = 0.85;
     
     theta = -theta;
-    var diamond3 = diamondRect.shallowCopy();
+    var diamond3 = diamondPrototype2.shallowCopy();
     diamond3.setRotation(0,0,-theta);
     diamond3.setPosition(radius*Math.sin(theta),radius*Math.cos(theta),0);
     diamond3.setScale(0.35, 0.35, 0.35);
     diamond3.applyTransform();
     diamondArray.push(diamond3);
     rootNode.add(diamond3.mesh);
+    var absorbption = diamond3.material.uniforms["Absorbption"].value;
+    absorbption.y = 0.35;
+    absorbption.z = 0.85;
 }
+
 var onReadyCallBack1 = function() {
-    sceneScreen.add(diamond.normalBakeHelperMesh);
     initDiamonds();
     bObjectLoaded = true;
 };
 
 var onReadyCallBack2 = function() {
-    sceneScreen.add(diamondRect.normalBakeHelperMesh);
     initMainDiamond();
+    bObjectLoaded = true;
+};
+
+var onReadyCallBack3 = function() {
+    var diamondOval = diamondPrototype3.shallowCopy();
+    diamondOval.setScale(0.5, 0.5, 0.5);
+    diamondOval.applyTransform();
+    diamondArray.push(diamondOval);
+    rootNode.add(diamondOval.mesh);
+    bObjectLoaded = true;
+};
+
+var onReadyCallBack4 = function() {
+    var diamond = diamondPrototype4.shallowCopy();
+    diamond.setPosition(1,0,0);
+    diamond.setScale(0.5, 0.5, 0.5);
+    diamond.applyTransform();
+    diamondArray.push(diamond);
+    rootNode.add(diamond.mesh);
     bObjectLoaded = true;
 };
 
@@ -143,103 +161,29 @@ var onIBLInfoReadyCallBack = function(roughnessArray, uniformTexCoordSetArray) {
 var envTextureLoader = new HDREnvTextureLoader();
 envTextureLoader.loadIBLInfo("../../img/IBL_Info.txt", onIBLInfoReadyCallBack);
 var envTexture = envTextureLoader.load('../../img/mips.png');
-DiamondShader.material.uniforms["IBLTexture"].value = envTexture;
-var diamond = new Diamond('../../img/Diamond_Round_Cut.obj', onReadyCallBack1);
-var diamondRect = new Diamond('../../img/wafercut.obj', onReadyCallBack2);
+var diamondPrototype1 = new Diamond('../../img/Diamond_Round_Cut.obj', envTexture, onReadyCallBack1);
+var diamondPrototype2 = new Diamond('../../img/wafercut.obj', envTexture, onReadyCallBack2);
+var diamondPrototype3 = new Diamond('../../img/oval.obj', envTexture, onReadyCallBack3);
+var diamondPrototype4 = new Diamond('../../img/diamond_cut.stl.obj', envTexture, onReadyCallBack4);
+diamondPrototypeArray.push(diamondPrototype1);
+diamondPrototypeArray.push(diamondPrototype2);
+diamondPrototypeArray.push(diamondPrototype3);
+diamondPrototypeArray.push(diamondPrototype4);
 
-init();
+initScene();
 animate();
 
 function toggleRotation() {
     bRotate = !bRotate;
 };
 
-function changeAbsorbption(index, value) {
-    if(index === 0)
-        DiamondShader.material.uniforms["Absorbption"].value.x = Number(value);
-    if(index === 1)    
-        DiamondShader.material.uniforms["Absorbption"].value.y = Number(value);
-    if(index === 2)    
-        DiamondShader.material.uniforms["Absorbption"].value.z = Number(value);
-}
-
-function changeTexture() {
-    currentTextureIndex++;
-    if(currentTextureIndex >= textureNames.length)
-        currentTextureIndex = 0;
-    loadEnvTexture(textureNames[currentTextureIndex]);
-}
-
-function changeDiamond() {
-    currentDiamondIndex++;
-    if(currentDiamondIndex >= diamondNames.length)
-        currentDiamondIndex = 0;
-    
-    loadDiamondObject(diamondNames[currentDiamondIndex]);
-}
-
-function changeHDRYWhite(value) {
-    DiamondShader.material.uniforms["YWhite"].value = Number(value);
-}
-
-function changeHDRLogAvgLum(value) {
-    DiamondShader.material.uniforms["LogAvgLum"].value = Number(value);
-}
-
-function changeHDRKey(value) {
-    DiamondShader.material.uniforms["Key"].value = Number(value);
-}
-
-function changeHDRSaturation(value) {
-    DiamondShader.material.uniforms["Saturation"].value = Number(value);
-}
-
-function changeRefractiveIndex(value) {
-    DiamondShader.material.uniforms["n2"].value = Number(value);
-}
-
-function changeConeRadiusScale(value) {
-    var scaledConeRadius = coneRadius * Number(value);
-    var tanAngle = scaledConeRadius / DiamondShader.material.uniforms["coneHeight"].value;
-    DiamondShader.material.uniforms["tanAngleSqCone"].value = tanAngle * tanAngle;
-}
-
-function changeBoundingSphereSquashFactor(value) {
-    DiamondShader.material.uniforms["squashFactor"].value = boundingSphere.radius * Number(value);
-}
-
-function changeBoundingSphereRadiusScale(value) {
-    DiamondShader.material.uniforms["boundingSphereRadius"].value = boundingSphere.radius * Number(value);
-}
 
 function changeBloomStrength(value) {
     bloomPass.materialCopy.uniforms["opacity"].value = Number(value);
 }
 
-function changeBloomSigma(value) {
-    bloomPass.convolutionUniforms[ "cKernel" ].value = THREE.ConvolutionShader.buildKernel(Number(value));
-}
 
-function changeNormalOffset(value) {
-    DiamondShader.material.uniforms["normalOffset"].value = Number(value);
-}
-
-function toggleIntersectionGeometry() {
-    DiamondShader.material.uniforms["bIntersectSphere"].value = !DiamondShader.material.uniforms["bIntersectSphere"].value;
-}
-
-function toggleDebugMode() {
-    DiamondShader.material.uniforms["bDebugBounces"].value = !DiamondShader.material.uniforms["bDebugBounces"].value;
-}
-
-function changeBounceCount(value) {
-    DiamondShader.material.uniforms["maxBounces"].value = Number(value);
-}
-function changeRIndexDelta(value) {
-    DiamondShader.material.uniforms["rIndexDelta"].value = Number(value);
-}
-
-function init() {
+function initScene() {
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -250,9 +194,7 @@ function init() {
     controls.addEventListener('change', render);
     // scene
     scene = new THREE.Scene();
-    sceneScreen = new THREE.Scene();
-    sceneScreen.add(diamond.cubeCamera);
-    
+    scene.add(rootNode);
     // Background Scene
     var bgTexture = THREE.ImageUtils.loadTexture( '../../img/bg.jpg' );
     var backgroundMesh = new THREE.Mesh(
@@ -288,34 +230,19 @@ function init() {
     //var effectFilm = new THREE.FilmPass(0.35, 0.95, 1024, false);
     //effectFilm.renderToScreen = true;
     bloomPass = new THREE.BloomPass(1.0, 25, 4.0, 512);
-    var bokehPass = new THREE.BokehPass( scene, camera, {
-            focus: 		1.0,
-            aperture:	0.025,
-            maxblur:	1.0,
-
-            width: window.innerWidth,
-            height: window.innerHeight
-    } );
-
-    bokehPass.renderToScreen = true;
                                 
     renderer.autoClear = false;
     composer = new THREE.EffectComposer(renderer);
     composer.setSize(window.innerWidth * dpr, window.innerHeight * dpr);
-    //        renderer.render( sceneBackground, backgroundCamera );
     composer.addPass(renderSceneBg);
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
     composer.addPass(effectFXAA);
-    //composer.addPass(bokehPass);
-//                composer.addPass(renderScene);
-//                composer.addPass(effectFilm);
 
     document.addEventListener('mousemove', onDocumentMouseMove, false);
     document.addEventListener('mousedown', onDocumentMouseDown, false);
     document.addEventListener('mouseup', onDocumentMouseUp, false);
     document.addEventListener('mousewheel', onDocumentMouseWheel, false);
-    window.addEventListener('dblclick', keydown, false);
     window.addEventListener('resize', onWindowResize, false);
 
     stats = new Stats();
@@ -337,23 +264,8 @@ function init() {
 
 }
 
-function keydown(e) {
-    var newwindow = window.open("");
-    var dataUrl = renderer.domElement.toDataURL("image/png");
-    var img = new Image();
-    img.src = dataUrl;
-    img.width /= 2;
-    img.height /= 2;
-    newwindow.document.body.appendChild(img);
-}
 function onDocumentMouseMove(event)
 {
-    var pos = camera.position;
-
-    if (pos.y < 2)
-    {
-        //pos.y = 2;
-    }
 }
 
 function onDocumentMouseWheel(event)
@@ -418,10 +330,6 @@ function animate() {
             for(var i=0; i<diamondArray.length; i++){
                 diamondArray[i].applyTransform();
             }
-//            DiamondShader.material.uniforms["ModelMatrix"].value.copy(diamondNode.matrix);
-//            var m1 = DiamondShader.material.uniforms["ModelMatrix"].value;
-//            var m2 = DiamondShader.material.uniforms["InverseModelMatrix"].value;
-//            m2.getInverse(m1);
         }
     }
 }
@@ -432,20 +340,13 @@ function render() {
     if (count < 3)
     {
         count++;
-        //renderer.render(sceneScreen, camera);
-        diamond.prepareNormalsCubeMap(renderer, sceneScreen);
-        diamondRect.prepareNormalsCubeMap(renderer, sceneScreen);
-        for(var i=0; i<diamondArray.length; i++) {
-            diamondArray[i].material.uniforms["tCubeMap"].value = diamond.cubeCamera.renderTarget;
-            diamondArray[i].material.uniforms["IBLTexture"].value = envTexture;
+        for(var i=0; i<diamondPrototypeArray.length; i++) {
+            diamondPrototypeArray[i].prepareNormalsCubeMap(renderer);
         }
     }
     if (count >= 3) 
     {
-        //renderer.setClearColor(0x000000, 1);
-//        renderer.render( sceneBackground, backgroundCamera );
-//        renderer.render( scene, camera );
-        composer.render(0.1);
+        composer.render();
     }
 }
 

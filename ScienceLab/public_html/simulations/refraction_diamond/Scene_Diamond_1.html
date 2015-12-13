@@ -792,8 +792,8 @@ function init() {
     effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
     effectFXAA.uniforms['resolution'].value.set(1 / (window.innerWidth * dpr), 1 / (window.innerHeight * dpr));
     effectFXAA.renderToScreen = true;
-    var effectFilm = new THREE.FilmPass(0.35, 0.95, 1024, false);
-    effectFilm.renderToScreen = true;
+    //var effectFilm = new THREE.FilmPass(0.35, 0.95, 1024, false);
+    //effectFilm.renderToScreen = true;
     bloomPass = new THREE.BloomPass(1.0, 25, 0.25, 512);
 
     composer = new THREE.EffectComposer(renderer);

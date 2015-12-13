@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->    
+<div class ="row-fluid">
+        <!--RIndex Delta<input style = "width:200px" type="range" min="0.0" max="0.5" step ="10" value = "0.1" >-->
+        Rotate<input style="margin-left: 10px" type="checkbox" onchange="(function(){document.getElementById('IFrame').contentWindow.toggleRotation(value)})(value)">
+        <br>
+        <div>
+            <br>
+            <div>
+                Bloom Strength<input style = "width:200px" type="range" min="0.0" max="10" step ="0.1" value = "1.0" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBloomStrength(value)})(value)">
+                <!--Sigma<input style = "width:200px" type="range" min="0.1" max="2.0" step ="0.01" value = "0.25" onchange="(function(){document.getElementById('IFrame').contentWindow.changeBloomSigma(value)})(value)">-->
+            </div>
+        </div>
+        <br>
+        Absorbption R<input style = "width:200px" type="range" min="0.0" max="20" step ="0.01" value = "2" onchange="(function(){document.getElementById('IFrame').contentWindow.changeAbsorbption(0,value)})(value)">
+        Absorbption G<input style = "width:200px" type="range" min="0.0" max="20" step ="0.01" value = "2" onchange="(function(){document.getElementById('IFrame').contentWindow.changeAbsorbption(1,value)})(value)">
+        Absorbption B<input style = "width:200px" type="range" min="0.0" max="20" step ="0.01" value = "2" onchange="(function(){document.getElementById('IFrame').contentWindow.changeAbsorbption(2,value)})(value)">
+        <br>
+        <br>
+        Diffuse R<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.86" onchange="(function(){document.getElementById('IFrame').contentWindow.changeDiffuseColor(0,value)})(value)">
+        Diffuse G<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.21" onchange="(function(){document.getElementById('IFrame').contentWindow.changeDiffuseColor(1,value)})(value)">
+        Diffuse B<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.16" onchange="(function(){document.getElementById('IFrame').contentWindow.changeDiffuseColor(2,value)})(value)">
+        <br>
+        Max DepthDiff<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.5" onchange="(function(){document.getElementById('IFrame').contentWindow.changeDepthDiffMax(value)})(value)">        
+        <br>
+        Surface Roughness<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.2" onchange="(function(){document.getElementById('IFrame').contentWindow.changeRoughness(value)})(value)">
+        <br>
+        Volume Roughness<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.2" onchange="(function(){document.getElementById('IFrame').contentWindow.changeVolumeRoughness(value)})(value)">
+</div>

@@ -16,4 +16,9 @@ and open the template in the editor.
             </div>
         </div>
         <br>
+        Metal R<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.73" onchange="(function(){document.getElementById('IFrame').contentWindow.changeMetalColor(0,value)})(value)">
+        Metal G<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.58" onchange="(function(){document.getElementById('IFrame').contentWindow.changeMetalColor(1,value)})(value)">
+        Metal B<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.2" onchange="(function(){document.getElementById('IFrame').contentWindow.changeMetalColor(2,value)})(value)">
+        <br>
+        Metal Roughness<input style = "width:200px" type="range" min="0.0" max="1" step ="0.01" value = "0.2" onchange="(function(){document.getElementById('IFrame').contentWindow.changeMetalRoughness(value)})(value)">
 </div>

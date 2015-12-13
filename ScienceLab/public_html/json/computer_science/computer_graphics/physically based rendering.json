@@ -31,7 +31,24 @@
                }
             ],
         "pageLink"  : "friction"
-    }
+    },
     
+    
+    {
+        "name": "Sub Surface Scattering", 
+        "id": "Mechanics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "simulations":
+            [
+               {
+                   "display_name": "Sub Surface Scattering",
+                   "description":"",
+                   "image" : "sss.png",
+                   "scene_name" : "Scene_SSS"
+               }
+            ],
+        "pageLink"  : "subsurfacescattering"
+    }
 ]
 }

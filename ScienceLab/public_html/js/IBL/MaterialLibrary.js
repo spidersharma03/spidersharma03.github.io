@@ -4,21 +4,16 @@
  * and open the template in the editor.
  */
 var vertexShaderIBL = "varying vec2 vUv; \n\
-   attribute vec4 tangent;\n\
    varying vec3 vecPos;\n\
    varying vec3 viewPos;\n\
    varying vec3 worldNormal;\n\
    varying vec3 Normal;\n\
-   varying mat3 tbn;\n\
    void main() {\n\
    vUv = uv;\n\
    vecPos = (modelMatrix * vec4(position, 1.0 )).xyz;\n\
    viewPos = (modelViewMatrix * vec4(position, 1.0 )).xyz;\n\
    worldNormal = (modelMatrix * vec4(normal,0.0)).xyz;\n\
    Normal = normalMatrix * normal;\n\
-   vec3 vTangent = normalize( normalMatrix * tangent.xyz );\n\
-   vec3 vBinormal = normalize(cross( Normal, vTangent ) * tangent.w);\n\
-   tbn = mat3(vTangent, vBinormal, Normal);\n\
    gl_Position = projectionMatrix * viewMatrix * vec4(vecPos, 1.0);\n\
 }";
 var fragmentShaderIBL = "precision highp float;\n\
@@ -30,7 +25,6 @@ var fragmentShaderIBL = "precision highp float;\n\
    varying vec3 viewPos;\n\
    varying vec3 worldNormal;\n\
    varying vec3 Normal;\n\
-   varying mat3 tbn;\n\
    uniform vec4 SpecularColor;\n\
    uniform vec4 DiffuseColor;\n\
    uniform sampler2D IBLTexture;\n\
@@ -41,7 +35,7 @@ var fragmentShaderIBL = "precision highp float;\n\
    uniform float RoughnessArray[8];\n\
    uniform float Roughness;\n\
    uniform float uMetal;\n\
-   \n\
+   uniform float metalRoughness;\n\
    \n\
     float MipLevel( vec2 uv ) {\n\
         vec2 dx = dFdx( uv * 1024.0 );\n\
@@ -60,11 +54,11 @@ var fragmentShaderIBL = "precision highp float;\n\
    }\n\
    \n\
    vec3 tonemap(vec3 RGB) {\n\
-      float LogAvgLum = 0.3;//0.08\n\
-      float key = 0.78;\n\
-      float Ywhite = 1e2;\n\
+      float LogAvgLum = 0.2;//0.08\n\
+      float key = 2.0;\n\
+      float Ywhite = 1e1;\n\
       Ywhite *= Ywhite;\n\
-      float sat = 2.0;\n\
+      float sat = 0.45;\n\
       float Ylum = dot(RGB ,vec3(0.2126, 0.7152, 0.0722));\n\
       float Y = key/LogAvgLum * Ylum ;\n\
       float Yd = Y * ( 1.0 + Y/Ywhite)/( 1.0 + Y) ;\n\
@@ -155,23 +149,13 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec2 uvRepeat = fract(vUv * 4.0);\n\
       vec3 viewVector = normalize(vecPos - cameraPosition);\n\
       vec3 normalizedWorldNormal = normalize(worldNormal);\n\
-      vec3 tangentNormal = texture2D( NormalMap, uvRepeat ).xyz * 2.0 - 1.0;\n\
-      tangentNormal.xy = tangentNormal.xy * 1.0;\n\
-      //mat3 tbnMatrix = getTBNMatrix(-viewPos, Normal);\n\
-      mat3 normalizedTBN = mat3(normalize(tbn[0]), normalize(tbn[1]), normalize(tbn[2]));\n\
-      normalizedWorldNormal = normalize( normalizedTBN * tangentNormal );\n\
-      normalizedWorldNormal = (vec4(normalizedWorldNormal,1.0) * viewMatrix).xyz;\n\
-      vec3 tViewVector = normalize(viewPos) * normalizedTBN;\n\
-      tViewVector = normalize(tViewVector * vec3(1.0,1.0,1.0));\n\
-      tViewVector = normalizedTBN * tViewVector;\n\
-      viewVector = (vec4(tViewVector,1.0) * viewMatrix).xyz;\n\
-      viewVector = normalize(viewVector);\n\
       float ndotv = dot(-normalizedWorldNormal, viewVector);\n\
       ndotv = ndotv < 0.0 ? 0.0 : ndotv;\n\
       vec3 reflectionVector = reflect( viewVector, normalizedWorldNormal );\n\
-      vec3 specularColor = texture2D(SpecularMap, uvRepeat).xyz;//vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);\n\
+      //vec3 specularColor = texture2D(SpecularMap, uvRepeat).xyz;//;\n\
+      vec3 specularColor = vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);//;\n\
       vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv),1.0);\n\
-      float roughnessVal = (1.0 - texture2D(RoughnessMap, uvRepeat).r);\n\
+      float roughnessVal = metalRoughness;//0.6*(1.0 - texture2D(RoughnessMap, uvRepeat).r);\n\
       vec4 IblSpecularColor = SampleSpecularContribution(specularContribution, reflectionVector,roughnessVal);\n\
       vec4 finalColor =  IblSpecularColor + SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal);\n\
       //vec3 dn = fwidth(normalizedWorldNormal);\n\
@@ -195,7 +179,8 @@ var shaderSource =
         Roughness: {type: 'f', value: 0.0},
         SpecularColor: { type: 'v4', value: null},
         DiffuseColor: { type: 'v4', value: null},
-        uMetal: { type: 'f', value: 0.0 }
+        uMetal: { type: 'f', value: 0.0 },
+        metalRoughness: { type: 'f', value: 0.6 }
     },
     vertexShader: vertexShaderIBL,
     fragmentShader: fragmentShaderIBL

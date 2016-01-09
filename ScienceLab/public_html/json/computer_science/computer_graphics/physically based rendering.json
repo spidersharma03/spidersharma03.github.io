@@ -32,8 +32,6 @@
             ],
         "pageLink"  : "friction"
     },
-    
-    
     {
         "name": "Sub Surface Scattering", 
         "id": "Mechanics.json", 
@@ -49,6 +47,22 @@
                }
             ],
         "pageLink"  : "subsurfacescattering"
+    },
+     {
+        "name": "PMREM", 
+        "id": "Mechanics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "simulations":
+            [
+               {
+                   "display_name": "Dynamic Filtered Cube Maps",
+                   "description":"",
+                   "image" : "dynamic_pmrem.png",
+                   "scene_name" : "Scene_DynamicPMREM"
+               }
+            ],
+        "pageLink"  : "PMREM_GPU"
     }
 ]
 }

@@ -46,7 +46,6 @@
         <script src="../../js/lib/three.js/js/shaders/CopyShader.js"></script>
         <script src="../../js/lib/three.js/js/shaders/ConvolutionShader.js"></script>
         <script src="../../js/lib/three.js/js/shaders/FilmShader.js"></script>
-        <script src="../../js/IBL/MaterialLibrary.js"></script>
 
         <script src="HDREnvTextureLoader.js"></script>
         <script src="DiamondLoader.js"></script>
@@ -64,7 +63,7 @@ var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight / 2;
 
 var cameraPosition = new THREE.Vector3();
-var bRotate = true;
+var bRotate = false;
 var bObjectLoaded = false;
 var IsIBLDataRead = false;
 var rootNode = new THREE.Object3D();
@@ -73,6 +72,7 @@ var sparkleTexture = THREE.ImageUtils.loadTexture( '../../img/sparkle5.png' );
 var sparkleTexture1 = THREE.ImageUtils.loadTexture( '../../img/sparkle3.png' );
 var noiseTexture = THREE.ImageUtils.loadTexture( '../../img/noiseTexture.jpg' );
 var sparkle1 = new Sparkle(sparkleTexture, noiseTexture);
+var sparkle2 = new Sparkle(sparkleTexture1, noiseTexture);
 
 var diamondArray = [];
 var diamondPrototypeArray = [];
@@ -151,75 +151,85 @@ var onReadyCallBack3 = function() {
 };
 
 var onReadyCallBack4 = function() {
-    var ringRadius = 1.8;
     var diamond = diamondPrototype4.shallowCopy();
-    diamond.setScale(0.5,0.75,0.5);
-    diamond.setPosition(0,ringRadius,0);
     diamondArray.push(diamond);
     rootNode.add(diamond.mesh);
-    
     sparkle1.material.uniforms["screenTexture"].value = composer.renderTarget2;
-    sparkle1.setScale(0.5);
-    sparkle1.setPositionOffset(0.5, 0.4,0);
-    diamond.addSparkle(sparkle1);
+    sparkle2.material.uniforms["screenTexture"].value = composer.renderTarget2;
     
-    var copySparkle1 = sparkle1.shallowCopy();
-    copySparkle1.setPositionOffset(-0.5, 0.4,0);
-    diamond.addSparkle(copySparkle1);
+    for(var i=0; i<15; i++) {
+        var copySparkle;
+        if(i<20)
+            copySparkle = sparkle1.shallowCopy();
+        else
+            copySparkle = sparkle2.shallowCopy();
+            
+        var y = 0.2;//(Math.random() - 0.5);
+        var x = (Math.random() - 0.5)*1.3;//(y+0.5)*2;
+        var z = (Math.random() - 0.5)*1.3;//*(y+0.5)*2;
+        copySparkle.setPositionOffset(x, y, z);
+        copySparkle.setScale(Math.random()*1 + 0.85);
+        copySparkle.setRotation(Math.random()*6);
+        copySparkle.setIntensity(2);
+        diamond.addSparkle(copySparkle);
+        sceneSparkles.add(copySparkle.mesh);
+    }
     
-    sceneSparkles.add(sparkle1.mesh);
-    sceneSparkles.add(copySparkle1.mesh);
-    
-    var copySparkle2 = sparkle1.shallowCopy();
-    copySparkle2.setPositionOffset(-0.5, 0.4,0.5);
-    diamond.addSparkle(copySparkle2);
-    sceneSparkles.add(copySparkle2.mesh);
     diamond.applyTransform();
+    
+//    var copyDiamond = diamond.shallowCopy();
+//    copyDiamond.setPosition(2,0,0);
+//    copyDiamond.applyTransform();
+//    diamondArray.push(copyDiamond);
+//    rootNode.add(copyDiamond.mesh);
+//    for(var j=0; j< copyDiamond.sparkles.length; j++) {
+//        sceneSparkles.add(copyDiamond.sparkles[j].mesh);
+//    }
     //diamond.setRotation(0.5, 0, 0.15);
     
-    var dTheta = Math.PI/10;
-    var theta = -3*dTheta;
-    var radius = 2.7;
-    var cy = -1;
-    for(var j=0; j<= 6; j++) {
-        if(theta !== 0) {
-            var copyDiamond = diamond.shallowCopy();
-//            var absorbption = diamond.material.uniforms["Absorbption"].value;
-//            absorbption.x = 1;
-//            absorbption.y = 2;
-//            absorbption.z = 0.3;
-            copyDiamond.setPosition(radius*Math.sin(theta), cy + radius*Math.cos(theta),0,0);
-            copyDiamond.setRotation(0,0,-theta);
-            copyDiamond.setScale(0.5,0.75,0.5);
-            diamondArray.push(copyDiamond);
-            rootNode.add(copyDiamond.mesh);
-            for(var i=0; i<copyDiamond.sparkles.length; i++) {
-                copyDiamond.sparkles[i].setScale(2);
-                sceneSparkles.add(copyDiamond.sparkles[i].mesh);
-            }
-            copyDiamond.applyTransform();
-        }
-        theta += dTheta;
-    }
-    dTheta = Math.PI/20;
-    theta = 3*dTheta;
-    radius *= 1.03;
-    for(var j=0; j<= 30; j++) {
-        if(theta !== 0) {
-            var copyDiamond = diamond.shallowCopy();
-            copyDiamond.setPosition(radius*Math.sin(theta), cy + radius*Math.cos(theta),0,0);
-            copyDiamond.setRotation(0,0,-theta);
-            copyDiamond.setScale(0.25,0.5,0.25);
-            diamondArray.push(copyDiamond);
-            rootNode.add(copyDiamond.mesh);
-            for(var i=0; i<copyDiamond.sparkles.length; i++) {
-                copyDiamond.sparkles[i].setScale(1);
-                sceneSparkles.add(copyDiamond.sparkles[i].mesh);
-            }
-            copyDiamond.applyTransform();
-        }
-        theta += dTheta;
-    }
+//    var dTheta = Math.PI/10;
+//    var theta = -3*dTheta;
+//    var radius = 2.7;
+//    var cy = -1;
+//    for(var j=0; j<= 6; j++) {
+//        if(theta !== 0) {
+//            var copyDiamond = diamond.shallowCopy();
+////            var absorbption = diamond.material.uniforms["Absorbption"].value;
+////            absorbption.x = 1;
+////            absorbption.y = 2;
+////            absorbption.z = 0.3;
+//            copyDiamond.setPosition(radius*Math.sin(theta), cy + radius*Math.cos(theta),0,0);
+//            copyDiamond.setRotation(0,0,-theta);
+//            copyDiamond.setScale(0.5,0.75,0.5);
+//            diamondArray.push(copyDiamond);
+//            rootNode.add(copyDiamond.mesh);
+//            for(var i=0; i<copyDiamond.sparkles.length; i++) {
+//                copyDiamond.sparkles[i].setScale(1);
+//                sceneSparkles.add(copyDiamond.sparkles[i].mesh);
+//            }
+//            copyDiamond.applyTransform();
+//        }
+//        theta += dTheta;
+//    }
+//    dTheta = Math.PI/20;
+//    theta = 3*dTheta;
+//    radius *= 1.03;
+//    for(var j=0; j<= 30; j++) {
+//        if(theta !== 0) {
+//            var copyDiamond = diamond.shallowCopy();
+//            copyDiamond.setPosition(radius*Math.sin(theta), cy + radius*Math.cos(theta),0,0);
+//            copyDiamond.setRotation(0,0,-theta);
+//            copyDiamond.setScale(0.25,0.5,0.25);
+//            diamondArray.push(copyDiamond);
+//            rootNode.add(copyDiamond.mesh);
+//            for(var i=0; i<copyDiamond.sparkles.length; i++) {
+//                copyDiamond.sparkles[i].setScale(1);
+//                sceneSparkles.add(copyDiamond.sparkles[i].mesh);
+//            }
+//            copyDiamond.applyTransform();
+//        }
+//        theta += dTheta;
+//    }
     bObjectLoaded = true;
 };
 
@@ -231,7 +241,7 @@ var onIBLInfoReadyCallBack = function(roughnessArray, uniformTexCoordSetArray) {
 
 var envTextureLoader = new HDREnvTextureLoader();
 envTextureLoader.loadIBLInfo("../../img/IBL_Info.txt", onIBLInfoReadyCallBack);
-var envTexture = envTextureLoader.load('../../img/mips.png');
+var envTexture = envTextureLoader.load('../../img/mips1.png');
 envTexture.generateMipmaps = false;
 envTexture.magFilter = THREE.LinearFilter;
 envTexture.minFilter = THREE.LinearFilter;
@@ -243,90 +253,18 @@ var diamondPrototype4 = new Diamond('../../img/Diamond_Round_Cut.obj', envTextur
 //diamondPrototypeArray.push(diamondPrototype2);
 //diamondPrototypeArray.push(diamondPrototype3);
 diamondPrototypeArray.push(diamondPrototype4);
-var library = new MaterialLibrary();
-var specularTexture = THREE.ImageUtils.loadTexture("../../img/gold.jpg");
-var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_copper.jpg");
-roughnessTexture.wrapS = THREE.RepeatWrapping;
-roughnessTexture.wrapT = THREE.RepeatWrapping;
-specularTexture.wrapS = THREE.RepeatWrapping;
-specularTexture.wrapT = THREE.RepeatWrapping;
                 
-library.shaderSource.uniforms['IBLTexture'].value = envTexture;
-library.shaderSource.uniforms['SpecularMap'].value = specularTexture;                                
-library.shaderSource.uniforms['RoughnessMap'].value = roughnessTexture;                                
-library.shaderSource.uniforms['SpecularColor'].value = new THREE.Vector4(1.0,0.6,0.15,1.0);                
-library.shaderSource.uniforms['DiffuseColor'].value = new THREE.Vector4(0.01,0.01,0.01,1.0);                
-library.shaderSource.uniforms['uMetal'].value = 0.0;
-library.shaderSource.uniforms['metalRoughness'].value = 0.2;
-
-var metalMaterial = new THREE.ShaderMaterial(
-        {uniforms: library.shaderSource.uniforms, 
-        vertexShader:library.shaderSource.vertexShader,
-        fragmentShader:library.shaderSource.fragmentShader});
-metalMaterial.map = true;
-metalMaterial.side = THREE.DoubleSide;
-
 initScene();
-//loadMetalObject();
 animate();
 
-
-function changeMetalRoughness(value) {
-    library.shaderSource.uniforms['metalRoughness'].value = Number(value);
-}
     
-function changeMetalColor(index, value) {
-    if(index === 0)
-        library.shaderSource.uniforms['SpecularColor'].value.x = Number(value);                
-    if(index === 1)
-        library.shaderSource.uniforms['SpecularColor'].value.y = Number(value);                
-    if(index === 2)
-        library.shaderSource.uniforms['SpecularColor'].value.z = Number(value);                
-}
-function loadMetalObject() {
-    var manager = new THREE.LoadingManager();
-				manager.onProgress = function ( item, loaded, total ) {
-
-					console.log( item, loaded, total );
-
-				};
-
-                var loader = new THREE.OBJLoader( manager );
-                loader.load( '../../img/ring1.obj', function ( object ) {
-                        objNode = object;
-                        object.traverse( function ( child ) {
-
-                                if ( child instanceof THREE.Mesh ) {
-
-                                        child.material = metalMaterial;
-                                        //child.geometry.center();
-                                        child.geometry.normalize();
-                                        child.position.y = -1;
-                                        child.scale.x = 0.75;
-                                        child.scale.y = 0.75;
-                                        child.scale.z = 0.75;
-                                        
-                                        child.geometry.computeVertexNormals();
-                                }
-                        } );
-                        
-                        object.position.y = 3;
-                        object.scale.x = 4;
-                        object.scale.y = 4;
-                        object.scale.z = 4;
-                        rootNode.add( object );
-                } );
-}
-
 function toggleRotation() {
     bRotate = !bRotate;
 };
 
-
 function changeBloomStrength(value) {
     bloomPass.materialCopy.uniforms["opacity"].value = Number(value);
 }
-
 
 function initScene() {
     container = document.createElement('div');

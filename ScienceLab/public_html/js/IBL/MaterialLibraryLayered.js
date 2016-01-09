@@ -4,21 +4,16 @@
  * and open the template in the editor.
  */
 var vertexShaderIBL = "varying vec2 vUv; \n\
-   attribute vec4 tangent;\n\
    varying vec3 vecPos;\n\
    varying vec3 viewPos;\n\
    varying vec3 worldNormal;\n\
    varying vec3 Normal;\n\
-   varying mat3 tbn;\n\
    void main() {\n\
    vUv = uv;\n\
    vecPos = (modelMatrix * vec4(position, 1.0 )).xyz;\n\
    viewPos = (modelViewMatrix * vec4(position, 1.0 )).xyz;\n\
    worldNormal = (modelMatrix * vec4(normal,0.0)).xyz;\n\
    Normal = normalMatrix * normal;\n\
-   vec3 vTangent = normalize( normalMatrix * tangent.xyz );\n\
-   vec3 vBinormal = normalize(cross( Normal, vTangent ) * tangent.w);\n\
-   tbn = mat3(vTangent, vBinormal, Normal);\n\
    gl_Position = projectionMatrix * viewMatrix * vec4(vecPos, 1.0);\n\
 }";
 var fragmentShaderIBL = "precision highp float;\n\
@@ -166,16 +161,6 @@ var fragmentShaderIBL = "precision highp float;\n\
       vec2 uvRepeat = fract(vUv * 4.0);\n\
       vec3 viewVector = normalize(vecPos - cameraPosition);\n\
       vec3 normalizedWorldNormal = normalize(worldNormal);\n\
-      vec3 tangentNormal = texture2D( NormalMap, uvRepeat ).xyz * 2.0 - 1.0;\n\
-      tangentNormal.xy = tangentNormal.xy * 1.0;\n\
-      mat3 normalizedTBN = mat3(normalize(tbn[0]), normalize(tbn[1]), normalize(tbn[2]));\n\
-      normalizedWorldNormal = normalize( normalizedTBN * tangentNormal );\n\
-      normalizedWorldNormal = (vec4(normalizedWorldNormal,1.0) * viewMatrix).xyz;\n\
-      vec3 tViewVector = normalize(viewPos) * normalizedTBN;\n\
-      tViewVector = normalize(tViewVector * vec3(1.0,1.0,1.0));\n\
-      tViewVector = normalizedTBN * tViewVector;\n\
-      viewVector = (vec4(tViewVector,1.0) * viewMatrix).xyz;\n\
-      viewVector = normalize(viewVector);\n\
       float ndotv2 = dot(-normalizedWorldNormal, viewVector);\n\
       vec3 reflectionVector = reflect( viewVector, normalizedWorldNormal );// Light vector for first layer\n\
       const float n = 1.4;\n\

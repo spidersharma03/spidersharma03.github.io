@@ -1,0 +1,613 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>three.js webgl - loaders - OBJ loader</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            body {
+                font-family: Monospace;
+                background-color: #000;
+                color: #fff;
+                margin: 0px;
+                overflow: hidden;
+            }
+            #info {
+                color: #fff;
+                position: absolute;
+                top: 10px;
+                width: 100%;
+                text-align: center;
+                z-index: 100;
+                display:block;
+            }
+            #info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+        </style>
+    </head>
+
+    <body>
+
+        <script src="../../js/lib/three.js/three.js"></script>
+        <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
+        <script src="../../js/lib/three.js/js/Detector.js"></script>
+        <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+        <script src="../../js/lib/three.js/js/loaders/OBJLoader.js"></script>
+        <script src="PMREMGenerator.js"></script>
+        <script src="PMREM_LatLonPacker.js"></script>
+        <script src="PMREM_CubeUVPacker.js"></script>
+        
+        <script id="vertexShader" type="x-shader/x-vertex">
+                varying vec3 worldNormal;
+                varying vec3 vecPos;
+                varying vec3 viewPos;
+                void main(){
+                        worldNormal = (modelMatrix * vec4(normal,0.0)).xyz;
+                        vecPos = (modelMatrix * vec4(position, 1.0 )).xyz;
+                        viewPos = (modelViewMatrix * vec4(position, 1.0 )).xyz;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+                }
+        </script>
+        
+        <script id="fragmentShader" type="x-shader/x-fragment">
+                #extension GL_EXT_shader_texture_lod : enable
+                varying vec3 worldNormal;
+                varying vec3 vecPos;
+                varying vec3 viewPos;
+                uniform samplerCube cubeTexture0;
+                uniform samplerCube cubeTextureDiffuse;
+                uniform float mapSize;
+                
+                float SchlickApproxFresenel(float a, float NdotV) {
+                    float schlick = pow(1.0 - abs(NdotV), 5.0);
+                    return a * ( 1.0 - schlick) + schlick;
+                }
+                
+                vec3 fixSeams(vec3 vec, float mipmapIndex) {
+                    float scale = 1.0 - 1.0 / mapSize;
+                    float M = max(max(abs(vec.x), abs(vec.y)), abs(vec.z));
+                    if (abs(vec.x) != M) vec.x *= scale;
+                    if (abs(vec.y) != M) vec.y *= scale;
+                    if (abs(vec.z) != M) vec.z *= scale;
+                    return vec;
+                }
+
+                vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV ) {
+                    vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);
+                    vec4 c1 = vec4(1.0, 0.0425, 1.04, -0.04);
+                    vec4 r = Roughness * c0 + c1;
+                    float a004 = min( r.x * r.x, exp2( -9.28 * NoV ) ) * r.x + r.y;
+                    vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;
+                    return SpecularColor * AB.x + AB.y;
+                }
+   
+                void main() {
+                        vec3 viewVector = normalize(vecPos - cameraPosition);
+                        vec3 Normal = normalize(worldNormal);
+                        vec3 reflectedDirection = fixSeams(reflect(viewVector, Normal), 0.0);
+                        float fresnel = SchlickApproxFresenel(0.951, dot(Normal, reflectedDirection));
+                        vec4 colorDiffuse = textureCube( cubeTextureDiffuse, worldNormal ) * vec4(1.0,0.31,0.1, 1.0) * (1.0 - fresnel);
+                        vec4 colorRefl = textureCube( cubeTexture0, reflectedDirection)  * fresnel;// * vec4(0.85*0.85,0.54*0.54,0.4*0.4,1.0);
+                        gl_FragColor = pow(colorRefl , vec4(0.45));
+                }
+        </script>
+        
+        <script id="fragmentShaderLatLon" type="x-shader/x-fragment">
+                #extension GL_OES_standard_derivatives : enable
+                varying vec3 worldNormal;
+                varying vec3 vecPos;
+                varying vec3 viewPos;
+                uniform sampler2D textureLatLon;
+                uniform float roughness;
+                const float PI = 3.14159265358979;
+    
+                float SchlickApproxFresenel(float a, float NdotV) {
+                    float schlick = pow(1.0 - abs(NdotV), 5.0);
+                    return a * ( 1.0 - schlick) + schlick;
+                }
+                
+                vec2 getUvFromRoughnessLevel(float phi, float theta, float roughnessLevel, float mipLevel) {
+                    float offset = 0.5/1024.0;
+                    float x = 1.0/pow(2.0, roughnessLevel);
+                    float mipOffsetx = x - 1.0/pow(2.0, mipLevel + roughnessLevel);
+                    float y1 = 1.0 - x;
+                    float y2 = 1.0/pow(2.0, roughnessLevel+1.0);
+                    float mipOffsety = y2 - 1.0/pow(2.0, mipLevel + roughnessLevel + 1.0);
+                    float min_x = 0.0 + mipOffsetx + offset; float max_x = x - offset;
+                    float min_y = y1 + mipOffsetx + offset; 
+                    float max_y = y1 + y2 + mipOffsety - offset;
+                    float delx = max_x - min_x;
+                    float dely = max_y - min_y;
+                    phi = min_x + phi * delx;
+                    theta = min_y + theta * dely;
+                    return vec2(phi, theta);
+                }
+                
+                vec2 MipLevelInfo( vec3 vec, float roughnessLevel ) {
+                    float scale = pow(2.0, 7.0-roughnessLevel);
+                    vec3 dx = dFdx( vec * scale );
+                    vec3 dy = dFdy( vec * scale );
+                    float d = max( dot( dx, dx ), dot( dy, dy ) );
+                    // Clamp the value to the max mip level counts\n\
+                    float rangeClamp = pow(2.0, (7.0 - 1.0) * 2.0);
+                    d = clamp(d, 1.0, rangeClamp);
+                    float mipLevel = 0.5 * log2(d);
+                    return vec2(floor(mipLevel), fract(mipLevel));
+                }
+                
+                float rnd(vec2 uv) {
+                        vec2 r = fract(sin(uv*4.0) * 1.0);
+                        return (r.x + r.y)*0.5;
+                }
+                    
+                vec4 SampleLatLonMap(vec3 direction, float roughness) {
+                    float phi = atan(direction.z, direction.x);
+                    phi = phi < 0.0 ? 2.0*PI + phi : phi;
+                    phi /= (2.0*PI);
+                    float theta = (asin(direction.y) + PI * 0.5)/PI;
+                    float roughnessVal = roughness*7.0;
+                    float r1 = floor(roughnessVal);
+                    float r2 = r1 + 1.0;
+                    float t = fract(roughnessVal);
+                    vec2 mipInfo = MipLevelInfo(direction, r1);
+                    float s = mipInfo.y;
+                    float level0 = mipInfo.x;
+                    float level1 = level0 + 1.0;
+                    level1 = level1 > 7.0 ? 7.0 : level1;
+                    // Tri linear interpolation.
+                    vec2 uv_10 = getUvFromRoughnessLevel(phi, theta, r1, level0);
+                    vec2 uv_11 = getUvFromRoughnessLevel(phi, theta, r1, level1);
+                    vec2 uv_20 = getUvFromRoughnessLevel(phi, theta, r2, level0);
+                    vec2 uv_21 = getUvFromRoughnessLevel(phi, theta, r2, level1);
+                    vec4 color10 = texture2D(textureLatLon, uv_10);
+                    vec4 color11 = texture2D(textureLatLon, uv_11);
+                    vec4 color20 = texture2D(textureLatLon, uv_20);
+                    vec4 color21 = texture2D(textureLatLon, uv_21);
+                    //vec4 c1 = color10 *(1.0 - s) + color11 * s;
+                    vec4 c1 = mix(color10 , color11,  s);
+                    vec4 c2 = mix(color20 , color21,  s);
+                    vec4 c3 = mix(c1 , c2,  t);
+                    return c3;
+                }
+                
+                void main() {
+                        vec3 viewVector = normalize(vecPos - cameraPosition);
+                        vec3 Normal = normalize(worldNormal);
+                        vec3 reflectedDirection = reflect(viewVector, Normal);
+                        float fresnel = SchlickApproxFresenel(0.951, dot(Normal, reflectedDirection));
+                        //vec4 colorDiffuse = textureCube( cubeTextureDiffuse, Normal );// * (1.0 - fresnel);
+                        vec4 colorRefl = SampleLatLonMap(reflectedDirection, roughness) * fresnel;
+                        gl_FragColor = pow(colorRefl , vec4(0.45));
+                }
+        </script>
+        
+        <script id="fragmentShaderCubeUV" type="x-shader/x-fragment">
+                #extension GL_OES_standard_derivatives : enable
+                varying vec3 worldNormal;
+                varying vec3 vecPos;
+                varying vec3 viewPos;
+                uniform sampler2D textureCubeUV;
+                uniform float textureSize;
+                uniform float roughness;
+                uniform float mapSize;
+                
+                float SchlickApproxFresenel(float a, float NdotV) {
+                    float schlick = pow(1.0 - abs(NdotV), 5.0);
+                    return a * ( 1.0 - schlick) + schlick;
+                }
+                
+                int getFaceFromDirection(vec3 direction) {
+                    vec3 absDirection = abs(direction);
+                    int face = -1;
+                    if( absDirection.x > absDirection.z ) {
+                        if(absDirection.x > absDirection.y )
+                            face = direction.x > 0.0 ? 0 : 3;
+                        else
+                            face = direction.y > 0.0 ? 1 : 4;                            
+                    }
+                    else {
+                        if(absDirection.z > absDirection.y )
+                            face = direction.z > 0.0 ? 2 : 5;
+                        else
+                            face = direction.y > 0.0 ? 1 : 4;
+                    }
+                    return face;
+                }
+                
+                vec2 MipLevelInfo( vec3 vec, float roughnessLevel ) {
+                    float s = log2(textureSize*0.25) - 1.0;
+                    float scale = pow(2.0, s-roughnessLevel);
+                    vec3 dx = dFdx( vec * scale );
+                    vec3 dy = dFdy( vec * scale );
+                    float d = max( dot( dx, dx ), dot( dy, dy ) );
+                    // Clamp the value to the max mip level counts. hard coded to 6 mips
+                    float rangeClamp = pow(2.0, (6.0 - 1.0) * 2.0);
+                    d = clamp(d, 1.0, rangeClamp);
+                    float mipLevel = 0.5 * log2(d);
+                    return vec2(floor(mipLevel), fract(mipLevel));
+                }
+                
+                vec2 getCubeUV(vec3 direction, float roughnessLevel, float mipLevel) {
+                    float maxLods =  log2(textureSize*0.25) - 2.0;
+                    mipLevel = roughnessLevel > maxLods - 3.0 ? 0.0 : mipLevel;
+                    float a = 16.0/textureSize;
+                    float powScale = pow(2.0,roughnessLevel + mipLevel);
+                    float scale = 1.0/pow(2.0,roughnessLevel + 2.0 + mipLevel);
+                    float mipOffset = 0.75*(1.0 - 1.0/pow(2.0, mipLevel))/pow(2.0,roughnessLevel);
+                    bool bRes = mipLevel == 0.0;
+                    scale =  bRes && (scale < a) ? a : scale;
+                    
+                    vec3 r;
+                    vec2 offset;
+                    int face = getFaceFromDirection(direction);
+                    
+                    if( face == 0) {
+                        r = vec3(direction.x, -direction.z, direction.y);
+                        offset = vec2(0.0+mipOffset,0.75/powScale);
+                        offset.y = bRes && (offset.y < 2.0*a) ?  a : offset.y;
+                    }
+                    else if( face == 1) {
+                        r = vec3(direction.y, direction.x, direction.z);
+                        offset = vec2(scale+mipOffset, 0.75/powScale);
+                        offset.y = bRes && (offset.y < 2.0*a) ?  a : offset.y;
+                    }
+                    else if( face == 2) {
+                        r = vec3(direction.z, direction.x, direction.y);
+                        offset = vec2(2.0*scale+mipOffset, 0.75/powScale);
+                        offset.y = bRes && (offset.y < 2.0*a) ?  a : offset.y;
+                    }
+                    else if( face == 3) {
+                        r = vec3(direction.x, direction.z, direction.y);
+                        offset = vec2(0.0+mipOffset,0.5/powScale);
+                        offset.y = bRes && (offset.y < 2.0*a) ?  0.0 : offset.y;
+                    }
+                    else if( face == 4) {
+                        r = vec3(direction.y, direction.x, -direction.z);
+                        offset = vec2(scale+mipOffset, 0.5/powScale);
+                        offset.y = bRes && (offset.y < 2.0*a) ?  0.0 : offset.y;
+                    }
+                    else {
+                        r = vec3(direction.z, -direction.x, direction.y);
+                        offset = vec2(2.0*scale+mipOffset, 0.5/powScale);
+                        offset.y = bRes && (offset.y < 2.0*a) ?  0.0 : offset.y;
+                    }
+                    r = normalize(r);
+                    float texelOffset = 0.5/textureSize;
+                    float s1 = (r.y/abs(r.x) + 1.0)*0.5;
+                    float s2 = (r.z/abs(r.x) + 1.0)*0.5;
+                    vec2 uv = offset + vec2(s1*scale, s2*scale);
+                    float min_x = offset.x + texelOffset; float max_x = offset.x + scale - texelOffset;
+                    float min_y = offset.y + texelOffset; 
+                    float max_y = offset.y + scale - texelOffset;
+                    float delx = max_x - min_x;
+                    float dely = max_y - min_y;
+                    uv.x = min_x + s1*delx;
+                    uv.y = min_y + s2*dely;
+                    return uv;
+                }
+                
+                void main() {
+                        vec3 viewVector = normalize(vecPos - cameraPosition);
+                        vec3 Normal = normalize(worldNormal);
+                        vec3 reflectedDirection = reflect(viewVector, Normal);
+                        float fresnel = SchlickApproxFresenel(0.951, dot(Normal, reflectedDirection));
+                        float maxLods =  log2(textureSize*0.25) - 3.0;
+                        float roughnessVal = roughness*maxLods;
+                        float r1 = floor(roughnessVal);
+                        float r2 = r1 + 1.0;
+                        float t = fract(roughnessVal);
+                        vec2 mipInfo = MipLevelInfo(reflectedDirection, r1);
+                        float s = mipInfo.y;
+                        float level0 = mipInfo.x;
+                        float level1 = level0 + 1.0;
+                        level1 = level1 > 5.0 ? 5.0 : level1;
+                        // Tri linear interpolation.
+                        vec2 uv_10 = getCubeUV(reflectedDirection, r1, level0);
+                        vec2 uv_11 = getCubeUV(reflectedDirection, r1, level1);
+                        vec2 uv_20 = getCubeUV(reflectedDirection, r2, level0);
+                        vec2 uv_21 = getCubeUV(reflectedDirection, r2, level1);
+                        vec4 color10 = texture2D(textureCubeUV, uv_10);
+                        vec4 color11 = texture2D(textureCubeUV, uv_11);
+                        vec4 color20 = texture2D(textureCubeUV, uv_20);
+                        vec4 color21 = texture2D(textureCubeUV, uv_21);
+                        vec4 c1 = mix(color10 , color11,  s);
+                        vec4 c2 = mix(color20 , color21,  s);
+                        vec4 c3 = mix(c1 , c2,  t);
+                        //vec2 uv1 = getCubeUV(reflectedDirection, 3.0, 3.0);
+                        //vec2 uv2 = getCubeUV(reflectedDirection, 3.0, 3.0);
+                        //vec4 colorDiffuse = textureCube( cubeTextureDiffuse, worldNormal ) * vec4(1.0,0.31,0.1, 1.0) * (1.0 - fresnel);
+                        //vec4 c1 = texture2D(textureCubeUV, uv1);// * fresnel;
+                        //vec4 c2 = texture2D(textureCubeUV, uv2);// * fresnel;
+                        //vec4 colorRefl = mix(c1, c2, t);
+                        gl_FragColor = pow(c3 , vec4(0.45));
+                }
+        </script>
+        
+        <script>
+
+var container, stats;
+var camera, backgroundCamera, scene, renderer, controls;
+var rootNode = new THREE.Object3D();
+var count = 0;
+var objNode;
+var bObjectLoaded = false;
+
+function traverseNode(node, material) {
+    node.traverse( function ( child ) {
+        if ( child instanceof THREE.Mesh ) {
+            child.material = material;
+            child.geometry.center();
+            child.geometry.normalize();
+            //child.position.y = -1;
+            //child.scale.x = 0.75;
+            //child.scale.y = 0.75;
+            //child.scale.z = 0.75;
+            child.geometry.computeVertexNormals();
+        }
+ } );
+}
+function loadObject() {
+    var manager = new THREE.LoadingManager();
+    manager.onProgress = function ( item, loaded, total ) {
+            console.log( item, loaded, total );
+    };
+
+    var loader = new THREE.OBJLoader( manager );
+    loader.load( '../../img/bunny.obj', function ( object ) {
+            objNode = object;
+            object.scale.x = 2;
+            object.scale.y = 2;
+            object.scale.z = 2;
+            traverseNode(objNode, testMaterialLatLon);
+            
+            scene.add( objNode );
+            bObjectLoaded = true;
+    } );
+    
+}
+
+var testMaterial,  testMaterialLatLon,  testMaterialCubeUV;
+
+//loadObject();
+//var material = new THREE.MeshStandardMaterial( { map: imgTexture, bumpScale: bumpScale, color: diffuseColor, metalness: metalness, roughness: roughness, shading: THREE.SmoothShading, envMap: localReflectionCube } )
+var bTextureLoaded = false;
+var onTextureLoad = function() {
+    bTextureLoaded = true;
+    pmremGenerator = new PMREMGenerator(reflectionCube);
+    pmremLatLonPacker = new PMREM_LatLonPacker(pmremGenerator.cubeLods);
+    pmremCubeUVPacker = new PMREM_CubeUVPacker(pmremGenerator.cubeLods);
+    initMaterials();
+    initTestScene();
+};
+
+var initMaterials = function() {
+    testMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            "mapSize" : {type: "f", value: 0},
+            "cubeTexture0": {type: "t", value: null},
+            "cubeTextureDiffuse": {type: "t", value: null}
+        },
+        vertexShader: document.getElementById( 'vertexShader' ).textContent,
+        fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+    });
+
+     testMaterialLatLon = new THREE.ShaderMaterial({
+        uniforms: {
+            "roughness": {type: "f", value: 0.0},
+            "textureLatLon": {type: "t", value: null}
+        },
+        vertexShader: document.getElementById( 'vertexShader' ).textContent,
+        fragmentShader: document.getElementById( 'fragmentShaderLatLon' ).textContent
+    });
+    
+    testMaterialLatLon.side = THREE.DoubleSide;
+
+    testMaterialCubeUV = new THREE.ShaderMaterial({
+        uniforms: {
+            "mapSize" : {type: "f", value: 0},
+            "roughness": {type: "f", value: 0.0},
+            "textureSize": {type: "f", value: 0.0},
+            "textureCubeUV": {type: "t", value: null}
+        },
+        vertexShader: document.getElementById( 'vertexShader' ).textContent,
+        fragmentShader: document.getElementById( 'fragmentShaderCubeUV' ).textContent
+    });
+    testMaterialCubeUV.side = THREE.DoubleSide;
+};
+
+var initTestScene = function() {
+    var sphereRadius = 0.5;
+    var sphereGeometry = new THREE.SphereGeometry(sphereRadius,25,16);
+    var geometry = new THREE.TorusKnotGeometry( 0.25, 0.1, 100, 16 );
+    var sphereMesh = new THREE.Mesh(sphereGeometry, testMaterial);
+    testMaterial.uniforms["cubeTexture0"].value = pmremGenerator.cubeLods[0];    
+    testMaterialLatLon.uniforms["textureLatLon"].value = pmremLatLonPacker.LatLonRenderTarget;
+    testMaterialCubeUV.uniforms["textureCubeUV"].value = pmremCubeUVPacker.CubeUVRenderTarget;
+    testMaterialCubeUV.uniforms["textureSize"].value = pmremCubeUVPacker.CubeUVRenderTarget.width;
+
+    var x = -3.5;
+    var y = 0.9;
+    for( var i=0; i<pmremGenerator.numLods; i++) {
+        var cloneMesh = sphereMesh.clone();
+        cloneMesh.material = testMaterial.clone();
+        cloneMesh.material.uniforms["cubeTexture0"].value = pmremGenerator.cubeLods[i];    
+        cloneMesh.material.uniforms["mapSize"].value = pmremGenerator.cubeLods[i].width;    
+        cloneMesh.material.uniforms["cubeTextureDiffuse"].value = pmremGenerator.cubeLods[numLods-1];    
+        cloneMesh.position.x = x;
+        cloneMesh.position.y = y;
+        rootNode.add(cloneMesh);
+        x += 2.1 * sphereRadius;
+    }
+//     x = -3.5;
+//     y = -0.9;
+//    for( var i=0; i<numLods; i++) {
+//        var cloneMesh = sphereMesh.clone();
+//        cloneMesh.material = testMaterialLatLon.clone();
+//        cloneMesh.material.uniforms["roughness"].value = i/(numLods-1);    
+//        cloneMesh.material.uniforms["textureLatLon"].value = pmremLatLonPacker.LatLonRenderTarget;    
+//        cloneMesh.position.x = x;
+//        cloneMesh.position.y = y;
+//        rootNode.add(cloneMesh);
+//        x += 2.1 * sphereRadius;
+//    }
+    x = -3.5;
+    y = -0.9;
+    for( var i=0; i<pmremGenerator.numLods; i++) {
+        var cloneMesh = sphereMesh.clone();
+        cloneMesh.material = testMaterialCubeUV.clone();
+        cloneMesh.material.uniforms["mapSize"].value = pmremGenerator.cubeLods[i].width;    
+        cloneMesh.material.uniforms["roughness"].value = i/(pmremGenerator.numLods-1);    
+        cloneMesh.material.uniforms["textureCubeUV"].value = pmremCubeUVPacker.CubeUVRenderTarget;    
+        cloneMesh.position.x = x;
+        rootNode.add(cloneMesh);
+        x += 2.1 * sphereRadius;
+    }
+//    for( var i=0; i<1; i++) {
+//        var cloneMesh = sphereMesh.clone();
+//        cloneMesh.material = testMaterialLatLon.clone();
+//        cloneMesh.material.uniforms["roughness"].value = 1;//5/(numLods-1);    
+//        cloneMesh.material.uniforms["textureLatLon"].value = pmremLatLonPacker.LatLonRenderTarget;    
+//        cloneMesh.position.x = 1;
+//        rootNode.add(cloneMesh);
+//        x += 2.1 * sphereRadius;
+//    }
+    scene.add(rootNode);
+};
+
+var path = "../../js/lib/three.js/textures/cube/pisa/";
+                var format = '.png';
+                var urls = [
+                    path + 'px' + format, path + 'nx' + format,
+                    path + 'py' + format, path + 'ny' + format,
+                    path + 'pz' + format, path + 'nz' + format
+                ];
+var reflectionCube = THREE.ImageUtils.loadTextureCube(urls, undefined, onTextureLoad);
+reflectionCube.generateMipmaps = false;
+reflectionCube.magFilter = THREE.LinearFilter;
+reflectionCube.minFilter = THREE.LinearFilter;
+
+var numLods = 8;
+var pmremGenerator;
+var pmremLatLonPacker;
+var pmremCubeUVPacker;
+
+var windowHalfX = window.innerWidth / 2;
+var windowHalfY = window.innerHeight / 2;
+
+var cameraPosition = new THREE.Vector3();
+
+initScene();
+animate();
+
+function initScene() {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000);
+    camera.position.z = 1;
+    camera.position.x = 0;
+     
+    controls = new THREE.OrbitControls(camera);
+    controls.addEventListener('change', render);
+    // scene
+    scene = new THREE.Scene();
+    
+    renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, antialias: true});
+    renderer.context.getExtension('EXT_shader_texture_lod');
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+        
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+    document.addEventListener('mousedown', onDocumentMouseDown, false);
+    document.addEventListener('mouseup', onDocumentMouseUp, false);
+    document.addEventListener('mousewheel', onDocumentMouseWheel, false);
+    window.addEventListener('resize', onWindowResize, false);
+
+    stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.top = '0px';
+    container.appendChild(stats.domElement);
+}
+
+function onDocumentMouseMove(event)
+{
+}
+
+function onDocumentMouseWheel(event)
+{
+    var pos = camera.position;
+    var d = pos.length();
+    cameraPosition.x = pos.x;
+    cameraPosition.y = pos.y;
+    cameraPosition.z = pos.z;
+    var min = 0.1;
+    var max = 100;
+    if (d < min)
+    {
+        cameraPosition.normalize();
+        pos.x = cameraPosition.x * min;
+        pos.y = cameraPosition.y * min;
+        pos.z = cameraPosition.z * min;
+    }
+    if (d > max)
+    {
+        cameraPosition.normalize();
+        pos.x = cameraPosition.x * max;
+        pos.y = cameraPosition.y * max;
+        pos.z = cameraPosition.z * max;
+    }
+
+}
+
+function onDocumentMouseDown(e)
+{
+}
+
+function onDocumentMouseUp(e)
+{
+}
+
+function onWindowResize() {
+    windowHalfX = window.innerWidth / 2;
+    windowHalfY = window.innerHeight / 2;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    //composer.setSize(window.innerWidth, window.innerHeight);
+//    uniforms.resolution.value.x = window.innerWidth;
+//    uniforms.resolution.value.y = window.innerHeight;
+//
+//    renderer.setSize( window.innerWidth, window.innerHeight );
+//
+//    camera.aspect = window.innerWidth / window.innerHeight;
+//    camera.updateProjectionMatrix();
+    effectFXAA.uniforms['resolution'].value.set(1/window.innerWidth, 1/window.innerHeight);
+    //composer.setSize(window.innerWidth, window.innerHeight);
+}
+    
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    stats.update();
+    rootNode.rotation.y += 0.016;
+    if(bTextureLoaded)
+        render();
+}
+
+function render() {
+    renderer.setClearColor(0xFFFFFF);
+    //if(count == 0) 
+    {
+        pmremGenerator.update(renderer);
+        //pmremLatLonPacker.update(renderer);
+        pmremCubeUVPacker.update(renderer);
+        count++;
+    }
+//        pmremCubeUVPacker.update(renderer);
+    renderer.render(scene, camera);
+}
+
+        </script>
+
+    </body>
+</html>

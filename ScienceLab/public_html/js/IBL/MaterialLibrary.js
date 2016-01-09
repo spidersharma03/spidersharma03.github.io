@@ -55,10 +55,10 @@ var fragmentShaderIBL = "precision highp float;\n\
    \n\
    vec3 tonemap(vec3 RGB) {\n\
       float LogAvgLum = 0.2;//0.08\n\
-      float key = 2.0;\n\
+      float key = 1.0;\n\
       float Ywhite = 1e1;\n\
       Ywhite *= Ywhite;\n\
-      float sat = 0.45;\n\
+      float sat = 0.5;\n\
       float Ylum = dot(RGB ,vec3(0.2126, 0.7152, 0.0722));\n\
       float Y = key/LogAvgLum * Ylum ;\n\
       float Yd = Y * ( 1.0 + Y/Ywhite)/( 1.0 + Y) ;\n\
@@ -152,10 +152,11 @@ var fragmentShaderIBL = "precision highp float;\n\
       float ndotv = dot(-normalizedWorldNormal, viewVector);\n\
       ndotv = ndotv < 0.0 ? 0.0 : ndotv;\n\
       vec3 reflectionVector = reflect( viewVector, normalizedWorldNormal );\n\
-      //vec3 specularColor = texture2D(SpecularMap, uvRepeat).xyz;//;\n\
-      vec3 specularColor = vec3(SpecularColor.x, SpecularColor.y, SpecularColor.z);//;\n\
+      vec3 specularColor = texture2D(SpecularMap, uvRepeat).xyz;//;\n\
+      //specularColor = vec3(SpecularColor.xyz);//;\n\
+      specularColor *= specularColor;\
       vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv),1.0);\n\
-      float roughnessVal = metalRoughness;//0.6*(1.0 - texture2D(RoughnessMap, uvRepeat).r);\n\
+      float roughnessVal = (1.0 - texture2D(RoughnessMap, uvRepeat).r);\n\
       vec4 IblSpecularColor = SampleSpecularContribution(specularContribution, reflectionVector,roughnessVal);\n\
       vec4 finalColor =  IblSpecularColor + SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal);\n\
       //vec3 dn = fwidth(normalizedWorldNormal);\n\

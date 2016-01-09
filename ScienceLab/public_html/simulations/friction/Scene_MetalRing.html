@@ -1,0 +1,380 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>three.js webgl - loaders - OBJ loader</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            body {
+                font-family: Monospace;
+                background-color: #000;
+                color: #fff;
+                margin: 0px;
+                overflow: hidden;
+            }
+            #info {
+                color: #fff;
+                position: absolute;
+                top: 10px;
+                width: 100%;
+                text-align: center;
+                z-index: 100;
+                display:block;
+            }
+            #info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+        </style>
+    </head>
+
+    <body>
+
+        <script src="../../js/lib/three.js/three.js"></script>
+        <script src="../../js/lib/three.js/ammo.js"></script>
+        <script src="MomentumConservation.js"></script>
+
+        <script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
+
+        <script src="../../js/lib/three.js/js/Detector.js"></script>
+        <script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
+        <script src="../../js/simulate/InclinedPlaneSystems.js"></script>
+        <script src="MaterialLibrary.js"></script>
+        <script src="../../js/lib/three.js/js/loaders/OBJLoader.js"></script>
+        
+        <script>
+
+            var container, stats;
+            var pickConstraint = null;
+            var camera, scene, renderer, controls;
+
+            var fov = 70,
+                    isUserInteracting = false,
+                    onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+                    lon = 0, onMouseDownLon = 0,
+                    lat = 0, onMouseDownLat = 0,
+                    phi = 0, theta = 0;
+
+            var mouseX = 0, mouseY = 0;
+
+            var windowHalfX = window.innerWidth / 2;
+            var windowHalfY = window.innerHeight / 2;
+
+            var cubeMaterial;
+            var groundMaterial;
+            var sphereMaterial, sphereMaterial1;
+           
+            var cameraPosition = new THREE.Vector3();
+            var library = new MaterialLibrary();
+            var sphereMesh, sphereMesh1, objNode;
+            var clonedUniforms1, clonedUniforms2;
+            
+            init();
+            animate();
+            
+            function makeBaseGeometry() {
+//                var sphereGeometry = new THREE.CylinderGeometry(2,2,6,30,20);
+                var sphereGeometry = new THREE.SphereGeometry(2,30,30);
+//                var sphereGeometry = new THREE.RingGeometry(0.5,5,30);
+//                var sphereGeometry = new THREE.TorusKnotGeometry(3, 1, 64, 18, 2, 3, 1);
+//                sphereGeometry.computeVertexNormals();
+//                var sphereGeometry = new THREE.TorusGeometry(2, 1, 50,50);
+                sphereGeometry.computeTangents();
+//                var tangentattributes = sphereGeometry.getAttribute("tangent");
+//                var tangents = [];
+//                for(var i=0; i<sphereGeometry.vertices.length; i++) {
+//                    var tangent = sphereGeometry.vertexTangents[i];
+//                    tangents.push(new THREE.Vector3(tangent.x, tangent.y, tangent.z));
+//                }
+//
+//                var attributes = {
+//                    tangent: {type:"v4", value: tangents}
+//                };
+                sphereMaterial.side = THREE.DoubleSide;
+                sphereMaterial1.side = THREE.DoubleSide;
+                sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                sphereMesh.position.x = 7;
+                sphereMesh.position.y = 5;
+                sphereMesh1 = new THREE.Mesh(sphereGeometry, sphereMaterial1);
+                sphereMesh1.position.x = -8;
+                sphereMesh1.position.y = 5;
+                //sphereMesh.castShadow = true;
+                //sphereMesh.receiveShadow = true;
+                //scene.add(sphereMesh);
+                //scene.add(sphereMesh1);
+                
+                var groundGeometry = new THREE.BoxGeometry(100,2,100,10,10,10);
+                groundGeometry.computeTangents();
+                var groundMesh = new THREE.Mesh(groundGeometry, sphereMaterial1);
+                groundMesh.position.y = -1.0;
+                //groundMesh.castShadow = true;
+                //groundMesh.receiveShadow = true;
+                //scene.add(groundMesh);
+                
+                var onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( Math.round(percentComplete, 2) + '% downloaded' );
+					}
+				};
+                var onError = function ( xhr ) {
+				};
+                                
+                var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+
+					console.log( item, loaded, total );
+
+				};
+
+                var loader = new THREE.OBJLoader( manager );
+                loader.load( '../../img/ring2.obj', function ( object ) {
+                        objNode = object;
+                        object.traverse( function ( child ) {
+                                if ( child instanceof THREE.Mesh ) {
+                                        child.material = sphereMaterial1;
+                                        child.geometry.computeVertexNormals();
+                                        child.geometry.normalize();
+                                        child.geometry.computeTangents();
+                                }
+
+                        } );
+                        
+                        object.scale.x = 5;
+                        object.scale.y = 5;
+                        object.scale.z = 5;
+                        scene.add( object );
+
+                }, onProgress, onError );
+            }
+
+            function syncSimulation()
+            {
+            }
+
+            function init() {
+
+                container = document.createElement('div');
+                document.body.appendChild(container);
+
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+                camera.position.z = 20;
+                camera.position.y = 4;
+                controls = new THREE.OrbitControls(camera);
+                controls.addEventListener('change', render);
+                // scene
+
+                scene = new THREE.Scene();
+
+                var ambient = new THREE.AmbientLight(0x101030);
+                scene.add(ambient);
+
+                var light = new THREE.DirectionalLight(0xffeedd);
+                light.position.set(50, 200, -100);
+                //var light1 = new THREE.SpotLight( 0xffffff );
+                //light1.position.set( 85, 85, 85 );
+                //light1.target.position.set(0, 0, 0 );
+                light.castShadow = true;
+                light.shadowMapWidth = 1024;
+                light.shadowMapHeight = 1024;
+
+                var d = 20;
+
+                light.shadowCameraLeft = -d;
+                light.shadowCameraRight = d;
+                light.shadowCameraTop = d;
+                light.shadowCameraBottom = -d;
+
+                light.shadowCameraFar = 1000;
+                light.shadowDarkness = 0.5;
+                scene.add(light);
+
+                var light1 = new THREE.DirectionalLight(0xffeedd);
+                light1.castShadow = false;
+                light1.position.set(50, 200, 300);
+                //scene.add( light1 );
+                var hemiLight = new THREE.HemisphereLight(0xaabbff, 0x111111, 4.0);
+                scene.add(hemiLight);
+
+                // texture
+
+                var manager = new THREE.LoadingManager();
+                manager.onProgress = function (item, loaded, total) {
+
+                    console.log(item, loaded, total);
+
+                };
+                
+                var reflTexture = THREE.ImageUtils.loadTexture("../../img/mips.png");
+                //reflTexture.wrapS = THREE.ClampToEdgeWrapping;
+                //reflTexture.wrapT = THREE.ClampToEdgeWrapping;
+                reflTexture.generateMipmaps = false;
+                reflTexture.magFilter = THREE.LinearFilter;
+                reflTexture.minFilter = THREE.LinearFilter;
+                //reflTexture.repeat.set(10, 10);
+                
+                var normalTexture = THREE.ImageUtils.loadTexture("../../img/plane_norrmal.jpg");
+                normalTexture.repeat.set(10, 10);
+                normalTexture.wrapS = THREE.RepeatWrapping;
+                normalTexture.wrapT = THREE.RepeatWrapping;
+
+                var specularTexture = THREE.ImageUtils.loadTexture("../../img/brass01.jpg");
+                //specularTexture = THREE.ImageUtils.generateDataTexture (4, 4, new THREE.Color("rgb(255,190,100)"));
+                var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_brass.jpg");
+                roughnessTexture.wrapS = THREE.RepeatWrapping;
+                roughnessTexture.wrapT = THREE.RepeatWrapping;
+                specularTexture.wrapS = THREE.RepeatWrapping;
+                specularTexture.wrapT = THREE.RepeatWrapping;
+                
+                library.shaderSource.uniforms['IBLTexture'].value = reflTexture;
+                library.shaderSource.uniforms['NormalMap'].value = normalTexture;                                
+                library.shaderSource.uniforms['SpecularMap'].value = specularTexture;                                
+                library.shaderSource.uniforms['RoughnessMap'].value = roughnessTexture;   
+                var r = 212/255
+                var g = 175/255;
+                var b = 55/255;
+                library.shaderSource.uniforms['SpecularColor'].value = new THREE.Vector4(r, g, b,1.0);                
+                library.shaderSource.uniforms['DiffuseColor'].value = new THREE.Vector4(0.01,0.01,0.01,1.0);                
+                library.shaderSource.uniforms['uMetal'].value = 0.0;
+                
+                var clonedUniforms1 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
+                clonedUniforms1['IBLTexture'].value = reflTexture;
+                clonedUniforms1['NormalMap'].value = normalTexture;
+                clonedUniforms1['Roughness'].value = 0.0;
+                clonedUniforms1['SpecularColor'].value = new THREE.Vector4(0.0,0.0,0.0,1.0); ;
+                clonedUniforms1['DiffuseColor'].value = new THREE.Vector4(0.03,0.01,0.0,1.0); ;
+                clonedUniforms1['RoughnessMap'].value = roughnessTexture;                                
+                clonedUniforms1['uMetal'].value = 0.0;
+
+                sphereMaterial = new THREE.ShaderMaterial(
+                        {uniforms: clonedUniforms1, 
+                        vertexShader:library.shaderSource.vertexShader,
+                        fragmentShader:library.shaderSource.fragmentShader});
+                sphereMaterial.map = true;
+                var clonedUniforms2 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
+                clonedUniforms2['IBLTexture'].value = reflTexture;
+                clonedUniforms2['NormalMap'].value = normalTexture;
+                clonedUniforms2['Roughness'].value = 0.40;
+                clonedUniforms2['SpecularMap'].value = specularTexture;                                
+                clonedUniforms2['RoughnessMap'].value = roughnessTexture;                                
+                clonedUniforms2['uMetal'].value = 0.0;
+
+                sphereMaterial1 = new THREE.ShaderMaterial(
+                        {uniforms:clonedUniforms2, 
+                        vertexShader:library.shaderSource.vertexShader,
+                        fragmentShader:library.shaderSource.fragmentShader});
+                sphereMaterial1.map = true;
+                
+				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, antialias:true});
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                container.appendChild(renderer.domElement);
+
+                document.addEventListener('mousemove', onDocumentMouseMove, false);
+                document.addEventListener('mousedown', onDocumentMouseDown, false);
+                document.addEventListener('mouseup', onDocumentMouseUp, false);
+                document.addEventListener('mousewheel', onDocumentMouseWheel, false);
+        			window.addEventListener( 'dblclick', keydown, false );
+
+                window.addEventListener('resize', onWindowResize, false);
+
+
+                renderer.shadowMapEnabled = true;
+                renderer.shadowMapSoft = true;
+                stats = new Stats();
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.top = '0px';
+		container.appendChild( stats.domElement );
+                
+                makeBaseGeometry();
+            }
+ function keydown(e) {
+                            var newwindow = window.open("");
+                            var dataUrl = renderer.domElement.toDataURL("image/png");
+                            var img = new Image();
+                            img.src = dataUrl;
+                            //img.width/=2;
+                            //img.height/=2;
+                            newwindow.document.body.appendChild(img);
+                        }
+            function onDocumentMouseMove(event)
+            {
+                var pos = camera.position;
+
+                if (pos.y < 2)
+                {
+                    //pos.y = 2;
+                }
+            }
+
+            function onDocumentMouseWheel(event)
+            {
+                var pos = camera.position;
+                var d = pos.length();
+                cameraPosition.x = pos.x;
+                cameraPosition.y = pos.y;
+                cameraPosition.z = pos.z;
+                var min = 5;
+                var max = 100;
+                if (d < min)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * min;
+                    pos.y = cameraPosition.y * min;
+                    pos.z = cameraPosition.z * min;
+                }
+                if (d > max)
+                {
+                    cameraPosition.normalize();
+                    pos.x = cameraPosition.x * max;
+                    pos.y = cameraPosition.y * max;
+                    pos.z = cameraPosition.z * max;
+                }
+
+            }
+
+            function onDocumentMouseDown(e)
+            {
+            }
+
+            function onDocumentMouseUp(e)
+            {
+            }
+
+            function onWindowResize() {
+
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+            }
+
+            var time = 0.0;
+            function animate() {
+                time += 0.016*0.3;
+                sphereMesh1.rotation.y += 0.01;
+                sphereMesh.rotation.y += 0.01;
+                if(objNode)
+                    objNode.rotation.y += 0.01;
+  
+                var roughness = Math.sin(time);
+                roughness *= roughness;
+                //library.shaderSource.uniforms['Roughness'].value = 0.5; 
+                requestAnimationFrame(animate);
+                controls.update();
+                stats.update();
+                syncSimulation();
+                render();
+            }
+
+            function render() {
+                renderer.setClearColor(0xFFFFFF, 1);
+                
+                renderer.render(scene, camera);
+            }
+
+        </script>
+
+    </body>
+</html>

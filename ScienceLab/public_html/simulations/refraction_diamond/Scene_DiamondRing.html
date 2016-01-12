@@ -320,11 +320,11 @@ var initRingMaterials = function() {
                 
                 var clonedUniforms3 = THREE.UniformsUtils.clone( library.shaderSource.uniforms );
                 clonedUniforms3['IBLTexture'].value = envTexture;
-                var r = 235/255
-                var g = 160/255;
-                var b = 10/255;
+                var r = 210/255
+                var g = 210/255;
+                var b = 210/255;
                 clonedUniforms3['SpecularColor'].value = new THREE.Vector4(r, g, b,1.0);                
-                clonedUniforms3['metalRoughness'].value = 0.15;                
+                clonedUniforms3['metalRoughness'].value = 0.3;                
                 
                 ringMaterial3 = new THREE.ShaderMaterial(
                         {uniforms:clonedUniforms3, 
@@ -507,13 +507,6 @@ var onRing4Loaded = function(object) {
         object.scale.y = 2;
         object.scale.z = 2;
         
-        var diamond = diamondPrototype4.shallowCopy();
-        diamond.setPosition(0, 1.6,0);
-        diamond.setScale(0.5, 0.5,0.5);
-        diamondArray.push(diamond);
-        metalRing1.add(diamond.mesh);
-        diamond.applyTransform();
-        
         rootNode.add( metalRing4 );
         var nDiamonds = 31;
         var dTheta = 0.1597;
@@ -521,6 +514,10 @@ var onRing4Loaded = function(object) {
         var radius = 1.88;
         for( var i=0; i<nDiamonds; i++) {
             var copyDiamond = diamondPrototype4.shallowCopy();
+            var absorbption = copyDiamond.material.uniforms["Absorbption"].value;
+            //absorbption.x = 0.5;
+            //absorbption.y = 0.95;
+            //absorbption.z = 0.85;            
             copyDiamond.setPosition(radius*Math.sin(theta), radius*Math.cos(theta),-0.3);
             copyDiamond.setRotation(0,0,-theta);
             copyDiamond.setScale(0.14, 0.14,0.14);

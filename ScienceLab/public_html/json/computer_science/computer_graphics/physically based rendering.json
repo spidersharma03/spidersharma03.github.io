@@ -69,28 +69,6 @@
                }
             ],
         "pageLink"  : "PMREM_GPU"
-    },
-     {
-        "name": "Refraction", 
-        "id": "Mechanics.json", 
-        "imageUrl": "", 
-        "description": "",
-        "simulations":
-            [
-               {
-                   "display_name": "Diamond Rings",
-                   "description":"",
-                   "image" : "diamond.png",
-                   "scene_name" : "Scene_DiamondRing"
-               },
-               {
-                   "display_name": "Ray Traced Refraction",
-                   "description":"",
-                   "image" : "diamond.png",
-                   "scene_name" : "Scene_Diamond_1"
-               }
-            ],
-        "pageLink"  : "refraction_diamond"
     }
 ]
 }

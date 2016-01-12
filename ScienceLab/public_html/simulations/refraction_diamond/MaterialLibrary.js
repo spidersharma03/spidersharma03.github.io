@@ -55,7 +55,7 @@ var fragmentShaderIBL = "precision highp float;\n\
    \n\
    vec3 tonemap(vec3 RGB) {\n\
       float LogAvgLum = 0.08;//0.08\n\
-      float key = 1.0;\n\
+      float key = 0.4;\n\
       float Ywhite = 1e1;\n\
       Ywhite *= Ywhite;\n\
       float sat = 0.45;\n\
@@ -157,7 +157,7 @@ var fragmentShaderIBL = "precision highp float;\n\
       specularColor = pow(specularColor, vec3(2.2));\
       vec4 specularContribution = vec4(EnvBRDFApprox(specularColor, Roughness, ndotv),1.0);\n\
       vec3 dn = fwidth(normalizedWorldNormal);\n\
-      float roughnessVal = 0.0;//(1.0 - texture2D(RoughnessMap, uvRepeat).r);\n\
+      float roughnessVal = metalRoughness;//(1.0 - texture2D(RoughnessMap, uvRepeat).r);\n\
       vec4 IblSpecularColor = SampleSpecularContribution(specularContribution, reflectionVector,roughnessVal);\n\
       vec4 finalColor =  IblSpecularColor + SampleDiffuseContribution(DiffuseColor, normalizedWorldNormal);\n\
       #ifdef USE_HDR\n\

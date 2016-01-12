@@ -56,6 +56,12 @@
         "simulations":
             [
                {
+                   "display_name": "PMREM",
+                   "description":"",
+                   "image" : "dynamic_pmrem.png",
+                   "scene_name" : "Scene_PMREM"
+               }, 
+               {
                    "display_name": "Dynamic Filtered Cube Maps",
                    "description":"",
                    "image" : "dynamic_pmrem.png",
@@ -63,6 +69,28 @@
                }
             ],
         "pageLink"  : "PMREM_GPU"
+    },
+     {
+        "name": "Refraction", 
+        "id": "Mechanics.json", 
+        "imageUrl": "", 
+        "description": "",
+        "simulations":
+            [
+               {
+                   "display_name": "Diamond Rings",
+                   "description":"",
+                   "image" : "diamond.png",
+                   "scene_name" : "Scene_DiamondRing"
+               },
+               {
+                   "display_name": "Ray Traced Refraction",
+                   "description":"",
+                   "image" : "diamond.png",
+                   "scene_name" : "Scene_Diamond_1"
+               }
+            ],
+        "pageLink"  : "refraction_diamond"
     }
 ]
 }

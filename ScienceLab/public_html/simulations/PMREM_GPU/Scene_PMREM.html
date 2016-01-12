@@ -526,7 +526,7 @@ function initScene() {
     stats = new Stats();
     stats.domElement.style.position = 'absolute';
     stats.domElement.style.top = '0px';
-    container.appendChild(stats.domElement);
+    //container.appendChild(stats.domElement);
 }
 
 function onDocumentMouseMove(event)
@@ -603,8 +603,8 @@ function render() {
         pmremCubeUVPacker.update(renderer);
         count++;
     }
-//        pmremCubeUVPacker.update(renderer);
-    renderer.render(scene, camera);
+        pmremCubeUVPacker.update(renderer);
+//    renderer.render(scene, camera);
 }
 
         </script>

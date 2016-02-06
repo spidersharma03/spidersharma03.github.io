@@ -429,9 +429,9 @@ var initTestScene = function() {
     var renderScene = new THREE.RenderPass(scene, camera);
     composer.addPass(renderScene);
     
-    var bloomPass = new THREE.BloomPass( 1, undefined, undefined, undefined, undefined, undefined );
-    bloomPass.highPassUniforms[ "luminosityThreshold" ].value = 0.5;
-    bloomPass.highPassUniforms[ "smoothWidth" ].value = 0.2;
+//    var bloomPass = new THREE.BloomPass( 1, undefined, undefined, undefined, undefined, undefined );
+//    bloomPass.highPassUniforms[ "luminosityThreshold" ].value = 0.5;
+//    bloomPass.highPassUniforms[ "smoothWidth" ].value = 0.2;
     
     //composer.addPass(bloomPass);
     //bloomPass.clear = true;

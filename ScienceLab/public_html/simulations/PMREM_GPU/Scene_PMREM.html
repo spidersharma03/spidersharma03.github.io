@@ -36,12 +36,24 @@
         <script src="PMREMGenerator.js"></script>
         <script src="PMREM_LatLonPacker.js"></script>
         <script src="PMREM_CubeUVPacker.js"></script>
+        <script src="BloomPass.js"></script>
+        <script src="ConvolutionShader.js"></script>
+        <script src="LuminosityHighPassShader.js"></script>
+        <script src="../../js/lib/three.js/js/postprocessing/EffectComposer.js"></script>
+        <script src="../../js/lib/three.js/js/postprocessing/RenderPass.js"></script>
+        <script src="../../js/lib/three.js/js/postprocessing/MaskPass.js"></script>
+        <script src="../../js/lib/three.js/js/postprocessing/ShaderPass.js"></script>
+        <script src="../../js/lib/three.js/js/shaders/CopyShader.js"></script>
+        <script src="../../js/lib/three.js/js/shaders/FXAAShader.js"></script>
+
         
         <script id="vertexShader" type="x-shader/x-vertex">
+                varying vec2 vUv;
                 varying vec3 worldNormal;
                 varying vec3 vecPos;
                 varying vec3 viewPos;
                 void main(){
+                        vUv = uv;
                         worldNormal = (modelMatrix * vec4(normal,0.0)).xyz;
                         vecPos = (modelMatrix * vec4(position, 1.0 )).xyz;
                         viewPos = (modelViewMatrix * vec4(position, 1.0 )).xyz;
@@ -183,10 +195,12 @@
         
         <script id="fragmentShaderCubeUV" type="x-shader/x-fragment">
                 #extension GL_OES_standard_derivatives : enable
+                varying vec2 vUv;
                 varying vec3 worldNormal;
                 varying vec3 vecPos;
                 varying vec3 viewPos;
                 uniform sampler2D textureCubeUV;
+                uniform sampler2D roughnessTexture;
                 uniform float textureSize;
                 uniform float roughness;
                 uniform float mapSize;
@@ -287,16 +301,19 @@
                 }
                 
                 void main() {
+                        vec2 uvRepeat = fract(vUv * 4.0);
                         vec3 viewVector = normalize(vecPos - cameraPosition);
                         vec3 Normal = normalize(worldNormal);
                         vec3 reflectedDirection = reflect(viewVector, Normal);
                         float fresnel = SchlickApproxFresenel(0.951, dot(Normal, reflectedDirection));
                         float maxLods =  log2(textureSize*0.25) - 3.0;
-                        float roughnessVal = roughness*maxLods;
+                        float roughnessVal = maxLods*(1.0 - texture2D(roughnessTexture, uvRepeat).r);
+                        roughnessVal *= roughnessVal * 0.7;
+                        //float roughnessVal = roughness*maxLods;
                         float r1 = floor(roughnessVal);
                         float r2 = r1 + 1.0;
                         float t = fract(roughnessVal);
-                        vec2 mipInfo = MipLevelInfo(reflectedDirection, r1);
+                        vec2 mipInfo = MipLevelInfo(reflectedDirection, 0.0);
                         float s = mipInfo.y;
                         float level0 = mipInfo.x;
                         float level1 = level0 + 1.0;
@@ -313,12 +330,7 @@
                         vec4 c1 = mix(color10 , color11,  s);
                         vec4 c2 = mix(color20 , color21,  s);
                         vec4 c3 = mix(c1 , c2,  t);
-                        //vec2 uv1 = getCubeUV(reflectedDirection, 3.0, 3.0);
-                        //vec2 uv2 = getCubeUV(reflectedDirection, 3.0, 3.0);
-                        //vec4 colorDiffuse = textureCube( cubeTextureDiffuse, worldNormal ) * vec4(1.0,0.31,0.1, 1.0) * (1.0 - fresnel);
-                        //vec4 c1 = texture2D(textureCubeUV, uv1);// * fresnel;
-                        //vec4 c2 = texture2D(textureCubeUV, uv2);// * fresnel;
-                        //vec4 colorRefl = mix(c1, c2, t);
+                        
                         gl_FragColor = pow(c3 , vec4(0.45));
                 }
         </script>
@@ -342,6 +354,7 @@ function traverseNode(node, material) {
             //child.scale.x = 0.75;
             //child.scale.y = 0.75;
             //child.scale.z = 0.75;
+            bObjectLoaded = true;
             child.geometry.computeVertexNormals();
         }
  } );
@@ -353,24 +366,38 @@ function loadObject() {
     };
 
     var loader = new THREE.OBJLoader( manager );
-    loader.load( '../../img/bunny.obj', function ( object ) {
+    loader.load( '../../img/wateringcan.obj', function ( object ) {
             objNode = object;
             object.scale.x = 2;
             object.scale.y = 2;
             object.scale.z = 2;
-            traverseNode(objNode, testMaterialLatLon);
+            traverseNode(objNode, testMaterialCubeUV);
             
             scene.add( objNode );
-            bObjectLoaded = true;
+            pmremGenerator.update(renderer);
+            pmremCubeUVPacker.update(renderer);
     } );
     
 }
 
-var testMaterial,  testMaterialLatLon,  testMaterialCubeUV;
+var  testMaterialCubeUV;
+ testMaterialCubeUV = new THREE.ShaderMaterial({
+        uniforms: {
+            "mapSize" : {type: "f", value: 0},
+            "roughness": {type: "f", value: 0.0},
+            "textureSize": {type: "f", value: 0.0},
+            "textureCubeUV": {type: "t", value: null},
+            "roughnessTexture": {type: "t", value: null}
+        },
+        vertexShader: document.getElementById( 'vertexShader' ).textContent,
+        fragmentShader: document.getElementById( 'fragmentShaderCubeUV' ).textContent
+    });
+    testMaterialCubeUV.side = THREE.DoubleSide;
+var composer;
 
-//loadObject();
 //var material = new THREE.MeshStandardMaterial( { map: imgTexture, bumpScale: bumpScale, color: diffuseColor, metalness: metalness, roughness: roughness, shading: THREE.SmoothShading, envMap: localReflectionCube } )
 var bTextureLoaded = false;
+var bTextureLoaded1 = false;
 var onTextureLoad = function() {
     bTextureLoaded = true;
     pmremGenerator = new PMREMGenerator(reflectionCube);
@@ -378,100 +405,41 @@ var onTextureLoad = function() {
     pmremCubeUVPacker = new PMREM_CubeUVPacker(pmremGenerator.cubeLods);
     initMaterials();
     initTestScene();
+    loadObject();
+};
+
+var onRoughnessTextureLoad = function() {
+    bTextureLoaded1 = true;
 };
 
 var initMaterials = function() {
-    testMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-            "mapSize" : {type: "f", value: 0},
-            "cubeTexture0": {type: "t", value: null},
-            "cubeTextureDiffuse": {type: "t", value: null}
-        },
-        vertexShader: document.getElementById( 'vertexShader' ).textContent,
-        fragmentShader: document.getElementById( 'fragmentShader' ).textContent
-    });
-
-     testMaterialLatLon = new THREE.ShaderMaterial({
-        uniforms: {
-            "roughness": {type: "f", value: 0.0},
-            "textureLatLon": {type: "t", value: null}
-        },
-        vertexShader: document.getElementById( 'vertexShader' ).textContent,
-        fragmentShader: document.getElementById( 'fragmentShaderLatLon' ).textContent
-    });
-    
-    testMaterialLatLon.side = THREE.DoubleSide;
-
-    testMaterialCubeUV = new THREE.ShaderMaterial({
-        uniforms: {
-            "mapSize" : {type: "f", value: 0},
-            "roughness": {type: "f", value: 0.0},
-            "textureSize": {type: "f", value: 0.0},
-            "textureCubeUV": {type: "t", value: null}
-        },
-        vertexShader: document.getElementById( 'vertexShader' ).textContent,
-        fragmentShader: document.getElementById( 'fragmentShaderCubeUV' ).textContent
-    });
-    testMaterialCubeUV.side = THREE.DoubleSide;
 };
 
 var initTestScene = function() {
-    var sphereRadius = 0.5;
-    var sphereGeometry = new THREE.SphereGeometry(sphereRadius,25,16);
-    var geometry = new THREE.TorusKnotGeometry( 0.25, 0.1, 100, 16 );
-    var sphereMesh = new THREE.Mesh(sphereGeometry, testMaterial);
-    testMaterial.uniforms["cubeTexture0"].value = pmremGenerator.cubeLods[0];    
-    testMaterialLatLon.uniforms["textureLatLon"].value = pmremLatLonPacker.LatLonRenderTarget;
     testMaterialCubeUV.uniforms["textureCubeUV"].value = pmremCubeUVPacker.CubeUVRenderTarget;
     testMaterialCubeUV.uniforms["textureSize"].value = pmremCubeUVPacker.CubeUVRenderTarget.width;
+    //scene.add(rootNode);
+    var roughnessTexture = THREE.ImageUtils.loadTexture("../../img/roughness_brass.jpg", undefined, onRoughnessTextureLoad);
+    roughnessTexture.wrapS = THREE.RepeatWrapping;
+    roughnessTexture.wrapT = THREE.RepeatWrapping;
+    testMaterialCubeUV.uniforms["roughnessTexture"].value = roughnessTexture;    
+    
+    composer = new THREE.EffectComposer(renderer);
+    composer.setSize(window.innerWidth, window.innerHeight);
+    var renderScene = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderScene);
+    
+    var bloomPass = new THREE.BloomPass( 1, undefined, undefined, undefined, undefined, undefined );
+    bloomPass.highPassUniforms[ "luminosityThreshold" ].value = 0.5;
+    bloomPass.highPassUniforms[ "smoothWidth" ].value = 0.2;
+    
+    //composer.addPass(bloomPass);
+    //bloomPass.clear = true;
 
-    var x = -3.5;
-    var y = 0.9;
-    for( var i=0; i<pmremGenerator.numLods; i++) {
-        var cloneMesh = sphereMesh.clone();
-        cloneMesh.material = testMaterial.clone();
-        cloneMesh.material.uniforms["cubeTexture0"].value = pmremGenerator.cubeLods[i];    
-        cloneMesh.material.uniforms["mapSize"].value = pmremGenerator.cubeLods[i].width;    
-        cloneMesh.material.uniforms["cubeTextureDiffuse"].value = pmremGenerator.cubeLods[numLods-1];    
-        cloneMesh.position.x = x;
-        cloneMesh.position.y = y;
-        rootNode.add(cloneMesh);
-        x += 2.1 * sphereRadius;
-    }
-//     x = -3.5;
-//     y = -0.9;
-//    for( var i=0; i<numLods; i++) {
-//        var cloneMesh = sphereMesh.clone();
-//        cloneMesh.material = testMaterialLatLon.clone();
-//        cloneMesh.material.uniforms["roughness"].value = i/(numLods-1);    
-//        cloneMesh.material.uniforms["textureLatLon"].value = pmremLatLonPacker.LatLonRenderTarget;    
-//        cloneMesh.position.x = x;
-//        cloneMesh.position.y = y;
-//        rootNode.add(cloneMesh);
-//        x += 2.1 * sphereRadius;
-//    }
-    x = -3.5;
-    y = -0.9;
-    for( var i=0; i<pmremGenerator.numLods; i++) {
-        var cloneMesh = sphereMesh.clone();
-        cloneMesh.material = testMaterialCubeUV.clone();
-        cloneMesh.material.uniforms["mapSize"].value = pmremGenerator.cubeLods[i].width;    
-        cloneMesh.material.uniforms["roughness"].value = i/(pmremGenerator.numLods-1);    
-        cloneMesh.material.uniforms["textureCubeUV"].value = pmremCubeUVPacker.CubeUVRenderTarget;    
-        cloneMesh.position.x = x;
-        rootNode.add(cloneMesh);
-        x += 2.1 * sphereRadius;
-    }
-//    for( var i=0; i<1; i++) {
-//        var cloneMesh = sphereMesh.clone();
-//        cloneMesh.material = testMaterialLatLon.clone();
-//        cloneMesh.material.uniforms["roughness"].value = 1;//5/(numLods-1);    
-//        cloneMesh.material.uniforms["textureLatLon"].value = pmremLatLonPacker.LatLonRenderTarget;    
-//        cloneMesh.position.x = 1;
-//        rootNode.add(cloneMesh);
-//        x += 2.1 * sphereRadius;
-//    }
-    scene.add(rootNode);
+    effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
+    effectFXAA.uniforms['resolution'].value.set(1 / (window.innerWidth), 1 / (window.innerHeight));
+    effectFXAA.renderToScreen = true;
+    composer.addPass(effectFXAA);
 };
 
 var path = "../../js/lib/three.js/textures/cube/pisa/";
@@ -485,7 +453,8 @@ var reflectionCube = THREE.ImageUtils.loadTextureCube(urls, undefined, onTexture
 reflectionCube.generateMipmaps = false;
 reflectionCube.magFilter = THREE.LinearFilter;
 reflectionCube.minFilter = THREE.LinearFilter;
-
+              
+                
 var numLods = 8;
 var pmremGenerator;
 var pmremLatLonPacker;
@@ -512,7 +481,7 @@ function initScene() {
     // scene
     scene = new THREE.Scene();
     
-    renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, antialias: true});
+    renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, antialias: false});
     renderer.context.getExtension('EXT_shader_texture_lod');
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
@@ -581,30 +550,28 @@ function onWindowResize() {
 //
 //    camera.aspect = window.innerWidth / window.innerHeight;
 //    camera.updateProjectionMatrix();
-    effectFXAA.uniforms['resolution'].value.set(1/window.innerWidth, 1/window.innerHeight);
+    //effectFXAA.uniforms['resolution'].value.set(1/window.innerWidth, 1/window.innerHeight);
     //composer.setSize(window.innerWidth, window.innerHeight);
 }
     
+var count = 0;
+
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
     stats.update();
     rootNode.rotation.y += 0.016;
-    if(bTextureLoaded)
+    count++;
+    if(bTextureLoaded && bTextureLoaded1 && bObjectLoaded &&count>30)
         render();
 }
 
 function render() {
-    renderer.setClearColor(0xFFFFFF);
-    //if(count == 0) 
-    {
-        pmremGenerator.update(renderer);
-        //pmremLatLonPacker.update(renderer);
-        pmremCubeUVPacker.update(renderer);
-        count++;
+    //renderer.setClearColor(0x000000);
+    if(composer!==undefined) {
+        composer.render();
+        //renderer.render(scene, camera);
     }
-        pmremCubeUVPacker.update(renderer);
-//    renderer.render(scene, camera);
 }
 
         </script>

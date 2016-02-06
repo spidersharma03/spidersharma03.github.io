@@ -3,6 +3,20 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+/*
+ * This class takes the cube lods(corresponding to different roughness values), and creates a single cubeUV 
+ * Texture. The format for a given roughness set of faces is simply::
+ * +X+Y+Z
+ * -X-Y-Z
+ * For every roughness a mip map chain is also saved, which is essential to remove the texture artifacts due to 
+ * minification.
+ * Right now for every face a PlaneMesh is drawn, which leads to a lot of geometry draw calls, but can be replaced
+ * later by drawing a single buffer and by sending the appropriate faceIndex via vertex attributes.
+ * The arrangement of the faces is fixed, as assuming this arrangement, the sampling function has been written.
+ * Run Scene_PMREM_CubeUV_PackingTest.html in the examples directory to visualize the packing.
+ * Run Scene_PMREM_CubeUV_Test.html and  Scene_DynamicPMREM.html in the examples directory to see the
+ * working code using this packing.
+ */
 var vertexShaderPMREMCubeUV = "precision highp float;\
                    varying vec2 vUv;\
                    void main() {\
@@ -24,14 +38,6 @@ var fragmentShaderPMREMCubeUV = "precision highp float;\
         vec3 sampleDir = vec3(cos(phi) * sinTheta, cosTheta, sin(phi) * sinTheta);\
         vec4 color = textureCube(cubeTexture, sampleDir);\
         return color * vec4(testColor, 1.0);\
-    }\
-    vec3 fixSeams(vec3 vec) {\
-        float scale = 1.0 - 1.0 / mapSize;\
-        float M = max(max(abs(vec.x), abs(vec.y)), abs(vec.z));\
-        if (abs(vec.x) != M) vec.x *= scale;\
-        if (abs(vec.y) != M) vec.y *= scale;\
-        if (abs(vec.z) != M) vec.z *= scale;\
-        return vec;\
     }\
     void main() {\
         vec3 sampleDirection;\
@@ -126,8 +132,6 @@ var PMREM_CubeUVPacker = function(cubeTextureLods, numLods) {
                 material.uniforms["mapSize"].value = mipSize;
                 var color = material.uniforms["testColor"].value;
                 //color.copy(testColor[j]);
-                //color.copy(new THREE.Vector3(Math.random(), Math.random(), Math.random()));
-                //color.copy(new THREE.Vector3(0, 0, 0));
                 var planeMesh = new THREE.Mesh(
                         new THREE.PlaneGeometry(mipSize, mipSize, 0),
                         material);

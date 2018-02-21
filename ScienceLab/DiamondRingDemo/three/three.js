@@ -18733,7 +18733,7 @@ THREE.Mesh = function ( geometry, material ) {
 	this.geometry = geometry !== undefined ? geometry : new THREE.Geometry();
 	this.material = material !== undefined ? material : new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff } );
 
-	this.updateMorphTargets();
+	//this.updateMorphTargets();
 
 };
 

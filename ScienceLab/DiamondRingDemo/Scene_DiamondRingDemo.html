@@ -68,6 +68,7 @@ var cameraPosition = new THREE.Vector3();
 var bRotate = true;
 var bObjectLoaded = false;
 var IsIBLDataRead = false;
+var bRingLoaded = false;
 var rootNode = new THREE.Object3D();
 rootNode.position.y = 2.1;
 var library = new MaterialLibrary();
@@ -253,6 +254,7 @@ var onRing1Loaded = function(object) {
             }
             copyDiamond.applyTransform();
         }
+	bRingLoaded = true;
 }
 
 var onRing2Loaded = function(object) {
@@ -518,7 +520,7 @@ function onWindowResize() {
 
 function animate() {
     requestAnimationFrame(animate);
-    if (IsIBLDataRead && bObjectLoaded) {
+    if (IsIBLDataRead && bObjectLoaded && bRingLoaded) {
         controls.update();
         stats.update();
         for(var i=0; i<diamondArray.length; i++){

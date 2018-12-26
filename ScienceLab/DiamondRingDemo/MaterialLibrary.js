@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-var vertexShaderIBL = "varying vec2 vUv; \n\
+var vertexShaderIBL = "varying vec2  vUv; \n\
    varying vec3 vecPos;\n\
    varying vec3 viewPos;\n\
    varying vec3 worldNormal;\n\

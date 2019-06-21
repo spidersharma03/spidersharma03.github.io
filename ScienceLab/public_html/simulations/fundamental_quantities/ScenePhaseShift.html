@@ -29,15 +29,15 @@
 	<body>
 
 		<script src="../../js/lib/three.js/three.js"></script>
-		
+
 		<script src="../../js/lib/three.js/js/controls/OrbitControls.js"></script>
 
 		<script src="../../js/lib/three.js/js/Detector.js"></script>
 		<script src="../../js/lib/three.js/js/libs/stats.min.js"></script>
                 <script src="SimplePendulumn.js"></script>
-                
+
 		<script>
-                        
+
                         var simplePendulumn  = new SimplePendulumn();
                         var simplePendulumn1 = new SimplePendulumn();
                         var phaseShift = 0;
@@ -51,27 +51,27 @@
 			lon = 0, onMouseDownLon = 0,
 			lat = 0, onMouseDownLat = 0,
 			phi = 0, theta = 0;
-			
+
                         var mouseX = 0, mouseY = 0;
 
 			var windowHalfX = window.innerWidth / 2;
 			var windowHalfY = window.innerHeight / 2;
-                        
+
                         var cubeMaterial;
                         var groundMaterial;
                         var sphereMaterial;
-                        
+
                         var boxMesh;
-                        
+
                         var sphereRadius = 0.2;
                         var cradleHeight = 3.0;
                         var cradleLength = 7.0;
                         var groundWidth = 1.5*cradleLength;
                         var groundDepth = 1.5*cradleLength;
                         var groundHeight = 0.2;
-                                                
+
                         var cameraPosition = new THREE.Vector3(0,0,5);
-                        
+
                         // Spring-Mass System
                         var springAmplitude = 0.2;
                         var springLength = 1.8;
@@ -79,17 +79,17 @@
                         var spiralRadius = 0.08;
                         var springMesh;
                         var time = 0.0;
-                        
+
                         var sphereMassMesh, sphereMassMesh1, sphereMassMeshPendulumn, sphereMassMeshPendulumn1;
                         var sphereMassRadius = 0.2;
-                        
+
                         // Pendulumn
                         var maxTheta = 15;
                         var pendulumnAnchorX = 0;
                         var pendulumnAnchorY = 0;
                         var pendulumnLength = springLength;
                         var geometryPendulumnThread;
-                        
+
                         // Oscilloscope stuff
                         var oscilloscopeGraphPoints = [];
                         var maxOscilloscopeGraphPoints = 1000;
@@ -106,14 +106,14 @@
                         var indices_array = [];
                         var positions_array = [];
                         var colors_array = [];
-                        
+
                         var indices_array1 = [];
                         var positions_array1 = [];
                         var colors_array1 = [];
-                        
+
                         initScene();
                         animate();
-                        
+
                         function createOscilloscopeGeometry(group)
                         {
                             // Create quad on to which the oscillations will be recorded.
@@ -121,7 +121,7 @@
                             var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/graph-paper.jpg");
                             texture.wrapS = THREE.RepeatWrapping;
                             texture.wrapT = THREE.RepeatWrapping;
-                            
+
                             texture.needsUpdate = true;
                             oscillographBaseMesh = new THREE.Mesh( oscilloscopeRecordGeometry ,new THREE.MeshLambertMaterial( { color: 0xffffff, ambient: 0xaaaaaa, combine:THREE.MixOperation, map:texture } ));
                             oscillographBaseMesh.castShadow = true;
@@ -131,7 +131,7 @@
                             // Create OScillograph Geometry
                             var oscillographGeometry = new THREE.BufferGeometry();
                             oscillographGeometry.dynamic = true;
-                            
+
                             for( var i=0; i<maxOscilloscopeGraphPoints; i++)
                             {
                                 positions_array.push(seperation,0.2,0);
@@ -140,44 +140,44 @@
                             }
                             for( var i=0; i<maxOscilloscopeGraphPoints; i++)
                             {
-                                indices_array.push(0);   
+                                indices_array.push(0);
                             }
-                            
+
                             oscillographGeometry.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices_array ), 1 ) );
                             oscillographGeometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( positions_array ), 3 ) );
                             oscillographGeometry.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( colors_array ), 3 ) );
-                            
+
                             oscillographGeometry.dynamic = true;
                             var lineMaterial = new THREE.LineBasicMaterial({ vertexColors: true });
                             oscillographMesh = new THREE.Line( oscillographGeometry, lineMaterial, THREE.LinePieces );
                             oscillographMesh.position.y = 0.05;
                             group.add( oscillographMesh );
-                            
+
                             // Create Oscillograph Geometry for Second Pendulumn
                             var oscillographGeometry1 = new THREE.BufferGeometry();
                             oscillographGeometry1.dynamic = true;
-                            
+
                             for( var i=0; i<maxOscilloscopeGraphPoints; i++)
                             {
                                 positions_array1.push(-seperation,0.2,0);
                                 colors_array1.push(0,0,0.2);
-                                indices_array1.push(0);   
+                                indices_array1.push(0);
                             }
-                            
+
                             oscillographGeometry1.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices_array1 ), 1 ) );
                             oscillographGeometry1.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( positions_array1 ), 3 ) );
                             oscillographGeometry1.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( colors_array1 ), 3 ) );
-                            
+
                             oscillographGeometry1.dynamic = true;
                             oscillographMesh1 = new THREE.Line( oscillographGeometry1, lineMaterial, THREE.LinePieces );
                             oscillographMesh1.position.y = 0.05;
                             group.add( oscillographMesh1 );
                         }
-                        
+
                         function updateOscilloscopeGraph()
                         {
                             var positions = oscillographMesh.geometry.getAttribute( 'position' ).array;
-                            var indices = oscillographMesh.geometry.getAttribute( 'index' ).array;
+                            var indices = oscillographMesh.geometry.index.array;
                                 // Cull and shift Points
                             if( currentOscilloscopeGraphPoints < maxOscilloscopeGraphPoints && positions[2] < -oscillographBaseLength/2 )
                             {
@@ -205,11 +205,11 @@
                             for( var i=0; i<3*currentOscilloscopeGraphPoints; i+=3 )
                             {
                                 positions[i+2] -= oscilloscopeGraphSpeed*dt;
-                            }  
-                            
+                            }
+
                             // Update Second Oscillograph
                             positions = oscillographMesh1.geometry.getAttribute( 'position' ).array;
-                            indices = oscillographMesh1.geometry.getAttribute( 'index' ).array;
+                            indices = oscillographMesh1.geometry.index.array;
                                 // Cull and shift Points
                             if( currentOscilloscopeGraphPoints1 < maxOscilloscopeGraphPoints && positions[2] < -oscillographBaseLength/2 )
                             {
@@ -238,7 +238,7 @@
                             {
                                 positions[i+2] -= oscilloscopeGraphSpeed*dt;
                             }
-                            
+
                             // Move texture coordinates of oscillographBaseMesh
                             var uv_1 = oscillographBaseMesh.geometry.faceVertexUvs[0][4];
                             var uv_2 = oscillographBaseMesh.geometry.faceVertexUvs[0][5];
@@ -252,18 +252,18 @@
                             //uvs[3].y += 0.01;
                             oscillographBaseMesh.geometry.uvsNeedUpdate = true;
                             oscillographBaseMesh.geometry.needsUpdate = true;
-                            
+
                             oscillographMesh.geometry.computeBoundingSphere();
                             oscillographMesh.geometry.dynamic = true;
                             oscillographMesh.geometry.attributes.position.needsUpdate = true;
-                            oscillographMesh.geometry.attributes.index.needsUpdate = true;
-                            
+                            oscillographMesh.geometry.index.needsUpdate = true;
+
                             oscillographMesh1.geometry.computeBoundingSphere();
                             oscillographMesh1.geometry.dynamic = true;
                             oscillographMesh1.geometry.attributes.position.needsUpdate = true;
-                            oscillographMesh1.geometry.attributes.index.needsUpdate = true;
+                            oscillographMesh1.geometry.index.needsUpdate = true;
                         }
-                        
+
                         function initPendulumnSystem()
                         {
                             simplePendulumn.init(1.8);
@@ -280,12 +280,12 @@
                             groupPendulumn.position.y = cradleHeight;
                             scene.add(groupPendulumn);
                             groupPendulumn.add(sphereMassMeshPendulumn);
-                            
+
                             // Suspension Threads
                             geometryPendulumnThread = new THREE.BufferGeometry();
                             var material = new THREE.LineBasicMaterial({ vertexColors: true });
                             geometryPendulumnThread.dynamic = true;
-                            
+
                             geometryPendulumnThread.addAttribute( 'position', new Float32Array( 6 ), 3 );
                             geometryPendulumnThread.addAttribute( 'color', new Float32Array( 6 ), 3 );
 
@@ -301,7 +301,7 @@
                             mesh.castShadow = true;
                             mesh.receiveShadow = true;
                             groupPendulumn.add( mesh );
-                            
+
                             // Create Geometry for Second Pendulumn
                                                         // Create SphereMass
                             var sphereGeometry1 = new THREE.SphereGeometry(sphereMassRadius, 15, 15);
@@ -309,11 +309,11 @@
                             sphereMassMeshPendulumn1.castShadow = true;
                             sphereMassMeshPendulumn1.receiveShadow = true;
                             groupPendulumn.add(sphereMassMeshPendulumn1);
-                            
+
                             // Suspension Threads
                             geometryPendulumnThread1 = new THREE.BufferGeometry();
                             geometryPendulumnThread1.dynamic = true;
-                            
+
                             geometryPendulumnThread1.addAttribute( 'position', new Float32Array( 6 ), 3 );
                             geometryPendulumnThread1.addAttribute( 'color', new Float32Array( 6 ), 3 );
 
@@ -329,10 +329,10 @@
                             mesh1.castShadow = true;
                             mesh1.receiveShadow = true;
                             groupPendulumn.add( mesh1 );
-                            
+
                             simplePendulumn.phase = phaseShift;
                         }
-                        
+
                         function initStructureGeometry(group)
                         {
                             createOscilloscopeGeometry(group);
@@ -353,19 +353,19 @@
                             var cyl3Mesh = new THREE.Mesh( cyl3, groundMaterial );
                             cyl3Mesh.castShadow = true;
                             cyl3Mesh.receiveShadow = true;
-                            cyl3Mesh.position.y += cradleHeight;                   
+                            cyl3Mesh.position.y += cradleHeight;
                             cyl3Mesh.rotation.z = 3.14/2;
                             cylGroup.add( cyl1Mesh );
                             cylGroup.add( cyl2Mesh );
                             cylGroup.add( cyl3Mesh );
-                            
+
                             group.add(cylGroup);
-                            
+
                             // Base Plane
                             var boxGeometry    = new THREE.BoxGeometry(groundWidth, groundHeight, groundDepth);
                             boxMesh = new THREE.Mesh( boxGeometry, groundMaterial );
                             group.add( boxMesh );
-                            
+
                             boxMesh.castShadow = true;
                             boxMesh.receiveShadow = true;
                         }
@@ -375,20 +375,20 @@
                             // Make Root Group
                             var group = new THREE.Object3D();
                             scene.add(group);
-                            
+
                             // Create Geometry for Pendulumn
                              initPendulumnSystem();
                             // Init Geometry for the Structure
                              initStructureGeometry(group);
                         }
-                        
-                        function updatePhysicalBodies() 
+
+                        function updatePhysicalBodies()
                         {
                             simplePendulumn.origin.x = seperation;
                             simplePendulumn1.origin.x = -seperation;
                             simplePendulumn.update(dt);
                             simplePendulumn1.update(dt);
-                            sphereMassMeshPendulumn.position.x = simplePendulumn.position.x;                    
+                            sphereMassMeshPendulumn.position.x = simplePendulumn.position.x;
                             sphereMassMeshPendulumn.position.y = simplePendulumn.position.y;
                             var positions = geometryPendulumnThread.getAttribute( 'position' ).array;
                             // positions
@@ -398,12 +398,12 @@
                             positions[3] = simplePendulumn.position.x;
                             positions[4] = simplePendulumn.position.y;
                             positions[5] = 0;
-                            
+
                             // Update Geometry of Second Pendulumn
                             geometryPendulumnThread.dynamic = true;
                             geometryPendulumnThread.attributes.position.needsUpdate = true;
-                            
-                            sphereMassMeshPendulumn1.position.x = simplePendulumn1.position.x;                    
+
+                            sphereMassMeshPendulumn1.position.x = simplePendulumn1.position.x;
                             sphereMassMeshPendulumn1.position.y = simplePendulumn1.position.y;
                             positions = geometryPendulumnThread1.getAttribute( 'position' ).array;
                             // positions
@@ -416,10 +416,10 @@
 
                             geometryPendulumnThread1.dynamic = true;
                             geometryPendulumnThread1.attributes.position.needsUpdate = true;
-                            
+
                             updateOscilloscopeGraph();
                         };
-                        
+
 			function initScene() {
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
@@ -433,7 +433,7 @@
 				// scene
 
 				scene = new THREE.Scene();
-                                
+
 				var ambient = new THREE.AmbientLight( 0x101030 );
 				scene.add( ambient );
 
@@ -445,7 +445,7 @@
                                 light.castShadow = true;
                                 light.shadowMapWidth = 1024;
 				light.shadowMapHeight = 1024;
-                                
+
                                 var d = 5;
 
 				light.shadowCameraLeft = -d;
@@ -465,7 +465,7 @@
 					console.log( item, loaded, total );
 
 				};
-                                    
+
                                 var path = "../../js/lib/three.js/textures/cube/pisa/";
 				var format = '.png';
 				var urls = [
@@ -475,13 +475,13 @@
 					];
 
 				var reflectionCube = THREE.ImageUtils.loadTextureCube( urls );
-				reflectionCube.format = THREE.RGBFormat;   
+				reflectionCube.format = THREE.RGBFormat;
                                 var texture = THREE.ImageUtils.loadTexture( "../../js/lib/three.js/textures/wood.jpg");
                                 //var material = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );                                //var texture = new THREE.Texture();
                                 cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, ambient: 0xaaaaaa, combine:THREE.MixOperation } )
                                 groundMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.2, map:texture});
                                 sphereMaterial = new THREE.MeshPhongMaterial({ envMap: reflectionCube, color: 0xffffff, specular: 0xffffff, ambient: 0x555555, reflectivity: 0.9, shininess:1000 });
-                                
+
 				renderer = new THREE.WebGLRenderer({antialias:true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
@@ -492,13 +492,13 @@
         			document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
 
 				window.addEventListener( 'resize', onWindowResize, false );
-                                
+
                                 renderer.shadowMapEnabled = true;
                                 renderer.shadowMapSoft = true;
-                                
+
                                 initGeometry();
 			}
-                        
+
                         function onDocumentMouseMove(event)
                         {
                             var pos = camera.position;
@@ -508,7 +508,7 @@
                                 //pos.y = 2;
                             }
                         }
-                        
+
                         function onDocumentMouseWheel(event)
                         {
                             var pos = camera.position;
@@ -530,17 +530,17 @@
                                pos.y = cameraPosition.y*10;
                                pos.z = cameraPosition.z*10;
                             }
-                            
+
                         }
-                        
+
                         function onDocumentMouseDown(e)
-                        {                                 
+                        {
                         }
-                        
+
                         function onDocumentMouseUp(e)
                         {
                         }
-                        
+
 			function onWindowResize() {
 
 				windowHalfX = window.innerWidth / 2;
